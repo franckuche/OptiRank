@@ -705,8 +705,9 @@ function generateTextWithAnalysis(headingsData) {
     text += '🏗️ STRUCTURE DES TITRES :\n';
     headingsList.forEach(heading => {
       const level = heading.level || heading.tag?.replace('h', '') || '?';
-      const headingText = heading.text || heading.content || '[Titre vide]';
-      text += `  H${level}: ${headingText}\n`;
+      const rawText = heading.text || heading.content || '[Titre vide]';
+      const cleanText = cleanHeadingText(rawText);
+      text += `  H${level}: ${cleanText}\n`;
     });
     text += '\n';
   }
@@ -747,11 +748,36 @@ function generateTextWithoutAnalysis(headingsData) {
     })
     .forEach(heading => {
       const level = heading.level || heading.tag?.replace('h', '') || '?';
-      const headingText = heading.text || heading.content || '[Titre vide]';
-      text += `H${level}: ${headingText}\n`;
+      const rawText = heading.text || heading.content || '[Titre vide]';
+      const cleanText = cleanHeadingText(rawText);
+      text += `H${level}: ${cleanText}\n`;
     });
   
   return text.trim();
+}
+
+/**
+ * Fonction améliorée pour nettoyer le texte des titres
+ * Supprime les espaces excessifs, sauts de ligne indésirables et caractères invisibles
+ */
+function cleanHeadingText(text) {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  
+  return text
+    // 1. Supprimer les caractères de contrôle et invisibles (sauf espaces et retours à la ligne)
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+    // 2. Normaliser tous les types d'espaces en espaces simples
+    .replace(/[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+    // 3. Remplacer les retours à la ligne par des espaces
+    .replace(/[\r\n\f\v]/g, ' ')
+    // 4. Supprimer les tabulations
+    .replace(/\t/g, ' ')
+    // 5. Remplacer les espaces multiples par un seul espace
+    .replace(/\s{2,}/g, ' ')
+    // 6. Supprimer les espaces en début et fin
+    .trim();
 }
 
 // Fonction utilitaire pour copier dans le presse-papiers
