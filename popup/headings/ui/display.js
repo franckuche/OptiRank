@@ -105,6 +105,17 @@ function displayHeadingsResults(headingsData) {
       });
     }
 
+    // NOUVEAU : Stocker les données nettoyées pour la copie
+    console.log('💾 DISPLAY: Stockage des données pour la copie');
+    window.headingsResults = {
+      counts: headingsData.counts,
+      items: headingsList, // Utiliser headingsList au lieu de la version avec titres manquants
+      headings: headingsList,
+      issues: headingsData.issues || []
+    };
+    
+    console.log('✅ DISPLAY: Données stockées dans window.headingsResults:', window.headingsResults);
+
   } catch (error) {
     console.error('❌ DISPLAY: Erreur dans displayHeadingsResults:', error);
     console.error('Stack trace:', error.stack);

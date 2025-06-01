@@ -658,7 +658,7 @@ function copyHeadingsWithAnalysis() {
 
 // Fonction pour copier sans analyse (structure simple)
 function copyHeadingsWithoutAnalysis() {
-  console.log('OptiRank Copy: Copie sans analyse demandée');
+  console.log('🔥 OptiRank Copy: Copie sans analyse demandée - DEBUG');
   
   try {
     // Utiliser les données stockées dans window.headingsResults si disponibles
@@ -666,21 +666,26 @@ function copyHeadingsWithoutAnalysis() {
     
     if (window.headingsResults) {
       headingsData = window.headingsResults;
-      console.log('OptiRank Copy: Utilisation des données cached', headingsData);
+      console.log('🔥 OptiRank Copy: Données trouvées:', headingsData);
+      console.log('🔥 Nombre de headings dans les données:', headingsData.items?.length || 0);
     } else {
-      console.warn('OptiRank Copy: Aucune donnée d\'analyse disponible');
+      console.warn('🔥 OptiRank Copy: Aucune donnée dans window.headingsResults');
+      console.log('🔥 window.headingsResults:', window.headingsResults);
+      console.log('🔥 window.OptiRankUtils:', window.OptiRankUtils);
       showCopyFeedback('Aucune donnée d\'analyse disponible', 'error');
       return;
     }
     
     // Générer le texte sans analyse
+    console.log('🔥 Appel de generateTextWithoutAnalysis');
     const textWithoutAnalysis = generateTextWithoutAnalysis(headingsData);
+    console.log('🔥 Texte généré:', textWithoutAnalysis);
     
     // Copier dans le presse-papiers
     copyToClipboard(textWithoutAnalysis, 'Structure copiée (simple)');
     
   } catch (error) {
-    console.error('OptiRank Copy: Erreur lors de la copie sans analyse', error);
+    console.error('🔥 OptiRank Copy: Erreur lors de la copie sans analyse', error);
     showCopyFeedback('Erreur lors de la copie', 'error');
   }
 }
@@ -699,11 +704,40 @@ function generateTextWithAnalysis(headingsData) {
     text += '\n';
   }
   
-  // Structure des titres
+  // Structure des titres avec filtrage amélioré
   const headingsList = headingsData.items || headingsData.headings || [];
   if (headingsList.length > 0) {
     text += '🏗️ STRUCTURE DES TITRES :\n';
-    headingsList.forEach(heading => {
+    
+    // Filtrer les titres avec le même critère que generateTextWithoutAnalysis
+    const filteredHeadings = headingsList.filter(heading => {
+      const headingText = heading.text || heading.content || '';
+      const cleanText = cleanHeadingText(headingText);
+      
+      // Exclure les titres vides après nettoyage
+      if (!cleanText || cleanText.length === 0) {
+        return false;
+      }
+      
+      // Exclure tous les titres contenant "manquant" (même après nettoyage)
+      if (cleanText.toLowerCase().includes('manquant')) {
+        return false;
+      }
+      
+      // Exclure les titres qui sont des patterns de titre manquant
+      if (cleanText.match(/^(niveau\s+)?h[1-6](\s+manquant)?$/i)) {
+        return false;
+      }
+      
+      // Exclure si c'est un titre artificiel généré par l'extension
+      if (cleanText.includes('Titre H') || cleanText.includes('Level H')) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    filteredHeadings.forEach(heading => {
       const level = heading.level || heading.tag?.replace('h', '') || '?';
       const rawText = heading.text || heading.content || '[Titre vide]';
       const cleanText = cleanHeadingText(rawText);
@@ -731,28 +765,64 @@ function generateTextWithAnalysis(headingsData) {
 
 // Fonction pour générer le texte sans analyse (format simple)
 function generateTextWithoutAnalysis(headingsData) {
+  console.log('🔥 DEBUG generateTextWithoutAnalysis: Début');
   const headingsList = headingsData.items || headingsData.headings || [];
+  console.log('🔥 Liste des headings:', headingsList);
   
   if (headingsList.length === 0) {
+    console.log('🔥 Aucun heading trouvé');
     return 'Aucun titre détecté sur cette page.';
   }
   
   let text = '';
   
-  // Trier les titres par ordre d'apparition et générer la structure simple
-  headingsList
-    .filter(heading => {
-      // Exclure les titres artificiels ajoutés par l'analyse
-      const headingText = heading.text || heading.content || '';
-      return !headingText.includes('Titre H') || !headingText.includes('manquant');
-    })
-    .forEach(heading => {
-      const level = heading.level || heading.tag?.replace('h', '') || '?';
-      const rawText = heading.text || heading.content || '[Titre vide]';
-      const cleanText = cleanHeadingText(rawText);
-      text += `H${level}: ${cleanText}\n`;
-    });
+  // Filtrage plus strict pour exclure tous les titres artificiels
+  console.log('🔥 Début du filtrage...');
+  const filteredHeadings = headingsList.filter(heading => {
+    const headingText = heading.text || heading.content || '';
+    const cleanText = cleanHeadingText(headingText);
+    
+    console.log(`🔥 Examen du heading: "${headingText}" -> "${cleanText}"`);
+    
+    // Exclure les titres vides après nettoyage
+    if (!cleanText || cleanText.length === 0) {
+      console.log('🔥 ❌ Exclu: titre vide');
+      return false;
+    }
+    
+    // Exclure tous les titres contenant "manquant" (même après nettoyage)
+    if (cleanText.toLowerCase().includes('manquant')) {
+      console.log('🔥 ❌ Exclu: contient "manquant"');
+      return false;
+    }
+    
+    // Exclure les titres qui sont des patterns de titre manquant
+    if (cleanText.match(/^(niveau\s+)?h[1-6](\s+manquant)?$/i)) {
+      console.log('🔥 ❌ Exclu: pattern de titre manquant');
+      return false;
+    }
+    
+    // Exclure si c'est un titre artificiel généré par l'extension
+    if (cleanText.includes('Titre H') || cleanText.includes('Level H')) {
+      console.log('🔥 ❌ Exclu: titre artificiel');
+      return false;
+    }
+    
+    console.log('🔥 ✅ Accepté');
+    return true;
+  });
   
+  console.log(`🔥 Après filtrage: ${filteredHeadings.length} titres gardés sur ${headingsList.length}`);
+  
+  filteredHeadings.forEach(heading => {
+    const level = heading.level || heading.tag?.replace('h', '') || '?';
+    const rawText = heading.text || heading.content || '[Titre vide]';
+    const cleanText = cleanHeadingText(rawText);
+    console.log(`🔥 Ajout: H${level}: ${cleanText}`);
+    text += `H${level}: ${cleanText}\n`;
+  });
+  
+  console.log('🔥 Texte final généré:', text.trim());
   return text.trim();
 }
 
@@ -768,15 +838,22 @@ function cleanHeadingText(text) {
   return text
     // 1. Supprimer les caractères de contrôle et invisibles (sauf espaces et retours à la ligne)
     .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
-    // 2. Normaliser tous les types d'espaces en espaces simples
+    // 2. Normaliser tous les types d'espaces Unicode en espaces simples
     .replace(/[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
-    // 3. Remplacer les retours à la ligne par des espaces
-    .replace(/[\r\n\f\v]/g, ' ')
-    // 4. Supprimer les tabulations
-    .replace(/\t/g, ' ')
-    // 5. Remplacer les espaces multiples par un seul espace
+    // 3. Remplacer TOUS les types de retours à la ligne et tabulations par des espaces
+    .replace(/[\r\n\f\v\t]/g, ' ')
+    // 4. Supprimer les séquences d'espaces très longues (souvent dues au HTML mal formaté)
+    .replace(/\s{3,}/g, ' ')
+    // 5. Remplacer les doubles espaces restants par un seul espace (appliqué plusieurs fois)
+    .replace(/\s{2,}/g, ' ')
     .replace(/\s{2,}/g, ' ')
     // 6. Supprimer les espaces en début et fin
+    .trim()
+    // 7. Nettoyage final : supprimer les espaces autour des signes de ponctuation
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .replace(/([,.;:!?])\s+/g, '$1 ')
+    // 8. Supprimer tout espace résiduel excessif
+    .replace(/\s+/g, ' ')
     .trim();
 }
 

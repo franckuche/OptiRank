@@ -41,27 +41,85 @@ function hideLoading() {
 let copyWithTags = true;
 
 /**
- * Fonction pour copier la structure des titres dans le presse-papier
+ * Fonction améliorée pour nettoyer le texte des titres
+ * Supprime les espaces excessifs, sauts de ligne indésirables et caractères invisibles
+ */
+function cleanHeadingText(text) {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  
+  return text
+    // 1. Supprimer les caractères de contrôle et invisibles (sauf espaces et retours à la ligne)
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+    // 2. Normaliser tous les types d'espaces Unicode en espaces simples
+    .replace(/[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+    // 3. Remplacer TOUS les types de retours à la ligne et tabulations par des espaces
+    .replace(/[\r\n\f\v\t]/g, ' ')
+    // 4. Supprimer les séquences d'espaces très longues (souvent dues au HTML mal formaté)
+    .replace(/\s{3,}/g, ' ')
+    // 5. Remplacer les doubles espaces restants par un seul espace (appliqué plusieurs fois)
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    // 6. Supprimer les espaces en début et fin
+    .trim()
+    // 7. Nettoyage final : supprimer les espaces autour des signes de ponctuation
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .replace(/([,.;:!?])\s+/g, '$1 ')
+    // 8. Supprimer tout espace résiduel excessif
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Fonction pour copier la structure des headings avec nettoyage amélioré
  * Cette fonction est simplifiée et robuste
  */
 function copyHeadingStructure(withAnalysis = false) {
+  console.log('🔥 UTILS: Copie demandée - avec analyse:', withAnalysis);
+  
   try {
     let textToCopy = '';
+    const headingsContainer = document.getElementById('headings-list');
     
-    // Récupérer tous les éléments de titre
-    const headingElements = document.querySelectorAll('#headings-list .heading-item');
+    if (!headingsContainer) {
+      console.error('Headings Utils: Conteneur des headings non trouvé');
+      showCopyError();
+      return;
+    }
     
-    // Construire le texte à partir des éléments réels
+    const headingElements = headingsContainer.querySelectorAll('.heading-item');
+    console.log('🔥 UTILS: Nombre d\'éléments trouvés:', headingElements.length);
+    
     if (headingElements.length > 0) {
-      // Filtrer les éléments vides
+      // Filtrer les éléments vides et les titres manquants si pas d'analyse
       const validHeadings = Array.from(headingElements).filter(heading => {
         const textElement = heading.querySelector('.heading-text');
         const isEmptyMissing = textElement && textElement.classList.contains('empty-missing');
         const missingIndicator = heading.querySelector('.missing-indicator');
+        const isMissingHeading = heading.classList.contains('missing-heading') || heading.hasAttribute('data-missing');
+        
+        console.log('🔥 UTILS: Examen heading:', {
+          text: textElement?.textContent?.trim(),
+          isEmptyMissing,
+          hasMissingIndicator: !!missingIndicator,
+          isMissingHeading,
+          withAnalysis
+        });
+        
+        // Si mode sans analyse, exclure TOUS les titres manquants
+        if (!withAnalysis && (isMissingHeading || missingIndicator)) {
+          console.log('🔥 UTILS: ❌ Exclu - titre manquant en mode sans analyse');
+          return false;
+        }
         
         // Inclure seulement si ce n'est pas un titre manquant vide
-        return !isEmptyMissing || missingIndicator;
+        const shouldInclude = !isEmptyMissing || missingIndicator;
+        console.log('🔥 UTILS:', shouldInclude ? '✅ Accepté' : '❌ Exclu');
+        return shouldInclude;
       });
+      
+      console.log('🔥 UTILS: Après filtrage:', validHeadings.length, 'titres gardés');
       
       validHeadings.forEach(heading => {
         const level = heading.getAttribute('data-level') || '';
@@ -70,13 +128,16 @@ function copyHeadingStructure(withAnalysis = false) {
         
         let text = '';
         if (textElement && !textElement.classList.contains('empty-missing')) {
-          text = textElement.textContent.trim();
+          const rawText = textElement.textContent.trim();
+          text = cleanHeadingText(rawText); // NOUVEAU: Nettoyage du texte
+          console.log('🔥 UTILS: Texte nettoyé:', rawText, '->', text);
         } else if (missingIndicator) {
           text = `[${missingIndicator.textContent}]`;
         }
         
         if (level && text) {
           textToCopy += `H${level}: ${text}\n`;
+          console.log('🔥 UTILS: Ajouté:', `H${level}: ${text}`);
         }
       });
       
@@ -106,6 +167,8 @@ function copyHeadingStructure(withAnalysis = false) {
     if (!textToCopy.trim()) {
       textToCopy = "Aucun titre détecté sur cette page.";
     }
+    
+    console.log('🔥 UTILS: Texte final à copier:', textToCopy);
     
     // Méthode de secours utilisant execCommand
     function copyWithExecCommand() {
