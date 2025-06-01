@@ -1,0 +1,12 @@
+{
+  "name": "optirank",
+  "version": "1.0.0",
+  "description": "Extension Chrome d'analyse de liens et de structure SEO",
+  "main": "popup/popup.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["chrome", "extension", "seo", "links", "validation"],
+  "author": "OptiRank Team",
+  "license": "MIT"
+}

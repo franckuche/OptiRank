@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3498db"/>
+      <stop offset="100%" stop-color="#2980b9"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="128" height="128" rx="24" fill="url(#bg)"/>
+  <g fill="white" transform="translate(24, 24)">
+    <!-- Link icon -->
+    <path d="M36,20 L36,36 L20,36 C8.954,36 0,27.046 0,16 C0,4.954 8.954,-4 20,-4 L36,-4 L36,12 L20,12 C16.686,12 14,14.686 14,18 C14,21.314 16.686,24 20,24 L36,24 L36,40 L20,40 C6.745,40 -4,29.255 -4,16 C-4,2.745 6.745,-8 20,-8 L40,-8 L40,20 L36,20 Z" transform="translate(40, 40) rotate(45) translate(-40, -40)"/>
+    <!-- Eye icon -->
+    <circle cx="40" cy="40" r="8" fill="#e74c3c"/>
+    <circle cx="40" cy="40" r="4" fill="white"/>
+  </g>
+</svg>

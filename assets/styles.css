@@ -1,0 +1,128 @@
+/* OptiRank - Content Script Styles */
+
+/* Valid links - green background */
+a.optirank-valid, a[data-optirank-status="valid"] {
+  background-color: rgba(52, 168, 83, 0.2) !important; /* #34a853 */
+  border: 2px solid #34a853 !important;
+  border-radius: 3px !important;
+  padding: 0 3px !important;
+  display: inline-block !important;
+  box-shadow: 0 0 5px rgba(52, 168, 83, 0.5) !important;
+}
+
+/* Broken links - red background and strikethrough */
+a.optirank-broken, a[data-optirank-status="broken"] {
+  background-color: rgba(234, 67, 53, 0.2) !important; /* #ea4335 */
+  border: 2px solid #ea4335 !important;
+  border-radius: 3px !important;
+  padding: 0 3px !important;
+  text-decoration: line-through !important;
+  text-decoration-color: #ea4335 !important;
+  text-decoration-thickness: 2px !important;
+  display: inline-block !important;
+  box-shadow: 0 0 5px rgba(234, 67, 53, 0.5) !important;
+}
+
+/* Redirect links - orange background */
+a.optirank-redirect, a[data-optirank-status="redirect"] {
+  background-color: rgba(251, 188, 5, 0.2) !important; /* #fbbc05 */
+  border: 2px solid #fbbc05 !important;
+  border-radius: 3px !important;
+  padding: 0 3px !important;
+  display: inline-block !important;
+  box-shadow: 0 0 5px rgba(251, 188, 5, 0.5) !important;
+}
+
+/* Nofollow links - purple background */
+a.optirank-nofollow, a[data-optirank-status="nofollow"] {
+  background-color: rgba(156, 39, 176, 0.2) !important; /* #9c27b0 */
+  border: 2px solid #9c27b0 !important;
+  border-radius: 3px !important;
+  padding: 0 3px !important;
+  display: inline-block !important;
+  box-shadow: 0 0 5px rgba(156, 39, 176, 0.5) !important;
+}
+
+/* Sponsored links - orange background */
+a.optirank-sponsored, a[data-optirank-status="sponsored"] {
+  background-color: rgba(255, 152, 0, 0.2) !important; /* #FF9800 */
+  border: 2px solid #FF9800 !important;
+  border-radius: 3px !important;
+  padding: 0 3px !important;
+  display: inline-block !important;
+  box-shadow: 0 0 5px rgba(255, 152, 0, 0.5) !important;
+}
+
+/* UGC links - blue background */
+a.optirank-ugc, a[data-optirank-status="ugc"] {
+  background-color: rgba(33, 150, 243, 0.2) !important; /* #2196F3 */
+  border: 2px solid #2196F3 !important;
+  border-radius: 3px !important;
+  padding: 0 3px !important;
+  display: inline-block !important;
+  box-shadow: 0 0 5px rgba(33, 150, 243, 0.5) !important;
+}
+
+/* Badge styles for all link types */
+.optirank-badge {
+  display: inline-block !important;
+  color: white !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  padding: 3px 6px !important;
+  border-radius: 4px !important;
+  margin-left: 4px !important;
+  vertical-align: middle !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Poor anchor text indicator */
+[data-optirank-poor-anchor="true"] {
+  border-bottom: 2px dotted #e74c3c !important;
+  text-decoration: none !important;
+}
+
+/* Archived link indicator */
+[data-optirank-archived="true"] {
+  border-bottom: 2px dashed #3498db !important;
+  cursor: help !important;
+}
+
+[data-optirank-archived="true"]:after {
+  content: "📚" !important;
+  font-size: 12px !important;
+  margin-left: 3px !important;
+  vertical-align: super !important;
+}
+
+/* Badge colors for different link types */
+.optirank-badge-valid {
+  background-color: #34a853 !important; /* --valid-color */
+}
+
+.optirank-badge-broken {
+  background-color: #ea4335 !important; /* --broken-color */
+}
+
+.optirank-badge-redirect {
+  background-color: #fbbc05 !important; /* --redirect-color */
+}
+
+.optirank-badge-nofollow {
+  background-color: #9c27b0 !important; /* --nofollow-color */
+}
+
+.optirank-badge-sponsored {
+  background-color: #FF9800 !important; /* --sponsored-color */
+}
+
+.optirank-badge-ugc {
+  background-color: #2196F3 !important; /* --ugc-color */
+}
+
+/* Hidden links (for filtering) */
+.optirank-hidden {
+  opacity: 0.3 !important;
+  filter: grayscale(100%) !important;
+}

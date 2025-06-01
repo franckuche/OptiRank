@@ -1,0 +1,63 @@
+{
+  "manifest_version": 3,
+  "name": "OptiRank",
+  "version": "1.0.0",
+  "description": "Extension d'analyse de liens et de structure SEO pour Chrome",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "OptiRank - Link Validator",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "32": "images/icon32.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "images/icon16.png",
+    "32": "images/icon32.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "content/common/utils.js",
+        "content/common/data.js",
+        "content/links/validation/redirectDetector.js",
+        "content/links/validation/validator.js",
+        "content/links/processing/scanner.js",
+        "content/links/detection/detector.js",
+        "content/reports/reporter.js",
+        "content/optiRankMain.js"
+      ],
+      "css": ["assets/styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["content/*.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
+      },
+      "description": "Ouvrir l'analyseur de liens"
+    }
+  }
+}

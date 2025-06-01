@@ -1,0 +1,94 @@
+/* Styles pour l'analyseur de structure hiérarchique des headings */
+
+/* Styles pour les titres manquants */
+.missing-heading {
+  opacity: 0.7;
+  background-color: rgba(255, 165, 0, 0.1);
+  border-left: 3px solid #FFA500;
+}
+
+.missing-indicator {
+  display: inline-block;
+  background-color: #FFA500;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* Styles pour les problèmes de hiérarchie */
+.hierarchy-issue {
+  position: relative;
+}
+
+.hierarchy-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #FFA500;
+  color: white;
+  margin-left: 8px;
+  font-size: 10px;
+  cursor: help;
+  position: relative;
+}
+
+.hierarchy-tooltip {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 10px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+  width: 220px;
+  z-index: 1000;
+  font-size: 12px;
+  color: var(--text-color);
+  text-align: left;
+}
+
+/* Flèche de l'infobulle */
+.hierarchy-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: -2px -2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Contenu de l'infobulle */
+.hierarchy-tooltip .tooltip-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #FFA500;
+}
+
+.hierarchy-tooltip .tooltip-detail {
+  margin-bottom: 4px;
+  color: var(--text-light);
+}
+
+/* Animation pour les indicateurs */
+@keyframes fadeInWarning {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.hierarchy-indicator {
+  animation: fadeInWarning 0.3s ease forwards;
+}

@@ -1,0 +1,43 @@
+/* Correction pour les infobulles qui sont coupées par les bordures des conteneurs */
+
+/* Assurer que les conteneurs avec overflow ne coupent pas les infobulles */
+.headings-list-container {
+  overflow: visible !important;
+}
+
+.headings-list {
+  overflow: visible !important;
+}
+
+.structure-list {
+  overflow: visible !important;
+}
+
+/* Style global pour toutes les infobulles */
+[class*="tooltip"] {
+  z-index: 9999 !important;
+  pointer-events: none;
+}
+
+/* Assurer que les éléments parents des infobulles ne coupent pas leur contenu */
+.heading-content, 
+.structure-item,
+.heading-item {
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Permettre aux indicateurs d'avoir un z-index élevé */
+.heading-length-indicator,
+.hierarchy-alert-badge,
+.missing-indicator {
+  z-index: 100;
+  position: relative;
+}
+
+/* Assurer que les infobulles sont visibles au-dessus de tous les autres éléments */
+.heading-length-tooltip,
+.hierarchy-tooltip {
+  z-index: 9999 !important;
+  pointer-events: none;
+}
