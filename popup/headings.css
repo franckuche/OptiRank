@@ -9,25 +9,51 @@
   --headings-border: rgba(59, 130, 246, 0.1);
 }
 
+/* === CORRECTION BACKGROUND GLOBAL === */
+.content {
+  background: var(--headings-bg) !important;
+  backdrop-filter: blur(8px);
+}
+
+/* === CORRECTION BACKGROUND CONTAINER ET NAVIGATION === */
+body:has(#headings.tab-content.active) .container,
+.container:has(#headings.tab-content.active) {
+  background-color: var(--headings-bg) !important;
+}
+
+body:has(#headings.tab-content.active) .tab-navigation,
+.tab-navigation:has(+ * #headings.tab-content.active) {
+  background: var(--headings-bg) !important;
+}
+
+/* === CORRECTION LARGEUR POUR HEADINGS === */
+#headings.tab-content.active ~ * .content,
+#headings.tab-content .content,
+.content:has(#headings.tab-content.active) {
+  --max-content-width: 100% !important;
+  max-width: 100% !important;
+}
+
 /* === BACKGROUND DÉGRADÉ POUR TOUTE LA PAGE === */
 #headings.tab-content {
-  background: var(--headings-bg);
-  backdrop-filter: blur(8px);
+  background: transparent;
+  backdrop-filter: none;
   min-height: 100vh;
-  padding: 16px;
+  padding: 0;
 }
 
 .headings-container {
   background: transparent;
+  padding: 0;
 }
 
 /* === CONTENEUR PRINCIPAL === */
 .heading-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%);
+  background: #fafafa;
   backdrop-filter: blur(12px);
   border: 1px solid var(--headings-border);
   border-radius: 12px;
-  margin-bottom: 16px;
+  margin: 0 2% 16px 2%;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
   transition: all 0.3s ease;
 }
@@ -72,127 +98,69 @@
   margin: 4px 0 0 0;
 }
 
-/* === GRILLE DES COMPTEURS (vraies classes du HTML) === */
+/* === GRILLE DES COMPTEURS - STYLE SIMPLE === */
 .heading-counts-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
   margin-bottom: 16px;
+  background: transparent !important;
 }
 
-.heading-count-item {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%);
-  border: 1px solid var(--headings-border);
-  border-radius: 8px;
-  padding: 12px 8px;
+.heading-count-box {
   text-align: center;
-  backdrop-filter: blur(4px);
-  transition: all 0.2s ease;
-  position: relative;
+  padding: 8px;
 }
 
-.heading-count-item:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 0.9) 100%);
-  border-color: rgba(59, 130, 246, 0.2);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.1);
-}
-
-/* Couleurs des badges : TOUS EN BLEU COMME LES ONGLETS (sauf manquants) */
-.count-badge {
-  font-size: 10px;
+.heading-count-square {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 700;
   color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  display: inline-block;
-  margin-bottom: 4px;
-  /* COULEUR UNIQUE BLEUE pour cohérence avec les onglets */
-  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  margin: 0 auto 8px auto;
+  background: var(--headings-blue-dark);
+  font-size: 16px;
 }
 
-/* Forcer TOUS les badges spécifiques en bleu */
-.h1-badge, .h2-badge, .h3-badge, .h4-badge, .h5-badge, .h6-badge {
-  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
-}
-
-/* Couleur jaune uniquement pour les sections manquantes */
-.count-badge.missing,
-.h1-badge.missing, .h2-badge.missing, .h3-badge.missing, 
-.h4-badge.missing, .h5-badge.missing, .h6-badge.missing {
-  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-}
-
-.count-number {
-  font-size: 18px;
-  font-weight: 700;
+.heading-label {
+  font-size: 12px;
+  font-weight: 600;
   color: var(--headings-blue-dark);
-  margin-top: 4px;
+  text-transform: uppercase;
 }
 
-/* === STRUCTURE DES TITRES - SANS SCROLL, HAUTEUR ADAPTATIVE === */
-.headings-list-container {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(248, 250, 252, 0.4) 100%);
-  border-radius: 8px;
-  padding: 16px;
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--headings-border);
-  min-height: 200px;
-  position: relative;
+/* Forcer TOUS les compteurs en bleu foncé */
+.h1-bg, .h2-bg, .h3-bg, .h4-bg, .h5-bg, .h6-bg,
+.h1-type, .h2-type, .h3-type, .h4-type, .h5-type, .h6-type,
+#h1-count, #h2-count, #h3-count, #h4-count, #h5-count, #h6-count {
+  background: var(--headings-blue-dark) !important;
 }
-
-.headings-list {
-  /* SUPPRESSION DU SCROLL - hauteur adaptative au contenu */
-  /* max-height: 400px; SUPPRIMÉ */
-  /* overflow-y: auto; SUPPRIMÉ */
-  /* scrollbar-width: thin; SUPPRIMÉ */
-  /* scrollbar-color: rgba(59, 130, 246, 0.3) transparent; SUPPRIMÉ */
-}
-
-/* SUPPRESSION des styles webkit-scrollbar car plus de scroll */
-/* .headings-list::-webkit-scrollbar { SUPPRIMÉ }
-/* .headings-list::-webkit-scrollbar-track { SUPPRIMÉ }
-/* .headings-list::-webkit-scrollbar-thumb { SUPPRIMÉ }
-/* .headings-list::-webkit-scrollbar-thumb:hover { SUPPRIMÉ } */
 
 /* === ÉLÉMENTS DE TITRE - AMÉLIORÉS === */
 .heading-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
-  margin-bottom: 8px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%);
+  padding: 12px 16px;
+  margin: 6px 0;
+  background: #fafafa;
   border: 1px solid rgba(59, 130, 246, 0.08);
-  border-radius: 8px;
+  border-radius: 12px;
   transition: all 0.3s ease;
   backdrop-filter: blur(6px);
   position: relative;
   overflow: hidden;
 }
 
-.heading-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, transparent, var(--headings-blue-light), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
 .heading-item:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 0.9) 100%);
+  background: #ffffff;
   border-color: rgba(59, 130, 246, 0.2);
   transform: translateX(8px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
-}
-
-.heading-item:hover::before {
-  opacity: 1;
 }
 
 .heading-item:last-child {
@@ -289,9 +257,9 @@
   100% { left: 100%; }
 }
 
-/* === INSIGHTS === */
+/* === INSIGHTS - DESIGN COLORÉ === */
 .insights-container {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(248, 250, 252, 0.4) 100%);
+  background: transparent !important;
   border-radius: 8px;
   padding: 16px;
   backdrop-filter: blur(8px);
@@ -307,38 +275,69 @@
 .insight-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
-  margin-bottom: 8px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.08);
-  border-radius: 8px;
+  gap: 15px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 12px;
   transition: all 0.3s ease;
   backdrop-filter: blur(6px);
+  border-left: 4px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .insight-item:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 0.9) 100%);
-  border-color: rgba(59, 130, 246, 0.2);
   transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .insight-item:last-child {
   margin-bottom: 0;
 }
 
+/* === TYPES D'INSIGHTS - COULEURS DISTINCTES === */
+.insight-item.success {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border-left-color: #22c55e;
+}
+
+.insight-item.success:hover {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+.insight-item.warning {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-left-color: #f59e0b;
+}
+
+.insight-item.warning:hover {
+  background: linear-gradient(135deg, #fefce8, #fde68a);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.insight-item.error {
+  background: linear-gradient(135deg, #fef2f2, #fecaca);
+  border-left-color: #ef4444;
+}
+
+.insight-item.error:hover {
+  background: linear-gradient(135deg, #fef1f1, #fca5a5);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* === ICÔNES REDESIGNÉES === */
 .insight-icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-top: 1px;
-  font-size: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .insight-item.success .insight-icon {
@@ -356,21 +355,46 @@
   color: white;
 }
 
+/* === CONTENU REDESIGNÉ === */
 .insight-content {
   flex: 1;
 }
 
 .insight-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--headings-blue-dark);
-  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.insight-item.success .insight-title {
+  color: #15803d;
+}
+
+.insight-item.error .insight-title {
+  color: #dc2626;
+}
+
+.insight-item.warning .insight-title {
+  color: #d97706;
 }
 
 .insight-description {
-  font-size: 12px;
-  color: #6b7280;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.insight-item.success .insight-description {
+  color: #166534;
+}
+
+.insight-item.error .insight-description {
+  color: #991b1b;
+}
+
+.insight-item.warning .insight-description {
+  color: #92400e;
 }
 
 /* === BOUTON DE COPIE - AMÉLIORÉ === */
@@ -530,4 +554,32 @@
   margin: 0;
   position: relative;
   z-index: 1;
-} 
+}
+
+/* === STRUCTURE DES TITRES - SANS SCROLL, HAUTEUR ADAPTATIVE === */
+.headings-list-container {
+  background: transparent !important;
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--headings-border);
+  min-height: 200px;
+  position: relative;
+  overflow: visible;
+}
+
+.headings-list {
+  /* SUPPRESSION DU SCROLL - hauteur adaptative au contenu */
+  /* max-height: 400px; SUPPRIMÉ */
+  /* overflow-y: auto; SUPPRIMÉ */
+  /* scrollbar-width: thin; SUPPRIMÉ */
+  /* scrollbar-color: rgba(59, 130, 246, 0.3) transparent; SUPPRIMÉ */
+  margin: -4px;
+  padding: 4px;
+}
+
+/* SUPPRESSION des styles webkit-scrollbar car plus de scroll */
+/* .headings-list::-webkit-scrollbar { SUPPRIMÉ }
+/* .headings-list::-webkit-scrollbar-track { SUPPRIMÉ }
+/* .headings-list::-webkit-scrollbar-thumb { SUPPRIMÉ }
+/* .headings-list::-webkit-scrollbar-thumb:hover { SUPPRIMÉ } */ 

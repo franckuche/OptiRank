@@ -4,7 +4,7 @@
 
 /* Variables pour une maintenance facile */
 :root {
-  --menu-bg-color: #3b82f6;
+  --menu-bg-color: #2563eb;
   --menu-text-normal: rgba(255, 255, 255, 0.8);
   --menu-text-hover: rgba(255, 255, 255, 0.95);
   --menu-text-active: rgba(255, 255, 255, 1);
@@ -13,7 +13,7 @@
   --menu-padding: 1.5%;
   --menu-gap: 0px;
   --menu-margin-top: 16px;
-  --menu-margin-sides: 12px;
+  --menu-margin-sides: 16px;
   --menu-margin-bottom: 20px;
   --menu-height: 75px;
 }
@@ -26,7 +26,6 @@
   justify-content: center;
   align-items: center;
   padding: var(--menu-margin-top) var(--menu-margin-sides) var(--menu-margin-bottom) var(--menu-margin-sides);
-  background: transparent;
   height: var(--menu-height);
 }
 
@@ -36,10 +35,12 @@
 .tabs {
   display: flex;
   gap: var(--menu-gap);
-  background: var(--menu-bg-color);
+  background: var(--menu-bg-color) !important;
   padding: var(--menu-padding);
   border-radius: var(--menu-border-radius);
   width: 100%;
+  margin-left: 5px;
+  margin-right: 5px;
 }
 
 /* ========================================

@@ -64,33 +64,135 @@ async function initOptiRank() {
           // Créer une fonction pour analyser les titres sans dépendre du module externe
           window.OptiRankHeadings = {
             detectHeadings: function() {
-              console.log('OptiRank: Détection des titres (headings) - Mode liste brute');
+              console.log('OptiRank: Détection des titres (headings)');
               
-              const rawHeadings = [];
+              // Structure de données pour les résultats
+              const headingsData = {
+                counts: {
+                  h1: 0,
+                  h2: 0,
+                  h3: 0,
+                  h4: 0,
+                  h5: 0,
+                  h6: 0
+                },
+                items: [],
+                issues: []
+              };
               
-              // Collecter SEULEMENT la liste brute des titres (pas de comptage)
+              // Détecter tous les titres visibles
               for (let i = 1; i <= 6; i++) {
-                const headings = document.querySelectorAll(`h${i}`);
+                const headings = Array.from(document.querySelectorAll(`h${i}`)).filter(heading => {
+                  // Vérifier si l'élément est visible
+                  const style = window.getComputedStyle(heading);
+                  return style.display !== 'none' && 
+                         style.visibility !== 'hidden' && 
+                         heading.offsetParent !== null;
+                });
                 
-                // Collecter chaque titre avec ses informations de base
+                // Mettre à jour le compteur
+                headingsData.counts[`h${i}`] = headings.length;
+                
+                // Collecter les informations sur chaque titre
                 headings.forEach(heading => {
-                  rawHeadings.push({
+                  headingsData.items.push({
                     level: i,
                     text: heading.textContent.trim(),
                     id: heading.id || '',
-                    hasAnchor: heading.querySelector('a') !== null,
-                    element: heading  // Garder une référence pour debug si nécessaire
+                    hasAnchor: heading.querySelector('a') !== null
                   });
                 });
               }
               
-              console.log(`OptiRank: ${rawHeadings.length} titres bruts détectés (H1-H6)`);
+              // Analyser les problèmes de structure
+              this.analyzeStructure(headingsData);
               
-              // Retourner SEULEMENT les données brutes - le popup fera tout le reste
-              return {
-                rawHeadings: rawHeadings,
-                timestamp: Date.now()
-              };
+              console.log(`OptiRank: ${headingsData.items.length} titres détectés`, headingsData);
+              return headingsData;
+            },
+            
+            analyzeStructure: function(headingsData) {
+              const counts = headingsData.counts;
+              
+              // Vérifier s'il y a plus d'un H1
+              if (counts.h1 > 1) {
+                headingsData.issues.push({
+                  type: 'multiple_h1',
+                  severity: 'high',
+                  message: `Il y a ${counts.h1} titres H1 sur la page. Il devrait y en avoir un seul.`
+                });
+              }
+              
+              // Vérifier s'il n'y a pas de H1
+              if (counts.h1 === 0) {
+                headingsData.issues.push({
+                  type: 'missing_h1',
+                  severity: 'high',
+                  message: 'Il n\'y a pas de titre H1 sur la page. Chaque page devrait avoir un H1.'
+                });
+              }
+              
+              // Vérifier les sauts dans la hiérarchie
+              for (let i = 1; i < 6; i++) {
+                if (counts[`h${i}`] === 0 && counts[`h${i+1}`] > 0) {
+                  headingsData.issues.push({
+                    type: 'hierarchy_skip',
+                    severity: 'medium',
+                    message: `Il y a des titres H${i+1} mais pas de titres H${i}. La hiérarchie des titres devrait être respectée.`
+                  });
+                }
+              }
+              
+              // Vérifier les problèmes de ratio entre niveaux (sauf entre H2 et H1)
+              for (let i = 2; i < 6; i++) {
+                const currentCount = counts[`h${i+1}`] || 0;
+                const parentCount = counts[`h${i}`] || 0;
+                
+                // Si il y a des titres du niveau actuel et du niveau parent
+                if (currentCount > 0 && parentCount > 0) {
+                  const ratio = currentCount / parentCount;
+                  
+                  // Problème si le ratio dépasse 3:1
+                  if (ratio > 3) {
+                    headingsData.issues.push({
+                      type: 'ratio_imbalance',
+                      severity: 'medium',
+                      message: `Déséquilibre détecté: ${currentCount} titres H${i+1} pour ${parentCount} titre${parentCount > 1 ? 's' : ''} H${i} (ratio ${ratio.toFixed(1)}:1). Recommandation: maximum 3:1.`
+                    });
+                  }
+                }
+              }
+              
+              // Identifier les sections manquantes dans la structure logique
+              this.identifyMissingSections(headingsData);
+            },
+            
+            identifyMissingSections: function(headingsData) {
+              const counts = headingsData.counts;
+              headingsData.missingSections = [];
+              
+              // Analyser les niveaux manquants dans la hiérarchie
+              for (let i = 1; i < 6; i++) {
+                if (counts[`h${i}`] === 0 && counts[`h${i+1}`] > 0) {
+                  // Section manquante détectée
+                  headingsData.missingSections.push({
+                    level: i,
+                    reason: 'hierarchy_gap',
+                    description: `Niveau H${i} manquant dans la hiérarchie`,
+                    suggestion: `Ajouter des titres H${i} pour structurer le contenu avant les H${i+1}`
+                  });
+                }
+              }
+              
+              // Suggestions pour une meilleure structure
+              if (counts.h1 === 1 && counts.h2 === 0 && (counts.h3 > 0 || counts.h4 > 0 || counts.h5 > 0 || counts.h6 > 0)) {
+                headingsData.missingSections.push({
+                  level: 2,
+                  reason: 'missing_main_sections',
+                  description: 'Sections principales manquantes',
+                  suggestion: 'Ajouter des titres H2 pour diviser le contenu en sections principales'
+                });
+              }
             }
           };
           

@@ -119,10 +119,13 @@ function updateHeadingCounts(counts) {
   for (let i = 1; i <= 6; i++) {
     const count = counts[`h${i}`] || 0;
     
-    // Mettre à jour le texte du compteur
-    const element = document.getElementById(`h${i}-count-label`);
+    // Mettre à jour le texte du compteur avec les bons IDs
+    const element = document.getElementById(`h${i}-count`);
     if (element) {
       element.textContent = count;
+      console.log(`%c[UPDATE_COUNTS] Compteur H${i} mis à jour: ${count}`, 'background: #3b82f6; color: white; padding: 2px 5px;');
+    } else {
+      console.warn(`%c[UPDATE_COUNTS] Élément h${i}-count non trouvé`, 'background: orange; color: white; padding: 2px 5px;');
     }
     
     // SUPPRIMÉ : Plus de gestion des classes missing pour les compteurs

@@ -53,203 +53,27 @@ document.addEventListener('DOMContentLoaded', function() {
   const tabLinks = document.querySelectorAll('.tab-link');
   const tabContents = document.querySelectorAll('.tab-content');
   
-  // Fonction pour filtrer les liens sur la page en fonction du type
-  function filterPageLinks(linkType) {
-    // Si on clique sur le même filtre qui est déjà actif, le désactiver et afficher tous les liens
-    if (currentActiveFilter && currentActiveFilter.linkType === linkType) {
-      linkType = 'all';
-      // Réinitialiser le filtre actif
-      if (currentActiveFilter.element) {
-        currentActiveFilter.element.classList.remove('active-filter');
-      }
-      currentActiveFilter = null;
-    } else {
-      // Mettre à jour le filtre actif
-      currentActiveFilter = {
-        linkType: linkType
-      };
-    }
-    
-    // Mettre à jour les checkboxes de filtrage en fonction du type de lien sélectionné
-    updateFilterCheckboxes(linkType);
-    
-    // Envoyer un message au content script pour filtrer les liens
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      if (tabs && tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: 'filterLinks',
-          linkType: linkType
-        });
-      }
-    });
-    
-    // Mettre à jour le tableau des résultats pour afficher uniquement les liens correspondant au filtre
-    if (window.lastResults) {
-      generateResultsTable(window.lastResults);
-    }
-  }
-  
-  // Fonction pour mettre à jour les checkboxes de filtrage en fonction du type de lien sélectionné
-  function updateFilterCheckboxes(linkType) {
-    // Récupérer toutes les checkboxes de filtrage
-    const filterAll = document.getElementById('filter-all');
-    const filterValid = document.getElementById('filter-valid');
-    const filterBroken = document.getElementById('filter-broken');
-    const filterRedirects = document.getElementById('filter-redirects');
-    const filterSkipped = document.getElementById('filter-skipped');
-    const filterDofollow = document.getElementById('filter-dofollow');
-    const filterNofollow = document.getElementById('filter-nofollow');
-    const filterSponsored = document.getElementById('filter-sponsored');
-    const filterUgc = document.getElementById('filter-ugc');
-    
-    // Vérifier que les éléments existent
-    if (!filterAll) return;
-    
-    // Décocher toutes les cases
-    const allCheckboxes = document.querySelectorAll('.filter-toggle input[type="checkbox"]');
-    allCheckboxes.forEach(checkbox => {
-      checkbox.checked = false;
-    });
-    
-    // Cocher les cases en fonction du type de lien sélectionné
-    switch (linkType) {
-      case 'all':
-        // Cocher toutes les cases
-        filterAll.checked = true;
-        break;
-        
-      case 'valid':
-        filterValid.checked = true;
-        break;
-        
-      case 'broken':
-        filterBroken.checked = true;
-        break;
-        
-      case 'redirect':
-        filterRedirects.checked = true;
-        break;
-        
-      case 'skipped':
-      case 'rel-skipped':
-        filterSkipped.checked = true;
-        break;
-        
-      case 'dofollow':
-        filterDofollow.checked = true;
-        break;
-        
-      case 'nofollow':
-        filterNofollow.checked = true;
-        break;
-        
-      case 'sponsored':
-        filterSponsored.checked = true;
-        break;
-        
-      case 'ugc':
-        filterUgc.checked = true;
-        break;
-        
-      case 'none':
-        // Ne rien cocher
-        break;
-    }
-  }
-  
-  // Fonction pour mettre en évidence la case active
-  function highlightActiveFilter(element, group) {
-    // Supprimer la classe active de TOUTES les cases statistiques
-    const allStatCards = document.querySelectorAll('.stat-card');
-    allStatCards.forEach(card => card.classList.remove('active-filter'));
-    
-    // Ajouter la classe active à l'élément cliqué
-    element.classList.add('active-filter');
-    
-    // Déterminer le type de lien en fonction du texte de l'élément
-    let linkType = 'all';
-    
-    // Récupérer le type de lien à partir de l'ID de l'élément
-    if (element.querySelector('#results-valid-links')) {
-      linkType = 'valid';
-    } else if (element.querySelector('#results-broken-links')) {
-      linkType = 'broken';
-    } else if (element.querySelector('#results-redirect-links')) {
-      linkType = 'redirect';
-    } else if (element.querySelector('#results-skipped-links')) {
-      linkType = 'skipped';
-    } else if (element.querySelector('#results-dofollow-links')) {
-      linkType = 'dofollow';
-    } else if (element.querySelector('#results-nofollow-links')) {
-      linkType = 'nofollow';
-    } else if (element.querySelector('#results-sponsored-links')) {
-      linkType = 'sponsored';
-    } else if (element.querySelector('#results-ugc-links')) {
-      linkType = 'ugc';
-    } else if (element.querySelector('#results-rel-skipped-links')) {
-      linkType = 'rel-skipped';
-    } else if (element.querySelector('#results-total-links')) {
-      linkType = 'all';
-    }
-    
-    // Mettre à jour la variable globale pour suivre le filtre actif
-    currentActiveFilter = {
-      group: group,
-      element: element,
-      linkType: linkType
-    };
-  }
-  
   tabLinks.forEach(link => {
     link.addEventListener('click', function(e) {
       e.preventDefault();
       
-      // Récupérer l'onglet cible
-      const targetTab = this.getAttribute('data-tab');
-      
-      // Désactiver tous les onglets
-      tabLinks.forEach(link => link.classList.remove('active'));
+      // Supprimer la classe active de tous les onglets
+      tabLinks.forEach(tab => tab.classList.remove('active'));
       tabContents.forEach(content => content.classList.remove('active'));
       
-      // Activer l'onglet cliqué
+      // Ajouter la classe active à l'onglet cliqué
       this.classList.add('active');
-      const targetContent = document.getElementById(targetTab);
+      
+      // Afficher le contenu correspondant
+      const targetId = this.getAttribute('data-tab');
+      const targetContent = document.getElementById(targetId);
       if (targetContent) {
         targetContent.classList.add('active');
         
-        // Gestion spéciale pour l'onglet Headings avec architecture modulaire
-        if (targetTab === 'headings') {
-          // Utiliser le nouveau module loader propre et scalable
-          if (window.headingsModuleLoader) {
-            console.log('🎯 Activation onglet headings - initialisation module loader');
-            
-            // Si le module loader n'est pas encore initialisé, l'initialiser
-            if (!window.headingsModuleLoader.initialized) {
-              window.headingsModuleLoader.initializeModules().then(() => {
-                console.log('✅ Modules headings initialisés, lancement analyse');
-                window.headingsModuleLoader.initializeHeadings();
-              }).catch(error => {
-                console.error('❌ Erreur initialisation modules headings:', error);
-              });
-            } else {
-              // Si déjà initialisé, juste lancer l'analyse
-              console.log('🔄 Modules déjà initialisés, lancement analyse');
-              window.headingsModuleLoader.initializeHeadings();
-            }
-          } else {
-            console.warn('⚠️ Module loader headings non disponible, chargement en cours...');
-            // Attendre que le module loader soit disponible
-            setTimeout(() => {
-              if (window.headingsModuleLoader) {
-                window.headingsModuleLoader.initializeModules();
-              } else {
-                console.error('❌ Module loader toujours pas disponible après timeout');
-              }
-            }, 500);
-          }
+        // Si c'est l'onglet headings, déclencher l'analyse
+        if (targetId === 'headings') {
+          analyzeHeadings();
         }
-      } else {
-        console.error('Popup.js: Contenu de l\'onglet non trouvé:', targetTab);
       }
     });
   });
@@ -1422,4 +1246,390 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
+  // Fonction pour analyser les titres de la page
+  function analyzeHeadings() {
+    console.log('🔍 Démarrage de l\'analyse des titres');
+    
+    // Afficher le message de chargement
+    const insightsList = document.getElementById('insights-list');
+    if (insightsList) {
+      insightsList.innerHTML = `
+        <li class="insight-item">
+          <div class="insight-icon">
+            <i class="fas fa-spinner fa-spin"></i>
+          </div>
+          <div class="insight-content">
+            <h4 class="insight-title">Analyse en cours</h4>
+            <p class="insight-description">Analyse de la structure des titres de la page...</p>
+          </div>
+        </li>
+      `;
+    }
+    
+    // Communiquer avec le content script pour analyser les titres
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      if (!tabs || tabs.length === 0) {
+        console.error('Aucun onglet actif trouvé');
+        showHeadingsError('Impossible d\'analyser la page active');
+        return;
+      }
+      
+      try {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'analyzeHeadings' }, function(response) {
+          if (chrome.runtime.lastError) {
+            console.error('Erreur de communication avec le content script:', chrome.runtime.lastError);
+            showHeadingsError('Impossible de communiquer avec la page. Rechargez la page et réessayez.');
+            return;
+          }
+          
+          if (response && response.headingsData) {
+            console.log('📊 Données des titres reçues:', response.headingsData);
+            displayHeadingsData(response.headingsData);
+          } else {
+            console.warn('Aucune donnée de titres reçue');
+            showHeadingsError('Aucun titre trouvé sur cette page');
+          }
+        });
+      } catch (error) {
+        console.error('Erreur lors de l\'analyse des titres:', error);
+        showHeadingsError('Erreur lors de l\'analyse des titres');
+      }
+    });
+  }
+  
+  // Fonction pour afficher les données des titres
+  function displayHeadingsData(headingsData) {
+    console.log('📋 Affichage des données des titres:', headingsData);
+    
+    // Stocker les données pour le module de copie
+    window.headingsResults = headingsData;
+    
+    // Mettre à jour les compteurs
+    updateHeadingCounters(headingsData.counts);
+    
+    // Afficher la structure des titres
+    displayHeadingStructure(headingsData.items || headingsData.headings || []);
+    
+    // Afficher les insights
+    displayHeadingInsights(headingsData);
+    
+    // Initialiser le dropdown de copie si ce n'est pas déjà fait
+    initializeCopyDropdown();
+  }
+  
+  // Fonction pour mettre à jour les compteurs de titres
+  function updateHeadingCounters(counts) {
+    console.log('🔢 Mise à jour des compteurs:', counts);
+    
+    for (let i = 1; i <= 6; i++) {
+      const countElement = document.getElementById(`h${i}-count`);
+      if (countElement) {
+        const count = counts[`h${i}`] || 0;
+        countElement.textContent = count;
+        console.log(`H${i}: ${count}`);
+      }
+    }
+  }
+  
+  // Fonction pour afficher la structure des titres
+  function displayHeadingStructure(headings) {
+    console.log('🏗️ Affichage de la structure des titres:', headings);
+    
+    const headingsList = document.querySelector('#headings-list .headings-list');
+    if (!headingsList) {
+      // Essayer un autre sélecteur si le premier ne fonctionne pas
+      const alternativeList = document.getElementById('headings-list');
+      if (alternativeList) {
+        console.log('Utilisation du sélecteur alternatif pour headings-list');
+      } else {
+        console.error('Élément headings-list non trouvé');
+        return;
+      }
+    }
+    
+    const container = headingsList || document.getElementById('headings-list');
+    
+    if (!headings || headings.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-list-ul"></i>
+          <p>Aucun titre trouvé sur cette page</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Récupérer les sections manquantes depuis window.headingsResults
+    const missingSections = window.headingsResults?.missingSections || [];
+    
+    // Créer un tableau combiné avec les titres existants et les sections manquantes
+    const combinedStructure = [];
+    
+    // Ajouter tous les titres existants
+    headings.forEach(heading => {
+      combinedStructure.push({
+        ...heading,
+        type: 'existing'
+      });
+    });
+    
+    // Ajouter les sections manquantes aux positions appropriées
+    missingSections.forEach(missingSection => {
+      combinedStructure.push({
+        level: missingSection.level,
+        text: `Section manquante`,
+        type: 'missing',
+        reason: missingSection.reason,
+        suggestion: missingSection.suggestion
+      });
+    });
+    
+    // Trier par niveau pour une meilleure présentation
+    combinedStructure.sort((a, b) => a.level - b.level);
+    
+    const headingsHTML = combinedStructure.map(item => {
+      const isMissing = item.type === 'missing';
+      const cssClass = isMissing ? 'heading-item missing-section-item' : 'heading-item';
+      
+      return `
+        <div class="${cssClass}" data-level="${item.level}">
+          <div class="level-indicator">H${item.level}</div>
+          <div class="heading-content">
+            <p class="heading-text">${escapeHtml(item.text)}</p>
+            ${isMissing ? '<span class="missing-section-indicator" title="Section manquante - ' + escapeHtml(item.suggestion || '') + '">!</span>' : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    container.innerHTML = headingsHTML;
+  }
+  
+  // Fonction pour afficher les insights et recommandations
+  function displayHeadingInsights(headingsData) {
+    console.log('💡 Affichage des insights:', headingsData);
+    
+    const insightsList = document.getElementById('insights-list');
+    if (!insightsList) {
+      console.error('Élément insights-list non trouvé');
+      return;
+    }
+    
+    const insights = [];
+    const counts = headingsData.counts || {};
+    const issues = headingsData.issues || [];
+    const missingSections = headingsData.missingSections || [];
+    
+    // Vérifier le H1
+    if (counts.h1 === 0) {
+      insights.push({
+        type: 'error',
+        icon: 'fas fa-exclamation-triangle',
+        title: 'H1 manquant',
+        description: 'Cette page n\'a pas de titre H1. Chaque page devrait avoir un titre principal H1.'
+      });
+    } else if (counts.h1 > 1) {
+      insights.push({
+        type: 'warning',
+        icon: 'fas fa-exclamation-circle',
+        title: 'Plusieurs H1 détectés',
+        description: `Cette page contient ${counts.h1} titres H1. Il est recommandé d'avoir un seul H1 par page.`
+      });
+    } else {
+      insights.push({
+        type: 'success',
+        icon: 'fas fa-check-circle',
+        title: 'H1 correct',
+        description: 'Cette page a un titre H1 unique, c\'est parfait !'
+      });
+    }
+    
+    // Vérifier la hiérarchie
+    let hierarchyIssues = [];
+    let ratioIssues = [];
+    
+    // Analyser les issues pour séparer hiérarchie et ratio
+    issues.forEach(issue => {
+      if (issue.type === 'hierarchy_skip') {
+        hierarchyIssues.push(issue.message);
+      } else if (issue.type === 'ratio_imbalance') {
+        ratioIssues.push(issue.message);
+      }
+    });
+    
+    if (hierarchyIssues.length > 0) {
+      insights.push({
+        type: 'warning',
+        icon: 'fas fa-layer-group',
+        title: 'Problème de hiérarchie',
+        description: hierarchyIssues.join(' ')
+      });
+    }
+    
+    if (ratioIssues.length > 0) {
+      insights.push({
+        type: 'warning',
+        icon: 'fas fa-balance-scale',
+        title: 'Déséquilibre de structure',
+        description: ratioIssues.join(' ')
+      });
+    }
+    
+    // Afficher les sections manquantes
+    if (missingSections && missingSections.length > 0) {
+      const missingDescriptions = missingSections.map(section => section.suggestion).join('. ');
+      insights.push({
+        type: 'warning',
+        icon: 'fas fa-puzzle-piece',
+        title: 'Sections manquantes détectées',
+        description: missingDescriptions + '.'
+      });
+    }
+    
+    // Si aucun problème de hiérarchie n'est détecté
+    if (hierarchyIssues.length === 0 && ratioIssues.length === 0 && (!missingSections || missingSections.length === 0)) {
+      const totalHeadings = Object.values(counts).reduce((sum, count) => sum + count, 0);
+      if (totalHeadings > 0) {
+        insights.push({
+          type: 'success',
+          icon: 'fas fa-layer-group',
+          title: 'Structure correcte',
+          description: 'La hiérarchie des titres respecte la structure logique et les bonnes pratiques.'
+        });
+      }
+    }
+    
+    // Compter le total de titres
+    const totalHeadings = Object.values(counts).reduce((sum, count) => sum + count, 0);
+    if (totalHeadings === 0) {
+      insights.push({
+        type: 'error',
+        icon: 'fas fa-heading',
+        title: 'Aucun titre trouvé',
+        description: 'Cette page ne contient aucun titre (H1-H6). Ajoutez des titres pour améliorer la structure et le SEO.'
+      });
+    } else {
+      insights.push({
+        type: 'success',
+        icon: 'fas fa-heading',
+        title: `${totalHeadings} titre${totalHeadings > 1 ? 's' : ''} trouvé${totalHeadings > 1 ? 's' : ''}`,
+        description: 'Cette page contient des titres qui structurent le contenu.'
+      });
+    }
+    
+    // Générer le HTML des insights
+    const insightsHTML = insights.map(insight => `
+      <li class="insight-item ${insight.type}">
+        <div class="insight-icon">
+          <i class="${insight.icon}"></i>
+        </div>
+        <div class="insight-content">
+          <h4 class="insight-title">${insight.title}</h4>
+          <p class="insight-description">${insight.description}</p>
+        </div>
+      </li>
+    `).join('');
+    
+    insightsList.innerHTML = insightsHTML;
+  }
+  
+  // Fonction pour afficher une erreur dans l'onglet headings
+  function showHeadingsError(message) {
+    console.error('❌ Erreur headings:', message);
+    
+    // Réinitialiser les compteurs à 0
+    for (let i = 1; i <= 6; i++) {
+      const countElement = document.getElementById(`h${i}-count`);
+      if (countElement) {
+        countElement.textContent = '0';
+      }
+    }
+    
+    // Afficher le message d'erreur dans la structure
+    const headingsList = document.querySelector('#headings-list .headings-list') || document.getElementById('headings-list');
+    if (headingsList) {
+      headingsList.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p style="color: #e74c3c;">${message}</p>
+        </div>
+      `;
+    }
+    
+    // Afficher l'erreur dans les insights
+    const insightsList = document.getElementById('insights-list');
+    if (insightsList) {
+      insightsList.innerHTML = `
+        <li class="insight-item error">
+          <div class="insight-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="insight-content">
+            <h4 class="insight-title">Erreur d'analyse</h4>
+            <p class="insight-description">${message}</p>
+          </div>
+        </li>
+      `;
+    }
+  }
+  
+  // Fonction utilitaire pour échapper le HTML
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  
+  // Fonction pour initialiser le dropdown de copie
+  function initializeCopyDropdown() {
+    const dropdownTrigger = document.getElementById('copy-dropdown-trigger');
+    const dropdownMenu = document.querySelector('.copy-dropdown-menu');
+    
+    if (!dropdownTrigger || !dropdownMenu) {
+      console.log('Éléments du dropdown de copie non trouvés');
+      return;
+    }
+    
+    // Éviter les initialisations multiples
+    if (dropdownTrigger.dataset.initialized === 'true') {
+      return;
+    }
+    
+    // Gestion du clic sur le bouton
+    dropdownTrigger.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const isVisible = dropdownMenu.style.display === 'block';
+      dropdownMenu.style.display = isVisible ? 'none' : 'block';
+    });
+    
+    // Fermer le dropdown quand on clique en dehors
+    document.addEventListener('click', function(e) {
+      if (!dropdownTrigger.contains(e.target) && !dropdownMenu.contains(e.target)) {
+        dropdownMenu.style.display = 'none';
+      }
+    });
+    
+    // Gestion des effets hover sur les options
+    const copyOptions = dropdownMenu.querySelectorAll('.copy-option');
+    copyOptions.forEach(option => {
+      option.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+      });
+      
+      option.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = 'transparent';
+      });
+      
+      option.addEventListener('click', function() {
+        dropdownMenu.style.display = 'none';
+      });
+    });
+    
+    // Marquer comme initialisé
+    dropdownTrigger.dataset.initialized = 'true';
+    
+    console.log('Dropdown de copie initialisé');
+  }
 });

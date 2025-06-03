@@ -20,7 +20,7 @@
   
   /* Layout et largeurs */
   --max-content-width: calc(100% - 32px); /* Largeur max = largeur totale - marges menu (16px × 2) */
-  --content-padding: 16px; /* Padding identique aux marges du menu */
+  --content-padding: 0px; /* Padding identique aux marges du menu */
   
   /* Propriétés générales */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);

@@ -1,0 +1,26 @@
+/* === RÈGLES GLOBALES POUR BACKGROUND UNIFORME === */
+/* Rendre transparents tous les éléments qui masquent le background global */
+.content-section,
+.dashboard-intro,
+.cta-container,
+.stat-card,
+.modern-card,
+.modern-card-body,
+.filters-bar,
+.filters-improved,
+.search-bar,
+.results-table-container,
+.results-table,
+.settings-section,
+.about-section,
+.alert-card,
+.issue-card,
+.headings-section,
+.headings-list-container,
+.structure-list,
+.structure-item,
+.insights-container,
+.insight-item {
+  background: transparent !important;
+  backdrop-filter: none !important;
+} 
