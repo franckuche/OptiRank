@@ -6,6 +6,7 @@
   <title>OptiRank</title>
   <link rel="stylesheet" href="popup.css">
   <link rel="stylesheet" href="headings.css">
+  <link rel="stylesheet" href="menu-tabs.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -165,14 +166,36 @@
 </head>
 <body>
   <div class="container">
-    <!-- Menu de navigation -->
+    <!-- Menu de navigation avec 8 onglets -->
     <nav class="tab-navigation">
       <div class="tabs">
-        <button class="tab-link active" data-tab="dashboard">Dashboard</button>
-        <button class="tab-link" data-tab="results">Résultats</button>
-        <button class="tab-link" data-tab="headings">Headings</button>
-        <button class="tab-link" data-tab="settings">Paramètres</button>
-        <button class="tab-link" data-tab="about">Aide</button>
+        <button class="tab-link active" data-tab="overview">
+          <span>Vue d'ensemble</span>
+        </button>
+        
+        <button class="tab-link" data-tab="content">
+          <span>Contenu</span>
+        </button>
+        
+        <button class="tab-link" data-tab="links">
+          <span>Links</span>
+        </button>
+        
+        <button class="tab-link" data-tab="technical">
+          <span>Technique</span>
+        </button>
+        
+        <button class="tab-link" data-tab="test">
+          <span>Test</span>
+        </button>
+        
+        <button class="tab-link" data-tab="test2">
+          <span>Test2</span>
+        </button>
+        
+        <button class="tab-link icon-only" data-tab="settings">
+          <i class="fas fa-cog"></i>
+        </button>
       </div>
     </nav>
     
@@ -193,432 +216,197 @@
         <p class="error-message">Une erreur est survenue. Veuillez réessayer.</p>
       </div>
       
-      <!-- Page Dashboard -->
-      <div id="dashboard" class="tab-content active">
-        <div class="dashboard-header">
-          <h2>Tableau de bord</h2>
-        </div>
-        
-        <div class="dashboard-intro">
-          <p>Bienvenue sur OptiRank, votre outil d'analyse de liens. Vérifiez rapidement l'état de tous les liens de votre page.</p>
-        </div>
-        
-        <div class="cta-container">
-          <!-- Options de scan rapides -->
-          <div class="quick-options">
-            <label class="option-toggle">
-              <input type="checkbox" id="quick-internal" checked>
-              <span>Liens internes</span>
-            </label>
-            <label class="option-toggle">
-              <input type="checkbox" id="quick-external" checked>
-              <span>Liens externes</span>
-            </label>
+      <!-- Onglet Vue d'ensemble - Actif par défaut -->
+      <div id="overview" class="tab-content active">
+        <div class="content-section">
+          <div class="dashboard-header">
+            <h2>Vue d'ensemble</h2>
           </div>
           
-          <button id="scan-button" class="primary-button">Analyser les liens</button>
-        </div>
-        
-        <!-- Note: Les actions rapides ont été supprimées car elles étaient redondantes -->
-      </div>
-      
-      <!-- Page Résultats détaillés -->
-      <div id="results" class="tab-content">
-        <h2>Résultats détaillés</h2>
-        
-        <!-- Résumé des statistiques (copie du dashboard) -->
-        <div class="stats-section">
-          <h3>Code réponse</h3>
-          <div class="stats-summary">
-            <div class="stat-card total">
-              <h3>Total</h3>
-              <span id="results-total-links" class="stat-value">0</span>
-            </div>
-            <div class="stat-card valid">
-              <h3>Valides</h3>
-              <span id="results-valid-links" class="stat-value">0</span>
-            </div>
-            <div class="stat-card broken">
-              <h3>Brisés</h3>
-              <span id="results-broken-links" class="stat-value">0</span>
-            </div>
-            <div class="stat-card redirect">
-              <h3>Redirections</h3>
-              <span id="results-redirect-links" class="stat-value">0</span>
-            </div>
-            <div class="stat-card skipped">
-              <h3>Ignorés</h3>
-              <span id="results-skipped-links" class="stat-value">0</span>
-            </div>
+          <div class="dashboard-intro">
+            <p>Bienvenue sur OptiRank, votre outil d'analyse de liens. Vérifiez rapidement l'état de tous les liens de votre page.</p>
           </div>
         </div>
         
-        <!-- Statistiques des attributs rel -->
-        <div class="stats-section">
-          <h3>Attributs Rel</h3>
-          <div class="stats-summary">
-            <div class="stat-card dofollow">
-              <h3>Dofollow</h3>
-              <span id="results-dofollow-links" class="stat-value">0</span>
-            </div>
-            <div class="stat-card nofollow">
-              <h3>Nofollow</h3>
-              <span id="results-nofollow-links" class="stat-value">0</span>
-            </div>
-            <div class="stat-card sponsored">
-              <h3>Sponsored</h3>
-              <span id="results-sponsored-links" class="stat-value">0</span>
-            </div>
-            <div class="stat-card ugc">
-              <h3>UGC</h3>
-              <span id="results-ugc-links" class="stat-value">0</span>
-            </div>
-            <div class="stat-card rel-skipped">
-              <h3>Ignorés</h3>
-              <span id="results-rel-skipped-links" class="stat-value">0</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Conteneur pour les filtres et la recherche -->
-        <div class="filters-search-container">
-          <h3>Filtres et recherche</h3>
-          
-          <!-- Barre de recherche intégrée -->
-          <div class="search-bar">
-            <div class="search-box">
-              <input type="text" id="search-links" placeholder="Rechercher des liens...">
-            </div>
-            <div class="results-count">
-              <span id="filtered-count">0</span> résultats
-            </div>
-          </div>
-          
-          <!-- Filtres améliorés avec select et groupes -->
-          <div class="filters-improved">
-            <div class="filter-row">
-              <!-- Filtre de statut avec select -->
-              <div class="filter-select-group">
-                <label for="status-filter">Statut:</label>
-                <select id="status-filter" class="filter-select">
-                  <option value="all" selected>Tous les statuts</option>
-                  <option value="valid">Valides</option>
-                  <option value="broken">Brisés</option>
-                  <option value="redirect">Redirections</option>
-                  <option value="skipped">Ignorés</option>
-                </select>
-              </div>
-              
-              <!-- Filtre d'attributs avec select -->
-              <div class="filter-select-group">
-                <label for="attribute-filter">Attributs:</label>
-                <select id="attribute-filter" class="filter-select">
-                  <option value="all" selected>Tous les attributs</option>
-                  <option value="dofollow">Dofollow</option>
-                  <option value="nofollow">Nofollow</option>
-                  <option value="sponsored">Sponsored</option>
-                  <option value="ugc">UGC</option>
-                </select>
-              </div>
-              
-              <!-- Filtre de type avec select -->
-              <div class="filter-select-group">
-                <label for="type-filter">Type:</label>
-                <select id="type-filter" class="filter-select">
-                  <option value="all" selected>Tous les types</option>
-                  <option value="internal">Liens internes</option>
-                  <option value="external">Liens externes</option>
-                </select>
-              </div>
+        <div class="content-section">
+          <div class="cta-container">
+            <!-- Options de scan rapides -->
+            <div class="quick-options">
+              <label class="option-toggle">
+                <input type="checkbox" id="quick-internal" checked>
+                <span>Liens internes</span>
+              </label>
+              <label class="option-toggle">
+                <input type="checkbox" id="quick-external" checked>
+                <span>Liens externes</span>
+              </label>
             </div>
             
-            <!-- Bouton de réinitialisation des filtres -->
-            <button id="reset-filters" class="reset-button">Réinitialiser les filtres</button>
+            <button id="scan-button" class="primary-button">Analyser les liens</button>
           </div>
-          
-          <!-- Conserver les checkboxes originales mais cachées pour compatibilité avec le code existant -->
-          <div class="hidden-filters" style="display: none;">
-            <input type="checkbox" id="filter-all" checked>
-            <input type="checkbox" id="filter-valid">
-            <input type="checkbox" id="filter-broken">
-            <input type="checkbox" id="filter-redirects">
-            <input type="checkbox" id="filter-skipped">
-            <input type="checkbox" id="filter-dofollow">
-            <input type="checkbox" id="filter-nofollow">
-            <input type="checkbox" id="filter-sponsored">
-            <input type="checkbox" id="filter-ugc">
-          </div>
-        </div>
-        
-        <!-- Tableau des résultats -->
-        <div class="results-table-container">
-          <table class="results-table">
-            <thead>
-              <tr>
-                <th data-sort="anchor" class="sortable">Texte d'ancrage <span class="sort-icon">&#8597;</span></th>
-                <th data-sort="status" class="sortable">Statut <span class="sort-icon">&#8597;</span></th>
-                <th data-sort="type" class="sortable">Type <span class="sort-icon">&#8597;</span></th>
-                <th data-sort="rel" class="sortable">Attributs <span class="sort-icon">&#8597;</span></th>
-              </tr>
-            </thead>
-            <tbody id="results-body">
-              <!-- Les résultats seront ajoutés ici dynamiquement -->
-            </tbody>
-          </table>
-        </div>
-        
-        <!-- Actions pour les résultats -->
-        <div class="results-actions">
-          <button id="export-csv" class="action-button">Exporter CSV</button>
-          <button id="copy-broken" class="action-button">Copier liens brisés</button>
         </div>
       </div>
       
-      <!-- Page Headings avec design amélioré mais familier -->
-      <div id="headings" class="tab-content">
-        
-        <!-- Conteneur principal pour toutes les cartes -->
-        <div class="headings-container">
-        
-        <!-- Carte des compteurs de titres -->
-        <div class="heading-card analytics-card">
-          <div class="heading-card-content">
-            <!-- En-tête avec titre professionnel -->
-            <div class="heading-card-header">
-              <div class="title-section">
-                <h3 class="heading-card-title">Compteurs de titres</h3>
-              </div>
-              <p class="heading-card-description">Distribution des niveaux de titre hiérarchiques détectés sur la page actuelle.</p>
-            </div>
-            
-            <!-- Grille de compteurs avec design simplifié -->
-            <div class="heading-counts-grid">
-              <!-- H1 -->
-              <div class="heading-count-item h1-item">
-                <div class="count-header">
-                  <span class="count-badge h1-badge">H1</span>
-                </div>
-                <div class="count-number" id="h1-count-label">0</div>
-                <div id="h1-count" data-value="0" style="display: none;"></div>
-              </div>
-              
-              <!-- H2 -->
-              <div class="heading-count-item h2-item">
-                <div class="count-header">
-                  <span class="count-badge h2-badge">H2</span>
-                </div>
-                <div class="count-number" id="h2-count-label">0</div>
-                <div id="h2-count" data-value="0" style="display: none;"></div>
-              </div>
-              
-              <!-- H3 -->
-              <div class="heading-count-item h3-item">
-                <div class="count-header">
-                  <span class="count-badge h3-badge">H3</span>
-                </div>
-                <div class="count-number" id="h3-count-label">0</div>
-                <div id="h3-count" data-value="0" style="display: none;"></div>
-              </div>
-              
-              <!-- H4 -->
-              <div class="heading-count-item h4-item">
-                <div class="count-header">
-                  <span class="count-badge h4-badge">H4</span>
-                </div>
-                <div class="count-number" id="h4-count-label">0</div>
-                <div id="h4-count" data-value="0" style="display: none;"></div>
-              </div>
-              
-              <!-- H5 -->
-              <div class="heading-count-item h5-item">
-                <div class="count-header">
-                  <span class="count-badge h5-badge">H5</span>
-                </div>
-                <div class="count-number" id="h5-count-label">0</div>
-                <div id="h5-count" data-value="0" style="display: none;"></div>
-              </div>
-              
-              <!-- H6 -->
-              <div class="heading-count-item h6-item">
-                <div class="count-header">
-                  <span class="count-badge h6-badge">H6</span>
-                </div>
-                <div class="count-number" id="h6-count-label">0</div>
-                <div id="h6-count" data-value="0" style="display: none;"></div>
+      <!-- Contenu des onglets individuels -->
+      <div id="content" class="tab-content">
+        <div class="content-section">
+          <div class="dashboard-header">
+            <h2>Analyse du contenu</h2>
+          </div>
+          <div class="dashboard-intro">
+            <p>Analyse détaillée du contenu de votre page web, incluant les titres, la structure et les éléments SEO.</p>
+          </div>
+          <div class="modern-grid">
+            <div class="modern-card">
+              <div class="modern-card-body">
+                <i class="fas fa-heading" style="font-size: 24px; color: var(--primary-color); margin-bottom: 8px;"></i>
+                <h4>Titres H1-H6</h4>
+                <p>Structure hiérarchique des titres</p>
               </div>
             </div>
-            
-            <!-- Alerte pour les problèmes de hiérarchie -->
-            <div id="heading-issues-alert" class="issues-alert" style="display: none;">
-              <div class="alert-content">
-                <div class="alert-icon">
-                  <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="alert-text">
-                  <h4 class="alert-title">Problèmes de hiérarchie détectés</h4>
-                  <p class="alert-description" id="heading-issues-message">Des niveaux de titre sont manquants dans la structure.</p>
-                </div>
+            <div class="modern-card">
+              <div class="modern-card-body">
+                <i class="fas fa-paragraph" style="font-size: 24px; color: var(--secondary-color); margin-bottom: 8px;"></i>
+                <h4>Contenu textuel</h4>
+                <p>Analyse du contenu textuel</p>
+              </div>
+            </div>
+            <div class="modern-card">
+              <div class="modern-card-body">
+                <i class="fas fa-image" style="font-size: 24px; color: var(--accent-color); margin-bottom: 8px;"></i>
+                <h4>Images et médias</h4>
+                <p>Optimisation des médias</p>
               </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Carte pour la structure des titres -->
-        <div class="heading-card structure-card">
-          <div class="heading-card-content">
-            <div class="heading-card-header heading-card-header-flex">
-              <div class="title-section">
-                <h3 class="heading-card-title">Structure des titres</h3>
-              </div>
-              <div class="copy-dropdown">
-                <button id="copy-dropdown-trigger" class="action-button dropdown-trigger">
-                  <i class="fas fa-copy"></i>
-                  <span>Copier</span>
-                  <i class="fas fa-chevron-down dropdown-arrow"></i>
-                </button>
-                <div id="copy-dropdown-menu" class="dropdown-menu">
-                  <button id="copy-with-analysis" class="dropdown-item">
-                    <i class="fas fa-clipboard-check"></i>
-                    <div class="dropdown-item-content">
-                      <span class="item-title">Avec analyse</span>
-                      <span class="item-description">Inclut les problèmes détectés</span>
-                    </div>
-                  </button>
-                  <button id="copy-without-analysis" class="dropdown-item">
-                    <i class="fas fa-clipboard"></i>
-                    <div class="dropdown-item-content">
-                      <span class="item-title">Sans analyse</span>
-                      <span class="item-description">Structure simple uniquement</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div id="headings-list-container" class="headings-list-container">
-              <div id="headings-list" class="headings-list">
-                <!-- Les titres seront insérés ici dynamiquement -->
-                <div class="empty-state">
-                  <i class="fas fa-list-ul"></i>
-                  <p>Aucun titre détecté sur cette page.</p>
-                </div>
-              </div>
-              <ul id="issues-list" class="issues-list"></ul>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Carte pour les Insights -->
-        <div class="heading-card insights-card">
-          <div class="heading-card-content">
-            <div class="heading-card-header">
-              <div class="title-section">
-                <h3 class="heading-card-title">Analyse intelligente</h3>
-              </div>
-              <p class="heading-card-description">Évaluation automatique de la qualité et de la structure des titres.</p>
-            </div>
-            
-            <div class="insights-container">
-              <ul id="insights-list" class="insights-list">
-              <li class="insight-item" id="insight-h1-present">
-                <div class="insight-icon"><i class="fas fa-times-circle"></i></div>
-                <div class="insight-content">
-                  <h4 class="insight-title">Balise h1 manquante</h4>
-                  <p class="insight-description">La page ne contient pas de balise titre H1. Chaque page devrait avoir un titre principal.</p>
-                </div>
-              </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <!-- Fin du conteneur principal -->
         </div>
       </div>
-      
-      <!-- Page Paramètres -->
+
+      <div id="links" class="tab-content">
+        <div class="content-section">
+          <div class="dashboard-header">
+            <h2>Analyse des liens</h2>
+          </div>
+          <div class="dashboard-intro">
+            <p>Vérification complète de tous les liens de votre page - internes, externes, et leur statut HTTP.</p>
+          </div>
+          <div id="results-container">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-value" id="total-links">0</div>
+                <div class="stat-label">Liens totaux</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" id="working-links">0</div>
+                <div class="stat-label">Liens valides</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" id="broken-links">0</div>
+                <div class="stat-label">Liens brisés</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="technical" class="tab-content">
+        <div class="content-section">
+          <div class="dashboard-header">
+            <h2>Analyse technique</h2>
+          </div>
+          <div class="dashboard-intro">
+            <p>Audit technique SEO de votre page : métadonnées, performances, structure HTML.</p>
+          </div>
+          <div class="modern-grid">
+            <div class="modern-card">
+              <div class="modern-card-body">
+                <i class="fas fa-code" style="font-size: 24px; color: var(--primary-color); margin-bottom: 8px;"></i>
+                <h4>Code HTML</h4>
+                <p>Validation et structure</p>
+              </div>
+            </div>
+            <div class="modern-card">
+              <div class="modern-card-body">
+                <i class="fas fa-tags" style="font-size: 24px; color: var(--secondary-color); margin-bottom: 8px;"></i>
+                <h4>Métadonnées</h4>
+                <p>Title, description, meta tags</p>
+              </div>
+            </div>
+            <div class="modern-card">
+              <div class="modern-card-body">
+                <i class="fas fa-tachometer-alt" style="font-size: 24px; color: var(--accent-color); margin-bottom: 8px;"></i>
+                <h4>Performance</h4>
+                <p>Vitesse et optimisation</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="test" class="tab-content">
+        <div class="content-section">
+          <div class="dashboard-header">
+            <h2>Zone de test</h2>
+          </div>
+          <div class="dashboard-intro">
+            <p>Espace pour tester de nouvelles fonctionnalités et analyses.</p>
+          </div>
+          <div class="modern-alert">
+            <i class="fas fa-flask modern-alert-icon"></i>
+            <div class="modern-alert-content">
+              <div class="modern-alert-title">Fonctionnalités expérimentales</div>
+              <div class="modern-alert-text">Cet onglet est destiné aux tests et nouvelles fonctionnalités en développement.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="test2" class="tab-content">
+        <div class="content-section">
+          <div class="dashboard-header">
+            <h2>Test avancé</h2>
+          </div>
+          <div class="dashboard-intro">
+            <p>Tests avancés et analyses personnalisées.</p>
+          </div>
+          <div class="modern-card">
+            <div class="modern-card-body">
+              <h4>Tests personnalisés</h4>
+              <p>Créez vos propres tests d'analyse SEO personnalisés.</p>
+              <button class="modern-btn modern-btn-primary">Nouveau test</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="settings" class="tab-content">
-        <h2>Paramètres</h2>
-        
-        <div class="settings-section">
-          <h3>Analyse automatique</h3>
-          <div class="setting-item">
-            <label class="setting-label">
-              <input type="checkbox" id="auto-scan-enabled">
-              <span>Analyser automatiquement au chargement de la page</span>
-            </label>
+        <div class="content-section">
+          <div class="dashboard-header">
+            <h2>Paramètres</h2>
           </div>
-        </div>
-        
-        <div class="settings-section">
-          <h3>Surlignage automatique</h3>
-          <div class="setting-item">
-            <label class="setting-label">
-              <input type="checkbox" id="auto-highlight-nofollow" checked>
-              <span>Liens Nofollow</span>
-            </label>
+          <div class="dashboard-intro">
+            <p>Configurez OptiRank selon vos besoins et préférences.</p>
           </div>
-          <div class="setting-item">
-            <label class="setting-label">
-              <input type="checkbox" id="auto-highlight-sponsored" checked>
-              <span>Liens Sponsorisés</span>
-            </label>
+          <div class="modern-card">
+            <div class="modern-card-body">
+              <h4>Options d'analyse</h4>
+              <div style="margin-top: 16px;">
+                <label class="option-toggle">
+                  <input type="checkbox" id="auto-scan" checked>
+                  <span>Analyse automatique</span>
+                </label>
+                <label class="option-toggle">
+                  <input type="checkbox" id="deep-analysis">
+                  <span>Analyse approfondie</span>
+                </label>
+                <label class="option-toggle">
+                  <input type="checkbox" id="track-redirects" checked>
+                  <span>Suivre les redirections</span>
+                </label>
+              </div>
+              <button id="save-settings" class="modern-btn modern-btn-primary" style="margin-top: 16px;">Enregistrer</button>
+            </div>
           </div>
-          <div class="setting-item">
-            <label class="setting-label">
-              <input type="checkbox" id="auto-highlight-ugc" checked>
-              <span>Liens UGC</span>
-            </label>
-          </div>
-          <div class="setting-item">
-            <label class="setting-label">
-              <input type="checkbox" id="highlight-poor-anchor-text" checked>
-              <span>Textes d'ancrage pauvres</span>
-            </label>
-          </div>
-        </div>
-        
-        <div class="settings-section">
-          <h3>Options d'affichage</h3>
-          <div class="setting-item">
-            <label class="setting-label">
-              <input type="checkbox" id="show-badges">
-              <span>Afficher les badges à côté des liens</span>
-            </label>
-          </div>
-        </div>
-        
-        <button id="save-settings" class="primary-button">Enregistrer les paramètres</button>
-      </div>
-      
-      <!-- Page Aide -->
-      <div id="about" class="tab-content">
-        <h2>Aide et informations</h2>
-        
-        <div class="about-section">
-          <h3>À propos d'OptiRank</h3>
-          <p>OptiRank est une extension Chrome qui analyse les liens de votre page web pour détecter les liens brisés, les redirections et d'autres informations importantes.</p>
-        </div>
-        
-        <div class="about-section">
-          <h3>Comment utiliser OptiRank</h3>
-          <ol>
-            <li><strong>Analyser une page</strong> : Cliquez sur le bouton "Analyser les liens" dans le tableau de bord.</li>
-            <li><strong>Voir les résultats détaillés</strong> : Accédez à l'onglet "Résultats" pour voir tous les liens analysés.</li>
-            <li><strong>Configurer l'extension</strong> : Utilisez l'onglet "Paramètres" pour personnaliser le comportement de l'extension.</li>
-          </ol>
-        </div>
-        
-        <div class="about-section">
-          <h3>Légende des couleurs</h3>
-          <ul class="color-legend">
-            <li><span class="color-sample valid"></span> Liens valides</li>
-            <li><span class="color-sample broken"></span> Liens brisés</li>
-            <li><span class="color-sample redirect"></span> Redirections</li>
-            <li><span class="color-sample nofollow"></span> Liens Nofollow</li>
-          </ul>
-        </div>
-        
-        <div class="version-info">
-          <p>OptiRank v1.0.0</p>
         </div>
       </div>
     </div>

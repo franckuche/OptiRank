@@ -18,6 +18,10 @@
   --text-secondary: #666666;
   --text-tertiary: #999999;
   
+  /* Layout et largeurs */
+  --max-content-width: calc(100% - 32px); /* Largeur max = largeur totale - marges menu (16px × 2) */
+  --content-padding: 16px; /* Padding identique aux marges du menu */
+  
   /* Propriétés générales */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
@@ -82,128 +86,16 @@ h1 {
   opacity: 0.9;
 }
 
-/* Navigation par onglets - Design glassmorphisme cohérent avec headings */
-.tab-navigation {
-  background: linear-gradient(135deg, rgba(239, 246, 255, 0.4) 0%, rgba(219, 234, 254, 0.3) 50%, rgba(243, 244, 246, 0.5) 100%);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-  padding: 16px 20px 0 20px;
-  position: relative;
-  z-index: 10;
-  margin: 0;
-}
-
-.tabs {
-  display: flex;
-  list-style: none;
-  justify-content: space-between;
-  width: 100%;
-  gap: 8px;
-}
-
-.tab-link {
-  flex: 1;
-  text-align: center;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(248, 250, 252, 0.3) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.08);
-  border-bottom: none;
-  cursor: pointer;
-  outline: none;
-  font-family: inherit;
-  display: block;
-  padding: 12px 16px;
-  text-decoration: none;
-  color: #374151;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border-radius: 12px 12px 0 0;
-  position: relative;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.04);
-  overflow: hidden;
-}
-
-/* Effet shimmer subtil sur les onglets */
-.tab-link::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.03), transparent);
-  animation: tabShimmer 8s infinite;
-  z-index: 1;
-}
-
-@keyframes tabShimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
-.tab-link:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(248, 250, 252, 0.5) 100%);
-  border-color: rgba(59, 130, 246, 0.15);
-  color: #1f2937;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
-}
-
-.tab-link.active {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(147, 197, 253, 0.05) 50%, rgba(255, 255, 255, 0.6) 100%);
-  color: #2563eb;
-  border-color: rgba(59, 130, 246, 0.2);
-  font-weight: 700;
-  box-shadow: 
-    0 4px 12px rgba(59, 130, 246, 0.12),
-    inset 0 1px 2px rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-  z-index: 2;
-}
-
-.tab-link.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
-  border-radius: 3px 3px 0 0;
-  z-index: 3;
-}
-
-/* Animation au focus pour l'accessibilité */
-.tab-link:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-/* Effet de pulsation pour l'onglet actif */
-.tab-link.active {
-  animation: activeTabGlow 3s ease-in-out infinite alternate;
-}
-
-@keyframes activeTabGlow {
-  0% { 
-    box-shadow: 
-      0 4px 12px rgba(59, 130, 246, 0.12),
-      inset 0 1px 2px rgba(255, 255, 255, 0.3);
-  }
-  100% { 
-    box-shadow: 
-      0 6px 16px rgba(59, 130, 246, 0.18),
-      inset 0 1px 2px rgba(255, 255, 255, 0.4);
-  }
-}
-
 /* Contenu des onglets */
 .content {
   flex: 1;
-  padding: 15px;
+  padding: 0; /* Supprime le padding global */
   position: relative;
   z-index: 5;
+  background-color: var(--background-color);
+  /* Centrage et largeur cohérente avec le menu */
+  max-width: var(--max-content-width);
+  margin: 0 auto;
 }
 
 .tab-content {
@@ -217,6 +109,8 @@ h1 {
   visibility: hidden;
   transition: opacity 0.3s ease;
   pointer-events: none;
+  /* Padding cohérent avec les marges du menu */
+  padding: 0 var(--content-padding);
 }
 
 .tab-content.active {
@@ -1906,4 +1800,197 @@ h2.compact-heading {
 
 .copy-success {
   animation: copy-success 0.5s forwards;
+}
+
+/* ========================================
+   CLASSES UTILITAIRES POUR LE LAYOUT
+   ======================================== */
+
+/* Container pour sections qui ont besoin d'espacement vertical */
+.content-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.content-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Wrapper pour les éléments larges (tableaux, cartes) */
+.full-width-wrapper {
+  margin: 0 calc(-1 * var(--content-padding));
+  padding: 0 var(--content-padding);
+}
+
+/* Pour les éléments qui doivent déborder légèrement */
+.bleed-wrapper {
+  margin: 0 calc(-0.5 * var(--content-padding));
+  padding: 0 calc(0.5 * var(--content-padding));
+}
+
+/* Espacement standard entre les sections */
+.section-spacing {
+  margin-top: var(--spacing-xl);
+}
+
+.section-spacing:first-child {
+  margin-top: 0;
+}
+
+/* ========================================
+   SYSTÈME D'ONGLETS - AFFICHAGE CONTENU
+   ======================================== */
+
+/* Par défaut, tout le contenu des onglets est caché */
+.tab-content {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Seul l'onglet actif est visible */
+.tab-content.active {
+  display: block;
+  opacity: 1;
+  animation: fadeInTab 0.3s ease;
+}
+
+/* Animation d'apparition des onglets */
+@keyframes fadeInTab {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   STYLES POUR LES STATISTIQUES DES LIENS
+   ======================================== */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12);
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #3b82f6;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ========================================
+   BOUTONS ET ÉLÉMENTS INTERACTIFS
+   ======================================== */
+
+.option-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.option-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #3b82f6;
+}
+
+.option-toggle span {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+}
+
+/* ========================================
+   CTA CONTAINER POUR LES ACTIONS
+   ======================================== */
+
+.cta-container {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+}
+
+.quick-options {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .quick-options {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 12px;
+  }
+  
+  .stat-card {
+    padding: 16px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+  }
 }
