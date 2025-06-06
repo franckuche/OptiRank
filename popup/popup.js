@@ -2,6 +2,304 @@
 // Variable globale pour suivre le filtre actif
 let currentActiveFilter = null;
 
+// === FONCTIONS GLOBALES POUR LES BOUTONS DE COPIE ===
+
+// Fonction globale pour afficher un message temporaire
+function showTemporaryMessageGlobal(message) {
+  const button = document.getElementById('copy-all-links');
+  if (!button) return;
+  
+  const originalText = button.innerHTML;
+  button.innerHTML = `<i class="fas fa-check"></i> ${message}`;
+  button.disabled = true;
+  
+  setTimeout(() => {
+    button.innerHTML = originalText;
+    button.disabled = false;
+  }, 2000);
+}
+
+// Fonction globale pour appliquer les filtres aux liens (version simplifiée)
+function applyLinksFiltersGlobal(linksArray) {
+  if (!Array.isArray(linksArray)) return linksArray || [];
+  
+  const searchTerm = document.getElementById('links-search')?.value?.toLowerCase() || '';
+  
+  // Si pas de terme de recherche et pas de filtres spécifiques, retourner tous les liens
+  if (!searchTerm) {
+    return linksArray;
+  }
+  
+  return linksArray.filter(link => {
+    if (!link) return false;
+    
+    // Filtrage par recherche
+    if (searchTerm) {
+      const url = (link.url || '').toLowerCase();
+      const anchorText = (link.anchorText || '').toLowerCase();
+      const matchesSearch = url.includes(searchTerm) || anchorText.includes(searchTerm);
+      if (!matchesSearch) return false;
+    }
+    
+    return true;
+  });
+}
+
+// Fonction globale pour copier tous les liens (version simple - sans analyse)
+function copyAllLinksSimple() {
+  console.log('🔗 copyAllLinksSimple appelée');
+  console.log('🔍 Vérification des données disponibles:');
+  console.log('- window.lastLinksResults:', window.lastLinksResults);
+  console.log('- window.lastResults:', window.lastResults);
+  
+  // Essayer différentes sources de données
+  let linksData = null;
+  
+  if (window.lastLinksResults && window.lastLinksResults.links) {
+    linksData = window.lastLinksResults.links;
+    console.log('✅ Utilisation de window.lastLinksResults.links');
+  } else if (window.lastResults && window.lastResults.links) {
+    linksData = window.lastResults.links;
+    console.log('✅ Utilisation de window.lastResults.links');
+  } else {
+    console.warn('❌ Aucune donnée de liens trouvée dans les variables globales');
+    
+    // Essayer de récupérer les liens directement depuis la page
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      if (tabs && tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'getPageLinks' }, function(response) {
+          if (chrome.runtime.lastError) {
+            console.error('❌ Erreur récupération liens:', chrome.runtime.lastError.message);
+            showTemporaryMessageGlobal('Erreur: Aucun lien disponible');
+            return;
+          }
+          
+          if (response && response.links && Array.isArray(response.links)) {
+            console.log(`✅ ${response.links.length} liens récupérés depuis la page`);
+            processSimpleCopy(response.links, tabs[0]);
+          } else {
+            console.error('❌ Pas de liens dans la réponse:', response);
+            showTemporaryMessageGlobal('Aucun lien à copier');
+          }
+        });
+      }
+    });
+    return;
+  }
+  
+  if (!Array.isArray(linksData) || linksData.length === 0) {
+    console.warn('❌ Données de liens invalides:', linksData);
+    showTemporaryMessageGlobal('Aucun lien à copier');
+    return;
+  }
+  
+  console.log(`🔗 ${linksData.length} liens trouvés, traitement...`);
+  
+  // Récupérer l'URL de base pour construire les URLs complètes
+  chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+    if (tabs && tabs[0]) {
+      processSimpleCopy(linksData, tabs[0]);
+    } else {
+      showTemporaryMessageGlobal('Erreur: Impossible d\'accéder à l\'onglet');
+    }
+  });
+}
+
+// Fonction helper pour traiter la copie simple
+function processSimpleCopy(linksData, tab) {
+  const baseUrl = new URL(tab.url).origin;
+  
+  // Appliquer les filtres pour ne copier que les liens visibles
+  const filteredLinks = applyLinksFiltersGlobal(linksData);
+  
+  if (filteredLinks.length === 0) {
+    console.warn('❌ Aucun lien après filtrage');
+    showTemporaryMessageGlobal('Aucun lien à copier');
+    return;
+  }
+  
+  console.log(`📝 Génération de la liste simple pour ${filteredLinks.length} liens`);
+  
+  // Construire la liste simple des URLs uniquement
+  const linksList = filteredLinks.map(link => {
+    let url = link.url || '';
+    
+    // Construire l'URL complète si nécessaire
+    if (url.startsWith('/') && baseUrl) {
+      url = baseUrl + url;
+    } else if (url.startsWith('#') && baseUrl) {
+      url = tab.url + url;
+    } else if (!url.startsWith('http') && !url.startsWith('mailto:') && !url.startsWith('tel:') && !url.startsWith('javascript:') && baseUrl) {
+      url = baseUrl + '/' + url;
+    }
+    
+    return url;
+  }).join('\n');
+  
+  // Copier vers le presse-papiers
+  navigator.clipboard.writeText(linksList).then(() => {
+    console.log(`✅ ${filteredLinks.length} liens copiés (simple)`);
+    showTemporaryMessageGlobal(`${filteredLinks.length} liens copiés !`);
+    
+    // Fermer le dropdown
+    const dropdown = document.querySelector('.copy-dropdown-menu');
+    if (dropdown) dropdown.style.display = 'none';
+  }).catch(err => {
+    console.error('❌ Erreur lors de la copie:', err);
+    showTemporaryMessageGlobal('Erreur lors de la copie');
+  });
+}
+
+// Fonction globale pour copier tous les liens avec analyse complète
+function copyAllLinksWithAnalysis() {
+  console.log('🔗 copyAllLinksWithAnalysis appelée');
+  console.log('🔍 Vérification des données disponibles:');
+  console.log('- window.lastLinksResults:', window.lastLinksResults);
+  console.log('- window.lastResults:', window.lastResults);
+  
+  // Essayer différentes sources de données
+  let linksData = null;
+  
+  if (window.lastLinksResults && window.lastLinksResults.links) {
+    linksData = window.lastLinksResults.links;
+    console.log('✅ Utilisation de window.lastLinksResults.links');
+  } else if (window.lastResults && window.lastResults.links) {
+    linksData = window.lastResults.links;
+    console.log('✅ Utilisation de window.lastResults.links');
+  } else {
+    console.warn('❌ Aucune donnée de liens trouvée dans les variables globales');
+    
+    // Essayer de récupérer les liens directement depuis la page
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      if (tabs && tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'getPageLinks' }, function(response) {
+          if (chrome.runtime.lastError) {
+            console.error('❌ Erreur récupération liens:', chrome.runtime.lastError.message);
+            showTemporaryMessageGlobal('Erreur: Aucun lien disponible');
+            return;
+          }
+          
+          if (response && response.links && Array.isArray(response.links)) {
+            console.log(`✅ ${response.links.length} liens récupérés depuis la page`);
+            processAnalysisCopy(response.links, tabs[0]);
+          } else {
+            console.error('❌ Pas de liens dans la réponse:', response);
+            showTemporaryMessageGlobal('Aucun lien à copier');
+          }
+        });
+      }
+    });
+    return;
+  }
+  
+  if (!Array.isArray(linksData) || linksData.length === 0) {
+    console.warn('❌ Données de liens invalides:', linksData);
+    showTemporaryMessageGlobal('Aucun lien à copier');
+    return;
+  }
+  
+  console.log(`🔗 ${linksData.length} liens trouvés, traitement...`);
+  
+  // Récupérer l'URL de base pour construire les URLs complètes
+  chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+    if (tabs && tabs[0]) {
+      processAnalysisCopy(linksData, tabs[0]);
+    } else {
+      showTemporaryMessageGlobal('Erreur: Impossible d\'accéder à l\'onglet');
+    }
+  });
+}
+
+// Fonction helper pour traiter la copie avec analyse
+function processAnalysisCopy(linksData, tab) {
+  const baseUrl = new URL(tab.url).origin;
+  
+  // Appliquer les filtres pour ne copier que les liens visibles
+  const filteredLinks = applyLinksFiltersGlobal(linksData);
+  
+  if (filteredLinks.length === 0) {
+    console.warn('❌ Aucun lien après filtrage');
+    showTemporaryMessageGlobal('Aucun lien à copier');
+    return;
+  }
+  
+  console.log(`📊 Génération du rapport d'analyse pour ${filteredLinks.length} liens`);
+  
+  // Construire la liste détaillée avec analyse
+  let reportContent = `RAPPORT D'ANALYSE DES LIENS - ${tab.url}\n`;
+  reportContent += `Date: ${new Date().toLocaleString('fr-FR')}\n`;
+  reportContent += `Total des liens analysés: ${filteredLinks.length}\n\n`;
+  
+  // Statistiques globales
+  const stats = {
+    valid: filteredLinks.filter(l => l.status && l.status < 300).length,
+    broken: filteredLinks.filter(l => l.status && l.status >= 400).length,
+    redirects: filteredLinks.filter(l => l.status && l.status >= 300 && l.status < 400).length,
+    internal: filteredLinks.filter(l => !l.isExternal).length,
+    external: filteredLinks.filter(l => l.isExternal).length,
+    nofollow: filteredLinks.filter(l => l.rel && l.rel.includes('nofollow')).length
+  };
+  
+  reportContent += `STATISTIQUES:\n`;
+  reportContent += `- Liens valides: ${stats.valid}\n`;
+  reportContent += `- Liens brisés: ${stats.broken}\n`;
+  reportContent += `- Redirections: ${stats.redirects}\n`;
+  reportContent += `- Liens internes: ${stats.internal}\n`;
+  reportContent += `- Liens externes: ${stats.external}\n`;
+  reportContent += `- Liens nofollow: ${stats.nofollow}\n\n`;
+  
+  reportContent += `DÉTAIL DES LIENS:\n`;
+  reportContent += `${'='.repeat(80)}\n\n`;
+  
+  filteredLinks.forEach((link, index) => {
+    let url = link.url || '';
+    
+    // Construire l'URL complète si nécessaire
+    if (url.startsWith('/') && baseUrl) {
+      url = baseUrl + url;
+    } else if (url.startsWith('#') && baseUrl) {
+      url = tab.url + url;
+    } else if (!url.startsWith('http') && !url.startsWith('mailto:') && !url.startsWith('tel:') && !url.startsWith('javascript:') && baseUrl) {
+      url = baseUrl + '/' + url;
+    }
+    
+    const status = link.status || 200;
+    const anchorText = link.anchorText || '[Sans texte]';
+    const type = link.isExternal ? 'Externe' : 'Interne';
+    const rel = link.rel || 'dofollow';
+    
+    let statusText = '';
+    if (status >= 400) {
+      statusText = `BRISÉ (${status})`;
+    } else if (status >= 300) {
+      statusText = `REDIRECTION (${status})`;
+    } else {
+      statusText = `VALIDE (${status})`;
+    }
+    
+    reportContent += `${index + 1}. ${anchorText}\n`;
+    reportContent += `   URL: ${url}\n`;
+    reportContent += `   Statut: ${statusText}\n`;
+    reportContent += `   Type: ${type}\n`;
+    reportContent += `   Rel: ${rel}\n\n`;
+  });
+  
+  // Copier vers le presse-papiers
+  navigator.clipboard.writeText(reportContent).then(() => {
+    console.log(`✅ Rapport complet de ${filteredLinks.length} liens copié`);
+    showTemporaryMessageGlobal(`Rapport complet copié !`);
+    
+    // Fermer le dropdown
+    const dropdown = document.querySelector('.copy-dropdown-menu');
+    if (dropdown) dropdown.style.display = 'none';
+  }).catch(err => {
+    console.error('❌ Erreur lors de la copie:', err);
+    showTemporaryMessageGlobal('Erreur lors de la copie');
+  });
+}
+
+// === DÉBUT DU DOMCONTENTLOADED ===
+
 // Fonction pour réinitialiser le filtre actif des cases statistiques
 function resetActiveStatFilter() {
   // Supprimer la classe active de toutes les cases statistiques
@@ -73,6 +371,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Si c'est l'onglet headings, déclencher l'analyse
         if (targetId === 'headings') {
           analyzeHeadings();
+        }
+        
+        // Si c'est l'onglet links, déclencher l'analyse des liens
+        if (targetId === 'links') {
+          console.log('🔗 Onglet Links activé, démarrage de l\'analyse');
+          // Initialiser les gestionnaires d'événements d'abord
+          setTimeout(() => {
+            initializeLinksEventHandlers();
+            analyzeLinks();
+          }, 100);
         }
       }
     });
@@ -814,7 +1122,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const isNofollow = link.isNofollow || (link.rel && link.rel.includes('nofollow'));
       const isSponsored = link.isSponsored || (link.rel && link.rel.includes('sponsored'));
       const isUgc = link.isUgc || (link.rel && link.rel.includes('ugc'));
-      // Un lien est dofollow s'il ne contient aucun des attributs rel qui limitent le suivi
+      // Un lien est dofollow s'il ne contient aucun des attributs rel qui limitent le suivi des robots
       // et s'il n'est pas ignoré (skipped) ou brisé
       const linkIsDofollow = !isNofollow && !isSponsored && !isUgc && !isSkippedLink && !isBroken;
       
@@ -1333,56 +1641,37 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction pour afficher la structure des titres
   function displayHeadingStructure(headings) {
-    console.log('🏗️ Affichage de la structure des titres:', headings);
+    console.log('🏗️ Affichage de la structure:', headings);
     
-    const headingsList = document.querySelector('#headings-list .headings-list');
-    if (!headingsList) {
-      // Essayer un autre sélecteur si le premier ne fonctionne pas
-      const alternativeList = document.getElementById('headings-list');
-      if (alternativeList) {
-        console.log('Utilisation du sélecteur alternatif pour headings-list');
-      } else {
-        console.error('Élément headings-list non trouvé');
-        return;
-      }
+    const container = document.querySelector('#headings-list .headings-list') || document.getElementById('headings-list');
+    if (!container) {
+      console.error('Conteneur headings-list non trouvé');
+      return;
     }
-    
-    const container = headingsList || document.getElementById('headings-list');
     
     if (!headings || headings.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
           <i class="fas fa-list-ul"></i>
-          <p>Aucun titre trouvé sur cette page</p>
+          <p>Aucun titre trouvé sur cette page.</p>
         </div>
       `;
       return;
     }
     
-    // Récupérer les sections manquantes depuis window.headingsResults
-    const missingSections = window.headingsResults?.missingSections || [];
+    // Créer la structure combinée sans les sections manquantes
+    const combinedStructure = [...headings];
     
-    // Créer un tableau combiné avec les titres existants et les sections manquantes
-    const combinedStructure = [];
-    
-    // Ajouter tous les titres existants
-    headings.forEach(heading => {
-      combinedStructure.push({
-        ...heading,
-        type: 'existing'
-      });
-    });
-    
-    // Ajouter les sections manquantes aux positions appropriées
-    missingSections.forEach(missingSection => {
-      combinedStructure.push({
-        level: missingSection.level,
-        text: `Section manquante`,
-        type: 'missing',
-        reason: missingSection.reason,
-        suggestion: missingSection.suggestion
-      });
-    });
+    // SUPPRIMÉ : Ne plus ajouter les sections manquantes
+    // missingSections.forEach(missingSection => {
+    //   combinedStructure.push({
+    //     level: missingSection.level,
+    //     text: `Section manquante`,
+    //     type: 'missing',
+    //     reason: missingSection.reason,
+    //     suggestion: missingSection.suggestion
+    //   });
+    // });
     
     // Trier par niveau pour une meilleure présentation
     combinedStructure.sort((a, b) => a.level - b.level);
@@ -1396,7 +1685,6 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="level-indicator">H${item.level}</div>
           <div class="heading-content">
             <p class="heading-text">${escapeHtml(item.text)}</p>
-            ${isMissing ? '<span class="missing-section-indicator" title="Section manquante - ' + escapeHtml(item.suggestion || '') + '">!</span>' : ''}
           </div>
         </div>
       `;
@@ -1418,7 +1706,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const insights = [];
     const counts = headingsData.counts || {};
     const issues = headingsData.issues || [];
-    const missingSections = headingsData.missingSections || [];
+    // SUPPRIMÉ : Ne plus traiter les sections manquantes
+    // const missingSections = headingsData.missingSections || [];
     
     // Vérifier le H1
     if (counts.h1 === 0) {
@@ -1475,19 +1764,19 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
-    // Afficher les sections manquantes
-    if (missingSections && missingSections.length > 0) {
-      const missingDescriptions = missingSections.map(section => section.suggestion).join('. ');
-      insights.push({
-        type: 'warning',
-        icon: 'fas fa-puzzle-piece',
-        title: 'Sections manquantes détectées',
-        description: missingDescriptions + '.'
-      });
-    }
+    // SUPPRIMÉ : Ne plus afficher les sections manquantes dans les insights
+    // if (missingSections && missingSections.length > 0) {
+    //   const missingDescriptions = missingSections.map(section => section.suggestion).join('. ');
+    //   insights.push({
+    //     type: 'warning',
+    //     icon: 'fas fa-puzzle-piece',
+    //     title: 'Sections manquantes détectées',
+    //     description: missingDescriptions + '.'
+    //   });
+    // }
     
     // Si aucun problème de hiérarchie n'est détecté
-    if (hierarchyIssues.length === 0 && ratioIssues.length === 0 && (!missingSections || missingSections.length === 0)) {
+    if (hierarchyIssues.length === 0 && ratioIssues.length === 0) {
       const totalHeadings = Object.values(counts).reduce((sum, count) => sum + count, 0);
       if (totalHeadings > 0) {
         insights.push({
@@ -1582,7 +1871,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction pour initialiser le dropdown de copie
   function initializeCopyDropdown() {
-    const dropdownTrigger = document.getElementById('copy-dropdown-trigger');
+    const dropdownTrigger = document.getElementById('copy-all-links');
     const dropdownMenu = document.querySelector('.copy-dropdown-menu');
     
     if (!dropdownTrigger || !dropdownMenu) {
@@ -1611,6 +1900,30 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
+    // Ajouter les event listeners pour les options de copie
+    const copySimpleOption = document.getElementById('copy-simple-option');
+    const copyAnalysisOption = document.getElementById('copy-analysis-option');
+    
+    if (copySimpleOption && !copySimpleOption.dataset.initialized) {
+      copySimpleOption.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔗 Clic sur copie simple détecté');
+        copyAllLinksSimple();
+      });
+      copySimpleOption.dataset.initialized = 'true';
+    }
+    
+    if (copyAnalysisOption && !copyAnalysisOption.dataset.initialized) {
+      copyAnalysisOption.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔗 Clic sur copie avec analyse détecté');
+        copyAllLinksWithAnalysis();
+      });
+      copyAnalysisOption.dataset.initialized = 'true';
+    }
+    
     // Gestion des effets hover sur les options
     const copyOptions = dropdownMenu.querySelectorAll('.copy-option');
     copyOptions.forEach(option => {
@@ -1621,15 +1934,1453 @@ document.addEventListener('DOMContentLoaded', function() {
       option.addEventListener('mouseleave', function() {
         this.style.backgroundColor = 'transparent';
       });
+    });
+    
+    // Marquer comme initialisé
+    dropdownTrigger.dataset.initialized = 'true';
+    
+    console.log('Dropdown de copie initialisé avec event listeners');
+  }
+
+  // === FONCTIONS POUR L'ONGLET LINKS ===
+  
+  // Fonction principale pour analyser les liens
+  function analyzeLinks() {
+    console.log('🔗 Début de l\'analyse des liens');
+    
+    // Afficher l'état de chargement
+    const tableBody = document.getElementById('links-table-body');
+    if (tableBody) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="4" class="loading-row">
+            <div class="loading-content">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Analyse des liens en cours...</span>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+    
+    // Récupérer l'onglet actif
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      if (!tabs || tabs.length === 0) {
+        showLinksError('Impossible de récupérer l\'onglet actif');
+        return;
+      }
       
-      option.addEventListener('click', function() {
+      const tab = tabs[0];
+      console.log('📱 Tab actif:', tab.url);
+      
+      // Vérifier si l'URL est valide pour l'injection de script
+      if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:')) {
+        showLinksError('Impossible d\'analyser cette page (page système du navigateur)');
+        return;
+      }
+      
+      // Essayer d'abord de récupérer les liens directement
+      console.log('🔍 Tentative de récupération directe des liens');
+      chrome.tabs.sendMessage(tab.id, { action: 'getPageLinks' }, function(response) {
+        if (chrome.runtime.lastError) {
+          console.warn('⚠️ Erreur lors de la récupération directe:', chrome.runtime.lastError.message);
+          
+          // Si l'injection du content script a échoué, essayer d'injecter manuellement
+          console.log('🔧 Tentative d\'injection manuelle du content script');
+          
+          // Injecter tous les scripts dans l'ordre du manifest
+          const scriptsToInject = [
+            'content/common/utils.js',
+            'content/common/data.js',
+            'content/links/validation/validator.js',
+            'content/links/validation/redirectDetector.js',
+            'content/links/detection/detector.js',
+            'content/links/processing/processor.js',
+            'content/links/processing/scanner.js',
+            'content/reports/reporter.js',
+            'content/optiRankMain.js'
+          ];
+          
+          chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: scriptsToInject
+          }, function() {
+            if (chrome.runtime.lastError) {
+              console.error('❌ Erreur d\'injection du script:', chrome.runtime.lastError.message);
+              showLinksError('Impossible d\'injecter le script d\'analyse. Rechargez la page et réessayez.');
+              return;
+            }
+            
+            console.log('✅ Script injecté avec succès, nouvelle tentative de récupération');
+            
+            // Attendre un peu que le script s'initialise
+            setTimeout(() => {
+              chrome.tabs.sendMessage(tab.id, { action: 'getPageLinks' }, function(retryResponse) {
+                if (chrome.runtime.lastError) {
+                  console.error('❌ Échec même après injection:', chrome.runtime.lastError.message);
+                  showLinksError('Script injecté mais communication impossible. Vérifiez que la page est bien chargée.');
+                  return;
+                }
+                
+                handleLinksResponse(retryResponse, tab.url);
+              });
+            }, 1000);
+          });
+          return;
+        }
+        
+        // Réponse reçue avec succès
+        handleLinksResponse(response, tab.url);
+      });
+    });
+  }
+  
+  // Fonction helper pour traiter la réponse des liens
+  function handleLinksResponse(response, tabUrl) {
+    console.log('📄 handleLinksResponse appelée avec:', response);
+    
+    if (!response) {
+      console.error('❌ Aucune réponse reçue du script d\'analyse');
+      showLinksError('Aucune réponse reçue du script d\'analyse');
+      return;
+    }
+    
+    if (response.error) {
+      console.error('❌ Erreur dans la réponse:', response.error);
+      showLinksError('Erreur d\'analyse: ' + response.error);
+      return;
+    }
+    
+    if (!response.links) {
+      console.error('❌ Pas de propriété links dans la réponse');
+      showLinksError('Aucune donnée de liens dans la réponse');
+      return;
+    }
+    
+    if (!Array.isArray(response.links)) {
+      console.error('❌ response.links n\'est pas un tableau:', typeof response.links, response.links);
+      showLinksError('Format de données incorrect reçu');
+      return;
+    }
+    
+    if (response.links.length === 0) {
+      console.warn('⚠️ Aucun lien trouvé sur la page');
+      // Créer des résultats vides mais valides
+      const emptyResults = {
+        links: [],
+        total: 0,
+        valid: 0,
+        broken: 0,
+        redirects: 0,
+        internal: 0,
+        external: 0,
+        nofollow: 0,
+        dofollow: 0
+      };
+      displayLinksData(emptyResults);
+      return;
+    }
+    
+    console.log(`🔗 ${response.links.length} liens trouvés, traitement en cours...`);
+    
+    // Créer l'objet results à partir des liens
+    const results = createResultsFromLinks(response.links);
+    console.log('📊 Results créés:', results);
+    
+    // Appeler displayLinksData
+    console.log('🎯 Appel de displayLinksData...');
+    displayLinksData(results);
+  }
+  
+  // Fonction helper pour créer l'objet results à partir des liens
+  function createResultsFromLinks(links) {
+    console.log('🔨 Création de l\'objet results à partir de', links.length, 'liens');
+    
+    if (!Array.isArray(links)) {
+      console.error('❌ Links is not an array:', typeof links);
+      return { links: [], total: 0, valid: 0, broken: 0, redirects: 0, internal: 0, external: 0, nofollow: 0, dofollow: 0 };
+    }
+    
+    // Analyser chaque lien pour déterminer son statut et type
+    const processedLinks = links.map(link => {
+      if (!link) return null;
+      
+      // Copier le lien pour éviter de modifier l'original
+      const processedLink = { ...link };
+      
+      // Déterminer le statut si pas déjà défini
+      if (!processedLink.status) {
+        // Si l'URL semble valide, considérer comme valide par défaut
+        if (processedLink.url && processedLink.url !== '#' && !processedLink.url.startsWith('javascript:')) {
+          processedLink.status = 200;
+        } else {
+          processedLink.status = 400; // Lien invalide
+        }
+      }
+      
+      // Déterminer si c'est un lien externe si pas déjà défini
+      if (typeof processedLink.isExternal === 'undefined') {
+        try {
+          const linkUrl = new URL(processedLink.url, window.location.href);
+          processedLink.isExternal = linkUrl.hostname !== window.location.hostname;
+        } catch (e) {
+          // Si l'URL est invalide, considérer comme externe par défaut
+          processedLink.isExternal = true;
+        }
+      }
+      
+      // S'assurer que rel est défini
+      if (!processedLink.rel) {
+        processedLink.rel = '';
+      }
+      
+      // S'assurer que anchorText est défini
+      if (!processedLink.anchorText) {
+        processedLink.anchorText = '[Sans texte]';
+      }
+      
+      return processedLink;
+    }).filter(link => link !== null);
+    
+    const results = {
+      links: processedLinks,
+      total: processedLinks.length,
+      valid: processedLinks.filter(l => l.status && l.status < 300).length,
+      broken: processedLinks.filter(l => l.status && l.status >= 400).length,
+      redirects: processedLinks.filter(l => l.status && l.status >= 300 && l.status < 400).length,
+      internal: processedLinks.filter(l => !l.isExternal).length,
+      external: processedLinks.filter(l => l.isExternal).length,
+      nofollow: processedLinks.filter(l => l.rel && l.rel.includes('nofollow')).length,
+      dofollow: processedLinks.filter(l => !l.rel || !l.rel.includes('nofollow')).length
+    };
+    
+    console.log('📈 Objet results créé:', results);
+    return results;
+  }
+  
+  // Fonction pour afficher les données des liens
+  function displayLinksData(results) {
+    console.log('📊 displayLinksData appelée avec:', results);
+    
+    // Sauvegarder les résultats pour les filtres ET pour les fonctions de copie
+    window.lastLinksResults = results;
+    window.lastResults = results; // Backup pour compatibilité
+    
+    // Log pour vérifier que les données sont bien stockées
+    console.log('💾 Données stockées dans les variables globales:');
+    console.log('- window.lastLinksResults:', window.lastLinksResults);
+    console.log('- window.lastResults:', window.lastResults);
+    
+    try {
+      console.log('🔢 Mise à jour des statistiques...');
+      // Mettre à jour les statistiques
+      updateLinksStats(results);
+      
+      console.log('📋 Génération du tableau...');
+      // Générer le tableau des liens
+      generateLinksTable(results);
+      
+      console.log('🎛️ Initialisation des gestionnaires d\'événements...');
+      // Initialiser les gestionnaires d'événements
+      initializeLinksEventHandlers();
+      
+      console.log('✅ Données de liens affichées avec succès');
+      console.log('📊 Résumé des données disponibles:');
+      console.log(`- Total liens: ${results.total || (results.links ? results.links.length : 0)}`);
+      console.log(`- Liens dans tableau: ${results.links ? results.links.length : 0}`);
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'affichage des données de liens:', error);
+      console.error('❌ Stack trace:', error.stack);
+      showLinksError('Erreur lors de l\'affichage des résultats: ' + error.message);
+    }
+  }
+  
+  // Fonction pour mettre à jour les statistiques des liens
+  function updateLinksStats(results) {
+    console.log('📊 updateLinksStats called with:', results);
+    
+    // Vérifications de sécurité
+    if (!results) {
+      console.error('❌ Results is null or undefined');
+      return;
+    }
+    
+    // S'assurer que results.links est un tableau
+    const linksArray = Array.isArray(results.links) ? results.links : [];
+    console.log('🔗 Links array:', linksArray);
+    
+    // Calculer les statistiques avec des vérifications
+    const stats = {
+      total: results.total || linksArray.length,
+      valid: results.valid || linksArray.filter(l => l && l.status && l.status < 300).length,
+      broken: results.broken || linksArray.filter(l => l && l.status && l.status >= 400).length,
+      redirects: results.redirects || linksArray.filter(l => l && l.status && l.status >= 300 && l.status < 400).length,
+      internal: results.internal || linksArray.filter(l => l && !l.isExternal).length,
+      external: results.external || linksArray.filter(l => l && l.isExternal).length,
+      nofollow: results.nofollow || linksArray.filter(l => l && l.rel && l.rel.includes('nofollow')).length,
+      dofollow: results.dofollow || linksArray.filter(l => l && (!l.rel || !l.rel.includes('nofollow'))).length
+    };
+    
+    console.log('📈 Calculated stats:', stats);
+    
+    // Mettre à jour les éléments de l'interface avec les bons IDs
+    const elements = {
+      'total-links': { value: stats.total, type: 'total' },
+      'valid-links': { value: stats.valid, type: 'valid' },
+      'broken-links': { value: stats.broken, type: 'broken' },
+      'redirect-links': { value: stats.redirects, type: 'redirect' },
+      'internal-links': { value: stats.internal, type: 'internal' },
+      'external-links': { value: stats.external, type: 'external' },
+      'nofollow-links': { value: stats.nofollow, type: 'nofollow' },
+      'dofollow-links': { value: stats.dofollow, type: 'dofollow' }
+    };
+    
+    // Suivre les sélections actives pour sélections multiples
+    if (!window.activeHighlights) {
+      window.activeHighlights = new Set();
+    }
+    
+    Object.entries(elements).forEach(([id, data]) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.textContent = data.value;
+        console.log(`✅ Updated ${id}: ${data.value}`);
+        
+        // Ajouter gestionnaire de clic pour surlignage avec sélections multiples
+        const statBox = element.closest('.stat-box');
+        if (statBox && !statBox.dataset.clickListenerAdded) {
+          statBox.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Gestion des sélections multiples
+            if (window.activeHighlights.has(data.type)) {
+              // Désélectionner si déjà sélectionné
+              window.activeHighlights.delete(data.type);
+              this.classList.remove('active-highlight');
+            } else {
+              // Ajouter à la sélection
+              window.activeHighlights.add(data.type);
+              this.classList.add('active-highlight');
+            }
+            
+            // Envoyer la liste des types sélectionnés au content script pour surlignage
+            const highlightTypes = Array.from(window.activeHighlights);
+            
+            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+              if (tabs && tabs[0]) {
+                chrome.tabs.sendMessage(tabs[0].id, {
+                  action: 'highlightLinksByTypes',
+                  types: highlightTypes
+                }, function(response) {
+                  if (chrome.runtime.lastError) {
+                    console.log('Surlignage non disponible:', chrome.runtime.lastError.message);
+                  } else {
+                    console.log(`🎯 Surlignage appliqué pour:`, highlightTypes);
+                  }
+                });
+              }
+            });
+            
+            console.log(`🎯 Statistique cliquée: ${data.type}, sélections actives:`, Array.from(window.activeHighlights));
+          });
+          statBox.dataset.clickListenerAdded = 'true';
+        }
+      } else {
+        console.warn(`⚠️ Element not found: ${id}`);
+      }
+    });
+    
+    // Mettre à jour la description du nombre de liens
+    const linksCountDescription = document.getElementById('links-count-description');
+    if (linksCountDescription) {
+      linksCountDescription.textContent = `${stats.total} lien${stats.total !== 1 ? 's' : ''} détecté${stats.total !== 1 ? 's' : ''} sur la page`;
+    }
+  }
+  
+  // Fonction pour générer le tableau des liens
+  function generateLinksTable(results) {
+    console.log('🎯 generateLinksTable appelée avec:', results);
+    
+    const tableBody = document.getElementById('links-table-body');
+    if (!tableBody) {
+      console.error('❌ Element links-table-body not found !');
+      return;
+    }
+    
+    console.log('✅ Element tableBody trouvé:', tableBody);
+    
+    // Vérifications de sécurité
+    if (!results) {
+      console.error('❌ No results provided');
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="4" class="empty-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Erreur</h3>
+            <p>Aucune donnée de liens disponible.</p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+    
+    // S'assurer que results.links est un tableau
+    const linksArray = Array.isArray(results.links) ? results.links : [];
+    console.log(`🔗 Processing ${linksArray.length} links`);
+    
+    // Si aucun lien n'est trouvé, afficher un message approprié
+    if (linksArray.length === 0) {
+      console.log('📝 Aucun lien trouvé, affichage du message');
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="4" class="empty-state">
+            <i class="fas fa-link"></i>
+            <h3>Aucun lien trouvé</h3>
+            <p>Cette page ne contient aucun lien à analyser. Assurez-vous d'être sur une page web avec des liens.</p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+    
+    console.log('⏳ Récupération de l\'onglet actif pour générer les liens...');
+    
+    // Récupérer l'URL de base pour construire les URLs complètes
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      const baseUrl = tabs && tabs[0] ? new URL(tabs[0].url).origin : '';
+      console.log('🌐 Base URL:', baseUrl);
+      
+      // Appliquer les filtres avant de générer le tableau
+      const filteredLinks = applyLinksFilters(linksArray);
+      console.log(`🔍 ${filteredLinks.length} liens après filtrage`);
+      
+      // Vérifier s'il y a des liens après filtrage
+      if (filteredLinks.length === 0) {
+        console.log('📝 Aucun lien après filtrage, affichage du message');
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="empty-state">
+              <i class="fas fa-filter"></i>
+              <h3>Aucun résultat</h3>
+              <p>Aucun lien ne correspond aux filtres sélectionnés. Ajustez les filtres ou réinitialisez-les.</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      console.log('🏗️ Génération des lignes du tableau...');
+      
+      // Générer les lignes du tableau avec vérifications
+      const rows = filteredLinks.map((link, index) => {
+        // Vérifications de sécurité pour chaque lien
+        if (!link) {
+          console.warn(`⚠️ Link at index ${index} is null/undefined`);
+          return '';
+        }
+        
+        let url = link.url || '#';
+        const status = link.status || 200;
+        const anchorText = link.anchorText || '[Sans texte]';
+        
+        // Construire l'URL complète si c'est un lien relatif
+        if (url.startsWith('/') && baseUrl) {
+          url = baseUrl + url;
+        } else if (url.startsWith('#') && baseUrl) {
+          url = tabs[0].url + url;
+        } else if (!url.startsWith('http') && !url.startsWith('mailto:') && !url.startsWith('tel:') && !url.startsWith('javascript:') && baseUrl) {
+          url = baseUrl + '/' + url;
+        }
+        
+        const statusBadge = getStatusBadge(status);
+        const typeBadge = getTypeBadge(link);
+        
+        // Pour l'affichage de l'URL, on va montrer soit le chemin relatif, soit juste le domaine
+        let displayUrl = '';
+        try {
+          const urlObj = new URL(url);
+          if (urlObj.origin === baseUrl) {
+            // Lien interne : afficher le chemin relatif
+            displayUrl = urlObj.pathname + urlObj.search + urlObj.hash;
+            if (displayUrl === '/') {
+              displayUrl = 'Page d\'accueil';
+            }
+          } else {
+            // Lien externe : afficher le domaine + chemin tronqué
+            displayUrl = urlObj.hostname + (urlObj.pathname !== '/' ? urlObj.pathname : '');
+          }
+        } catch (e) {
+          // Si l'URL n'est pas valide, l'afficher telle quelle mais tronquée
+          displayUrl = url;
+        }
+        
+        const truncatedUrl = truncateText(displayUrl, 50);
+        const truncatedAnchor = truncateText(anchorText, 40);
+        
+        return `
+          <tr>
+            <td title="${escapeHtml(anchorText)}">
+              <strong>${escapeHtml(truncatedAnchor)}</strong>
+            </td>
+            <td title="${escapeHtml(url)}">
+              <a href="${escapeHtml(url)}" target="_blank" class="link-url">
+                ${escapeHtml(truncatedUrl)}
+              </a>
+            </td>
+            <td>${statusBadge}</td>
+            <td>${typeBadge}</td>
+          </tr>
+        `;
+      }).filter(row => row !== '').join(''); // Filtrer les lignes vides
+      
+      console.log('📝 Mise à jour du contenu du tableau...');
+      
+      // Mettre à jour le tableau avec les liens générés
+      if (rows) {
+        tableBody.innerHTML = rows;
+        console.log('✅ Tableau généré avec succès avec', filteredLinks.length, 'liens');
+      } else {
+        console.error('❌ Erreur de génération des lignes');
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="empty-state">
+              <i class="fas fa-exclamation-triangle"></i>
+              <h3>Erreur de génération</h3>
+              <p>Impossible de générer le tableau des liens.</p>
+            </td>
+          </tr>
+        `;
+      }
+    });
+  }
+  
+  // Nouvelle fonction pour appliquer les filtres aux liens
+  function applyLinksFilters(linksArray) {
+    const searchTerm = document.getElementById('links-search')?.value?.toLowerCase() || '';
+    
+    // Récupérer les états des filtres
+    const statusFilters = {
+      valid: document.querySelector('input[data-filter="status"][data-value="valid"]')?.checked || false,
+      broken: document.querySelector('input[data-filter="status"][data-value="broken"]')?.checked || false,
+      redirect: document.querySelector('input[data-filter="status"][data-value="redirect"]')?.checked || false
+    };
+    
+    const typeFilters = {
+      internal: document.querySelector('input[data-filter="type"][data-value="internal"]')?.checked || false,
+      external: document.querySelector('input[data-filter="type"][data-value="external"]')?.checked || false
+    };
+    
+    // Si aucun filtre de statut n'est coché, considérer tous comme cochés
+    const anyStatusFilter = Object.values(statusFilters).some(Boolean);
+    if (!anyStatusFilter) {
+      statusFilters.valid = statusFilters.broken = statusFilters.redirect = true;
+    }
+    
+    // Si aucun filtre de type n'est coché, considérer tous comme cochés
+    const anyTypeFilter = Object.values(typeFilters).some(Boolean);
+    if (!anyTypeFilter) {
+      typeFilters.internal = typeFilters.external = true;
+    }
+    
+    return linksArray.filter(link => {
+      if (!link) return false;
+      
+      // Filtrage par recherche
+      if (searchTerm) {
+        const url = (link.url || '').toLowerCase();
+        const anchorText = (link.anchorText || '').toLowerCase();
+        const matchesSearch = url.includes(searchTerm) || anchorText.includes(searchTerm);
+        if (!matchesSearch) return false;
+      }
+      
+      // Filtrage par statut
+      const status = link.status || 200;
+      const isValid = status < 300;
+      const isBroken = status >= 400;
+      const isRedirect = status >= 300 && status < 400;
+      
+      const statusMatch = 
+        (statusFilters.valid && isValid) ||
+        (statusFilters.broken && isBroken) ||
+        (statusFilters.redirect && isRedirect);
+      
+      if (!statusMatch) return false;
+      
+      // Filtrage par type
+      const isExternal = link.isExternal || false;
+      const typeMatch = 
+        (typeFilters.internal && !isExternal) ||
+        (typeFilters.external && isExternal);
+      
+      return typeMatch;
+    });
+  }
+  
+  // Fonction pour générer le badge de statut
+  function getStatusBadge(status) {
+    if (status >= 400) {
+      return `<span class="status-badge broken">${status} Brisé</span>`;
+    } else if (status >= 300) {
+      return `<span class="status-badge redirect">${status} Redirection</span>`;
+    } else {
+      return `<span class="status-badge valid">${status} Valide</span>`;
+    }
+  }
+  
+  // Fonction pour générer le badge de type
+  function getTypeBadge(link) {
+    let badges = [];
+    
+    // Type de lien (interne/externe)
+    if (link.isExternal) {
+      badges.push('<span class="type-badge external">Externe</span>');
+    } else {
+      badges.push('<span class="type-badge internal">Interne</span>');
+    }
+    
+    // Attributs rel
+    if (link.rel && link.rel.includes('nofollow')) {
+      badges.push('<span class="type-badge nofollow">Nofollow</span>');
+    }
+    
+    return badges.join(' ');
+  }
+  
+  // Fonction pour initialiser les gestionnaires d'événements de l'onglet links
+  function initializeLinksEventHandlers() {
+    console.log('🔗 Initialisation des gestionnaires Links');
+    
+    // Gestionnaire pour le bouton reset des filtres
+    const resetFiltersButton = document.getElementById('reset-filters');
+    if (resetFiltersButton && !resetFiltersButton.dataset.initialized) {
+      resetFiltersButton.addEventListener('click', function() {
+        console.log('🔄 Réinitialisation des filtres');
+        resetAllFilters();
+      });
+      resetFiltersButton.dataset.initialized = 'true';
+    }
+    
+    // Gestionnaire pour le bouton export CSV
+    const exportCSVBtn = document.getElementById('export-csv-btn');
+    if (exportCSVBtn && !exportCSVBtn.dataset.initialized) {
+      exportCSVBtn.addEventListener('click', function() {
+        console.log('📊 Clic sur export CSV du nouveau bouton détecté');
+        exportLinksToCSV();
+      });
+      exportCSVBtn.dataset.initialized = 'true';
+    }
+    
+    // Initialiser les filtres et la recherche
+    initializeLinksFiltersAndSearch();
+    
+    // Initialiser le dropdown de copie
+    initializeLinksDropdown();
+  }
+  
+  // Fonction pour réinitialiser tous les filtres
+  function resetAllFilters() {
+    // Réinitialiser tous les checkboxes des filtres intégrés
+    const filterCheckboxes = document.querySelectorAll('.filter-menu input[type="checkbox"]');
+    filterCheckboxes.forEach(checkbox => {
+      checkbox.checked = true;
+    });
+    
+    // Vider la barre de recherche
+    const searchInput = document.getElementById('links-search');
+    if (searchInput) {
+      searchInput.value = '';
+    }
+    
+    // Cacher le bouton clear search
+    const clearSearchButton = document.getElementById('clear-search');
+    if (clearSearchButton) {
+      clearSearchButton.style.display = 'none';
+    }
+    
+    // Mettre à jour les indicateurs visuels des boutons de filtre
+    updateFilterButtonStates();
+    
+    // Réappliquer les filtres (qui vont tout afficher maintenant)
+    applyLinksFiltersWithoutParam();
+    
+    console.log('✅ Filtres réinitialisés');
+  }
+  
+  // Fonction pour initialiser les filtres et la recherche avec les nouveaux filtres intégrés
+  function initializeLinksFiltersAndSearch() {
+    console.log('🔍 Initialisation des filtres links intégrés');
+    
+    // Initialiser les dropdowns de filtres
+    initializeFilterDropdowns();
+    
+    // Recherche avec filtrage en temps réel
+    const searchInput = document.getElementById('links-search');
+    const clearSearch = document.getElementById('clear-search');
+    
+    if (searchInput && !searchInput.dataset.initialized) {
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        if (searchTerm) {
+          clearSearch.style.display = 'block';
+        } else {
+          clearSearch.style.display = 'none';
+        }
+        
+        // Appliquer les filtres avec la recherche
+        applyLinksFiltersWithoutParam();
+      });
+      searchInput.dataset.initialized = 'true';
+    }
+    
+    if (clearSearch && !clearSearch.dataset.initialized) {
+      clearSearch.addEventListener('click', function() {
+        searchInput.value = '';
+        this.style.display = 'none';
+        
+        // Réappliquer les filtres sans la recherche
+        applyLinksFiltersWithoutParam();
+      });
+      clearSearch.dataset.initialized = 'true';
+    }
+    
+    console.log('✅ Filtres et recherche links initialisés');
+  }
+  
+  // Fonction pour initialiser les dropdowns de filtres
+  function initializeFilterDropdowns() {
+    // Bouton de filtre de statut
+    const statusFilterBtn = document.getElementById('status-filter-btn');
+    const statusFilterMenu = document.getElementById('status-filter-menu');
+    
+    if (statusFilterBtn && statusFilterMenu && !statusFilterBtn.dataset.initialized) {
+      statusFilterBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        // Fermer les autres menus
+        document.querySelectorAll('.filter-menu').forEach(menu => {
+          if (menu !== statusFilterMenu) {
+            menu.classList.remove('show');
+          }
+        });
+        
+        // Toggle ce menu
+        statusFilterMenu.classList.toggle('show');
+      });
+      statusFilterBtn.dataset.initialized = 'true';
+    }
+    
+    // Bouton de filtre de type
+    const typeFilterBtn = document.getElementById('type-filter-btn');
+    const typeFilterMenu = document.getElementById('type-filter-menu');
+    
+    if (typeFilterBtn && typeFilterMenu && !typeFilterBtn.dataset.initialized) {
+      typeFilterBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        // Fermer les autres menus
+        document.querySelectorAll('.filter-menu').forEach(menu => {
+          if (menu !== typeFilterMenu) {
+            menu.classList.remove('show');
+          }
+        });
+        
+        // Toggle ce menu
+        typeFilterMenu.classList.toggle('show');
+      });
+      typeFilterBtn.dataset.initialized = 'true';
+    }
+    
+    // Fermer les menus quand on clique en dehors
+    document.addEventListener('click', function() {
+      document.querySelectorAll('.filter-menu').forEach(menu => {
+        menu.classList.remove('show');
+      });
+    });
+    
+    // Gestionnaires pour les options de filtre
+    const filterInputs = document.querySelectorAll('.filter-menu input[type="checkbox"]');
+    filterInputs.forEach(input => {
+      if (!input.dataset.initialized) {
+        input.addEventListener('change', function(e) {
+          e.stopPropagation(); // Empêcher la fermeture du menu
+          console.log('🔍 Filtre changé:', this.dataset.filter, this.dataset.value, this.checked);
+          
+          // Mettre à jour l'état visuel du bouton
+          updateFilterButtonStates();
+          
+          // Appliquer les filtres
+          applyLinksFiltersWithoutParam();
+        });
+        input.dataset.initialized = 'true';
+      }
+    });
+    
+    // Empêcher la fermeture des menus quand on clique à l'intérieur
+    document.querySelectorAll('.filter-menu').forEach(menu => {
+      menu.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+    });
+    
+    console.log('✅ Dropdowns de filtres initialisés');
+  }
+  
+  // Fonction pour mettre à jour l'état visuel des boutons de filtre
+  function updateFilterButtonStates() {
+    // Bouton de statut
+    const statusFilterBtn = document.getElementById('status-filter-btn');
+    const statusInputs = document.querySelectorAll('#status-filter-menu input[type="checkbox"]');
+    const statusAllChecked = Array.from(statusInputs).every(input => input.checked);
+    
+    if (statusFilterBtn) {
+      statusFilterBtn.classList.toggle('has-active-filters', !statusAllChecked);
+      statusFilterBtn.classList.toggle('active', !statusAllChecked);
+    }
+    
+    // Bouton de type
+    const typeFilterBtn = document.getElementById('type-filter-btn');
+    const typeInputs = document.querySelectorAll('#type-filter-menu input[type="checkbox"]');
+    const typeAllChecked = Array.from(typeInputs).every(input => input.checked);
+    
+    if (typeFilterBtn) {
+      typeFilterBtn.classList.toggle('has-active-filters', !typeAllChecked);
+      typeFilterBtn.classList.toggle('active', !typeAllChecked);
+    }
+  }
+  
+  // Fonction pour appliquer les filtres sur les liens (adaptée pour les nouveaux filtres)
+  function applyLinksFiltersWithoutParam() {
+    if (!window.lastLinksResults || !window.lastLinksResults.links) {
+      console.log('Aucune donnée de liens à filtrer');
+      return;
+    }
+    
+    console.log('🔍 Application des filtres links intégrés');
+    
+    // Récupérer les filtres actifs
+    const activeFilters = {
+      status: [],
+      type: []
+    };
+    
+    // Récupérer les filtres de statut depuis les nouveaux menus
+    const statusFilters = document.querySelectorAll('#status-filter-menu input[data-filter="status"]:checked');
+    statusFilters.forEach(filter => {
+      activeFilters.status.push(filter.dataset.value);
+    });
+    
+    // Récupérer les filtres de type depuis les nouveaux menus
+    const typeFilters = document.querySelectorAll('#type-filter-menu input[data-filter="type"]:checked');
+    typeFilters.forEach(filter => {
+      activeFilters.type.push(filter.dataset.value);
+    });
+    
+    // Récupérer le terme de recherche
+    const searchTerm = document.getElementById('links-search')?.value.toLowerCase().trim() || '';
+    
+    // Filtrer les liens
+    const filteredLinks = window.lastLinksResults.links.filter(link => {
+      // Filtre par statut
+      let statusMatch = activeFilters.status.length === 0; // Si aucun filtre, accepter tout
+      if (activeFilters.status.includes('valid') && link.status < 300) statusMatch = true;
+      if (activeFilters.status.includes('broken') && link.status >= 400) statusMatch = true;
+      if (activeFilters.status.includes('redirect') && link.status >= 300 && link.status < 400) statusMatch = true;
+      
+      // Filtre par type
+      let typeMatch = activeFilters.type.length === 0; // Si aucun filtre, accepter tout
+      if (activeFilters.type.includes('internal') && !link.isExternal) typeMatch = true;
+      if (activeFilters.type.includes('external') && link.isExternal) typeMatch = true;
+      
+      // Filtre par recherche
+      let searchMatch = true;
+      if (searchTerm) {
+        const searchText = `${link.anchorText || ''} ${link.url || ''}`.toLowerCase();
+        searchMatch = searchText.includes(searchTerm);
+      }
+      
+      return statusMatch && typeMatch && searchMatch;
+    });
+    
+    // Régénérer le tableau avec les liens filtrés
+    const modifiedResults = {
+      ...window.lastLinksResults,
+      links: filteredLinks
+    };
+    
+    generateLinksTable(modifiedResults);
+    
+    // Mettre à jour la description du nombre de liens
+    const description = document.getElementById('links-count-description');
+    if (description) {
+      const total = window.lastLinksResults.links.length;
+      const filtered = filteredLinks.length;
+      if (filtered === total) {
+        description.textContent = `${total} lien${total !== 1 ? 's' : ''} détecté${total !== 1 ? 's' : ''} sur la page`;
+      } else {
+        description.textContent = `${filtered} sur ${total} liens affichés`;
+      }
+    }
+    
+    console.log(`✅ Filtres appliqués: ${filteredLinks.length}/${window.lastLinksResults.links.length} liens affichés`);
+  }
+  
+  // Fonction pour initialiser le dropdown de copie
+  function initializeLinksDropdown() {
+    const dropdownTrigger = document.getElementById('copy-all-links');
+    const dropdownMenu = document.querySelector('.copy-dropdown-menu');
+    
+    if (!dropdownTrigger || !dropdownMenu) {
+      console.log('Éléments du dropdown de copie non trouvés');
+      return;
+    }
+    
+    // Éviter les initialisations multiples
+    if (dropdownTrigger.dataset.initialized === 'true') {
+      return;
+    }
+    
+    // Gestion du clic sur le bouton
+    dropdownTrigger.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const isVisible = dropdownMenu.style.display === 'block';
+      dropdownMenu.style.display = isVisible ? 'none' : 'block';
+    });
+    
+    // Fermer le dropdown quand on clique en dehors
+    document.addEventListener('click', function(e) {
+      if (!dropdownTrigger.contains(e.target) && !dropdownMenu.contains(e.target)) {
         dropdownMenu.style.display = 'none';
+      }
+    });
+    
+    // Ajouter les event listeners pour les options de copie
+    const copySimpleOption = document.getElementById('copy-simple-option');
+    const copyAnalysisOption = document.getElementById('copy-analysis-option');
+    
+    if (copySimpleOption && !copySimpleOption.dataset.initialized) {
+      copySimpleOption.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔗 Clic sur copie simple détecté');
+        copyAllLinksSimple();
+      });
+      copySimpleOption.dataset.initialized = 'true';
+    }
+    
+    if (copyAnalysisOption && !copyAnalysisOption.dataset.initialized) {
+      copyAnalysisOption.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔗 Clic sur copie avec analyse détecté');
+        copyAllLinksWithAnalysis();
+      });
+      copyAnalysisOption.dataset.initialized = 'true';
+    }
+    
+    // Gestion des effets hover sur les options
+    const copyOptions = dropdownMenu.querySelectorAll('.copy-option');
+    copyOptions.forEach(option => {
+      option.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+      });
+      
+      option.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = 'transparent';
       });
     });
     
     // Marquer comme initialisé
     dropdownTrigger.dataset.initialized = 'true';
     
-    console.log('Dropdown de copie initialisé');
+    console.log('Dropdown de copie initialisé avec event listeners');
   }
+  
+  // Fonction pour copier tous les liens vers le presse-papiers
+  function copyAllLinksToClipboard() {
+    if (!window.lastLinksResults || !window.lastLinksResults.links) {
+      console.warn('Aucun lien à copier');
+      showTemporaryMessage('Aucun lien à copier');
+      return;
+    }
+    
+    // Récupérer l'URL de base
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      const baseUrl = tabs && tabs[0] ? new URL(tabs[0].url).origin : '';
+      
+      // Appliquer les filtres pour ne copier que les liens visibles
+      const filteredLinks = applyLinksFilters(window.lastLinksResults.links);
+      
+      if (filteredLinks.length === 0) {
+        console.warn('Aucun lien visible à copier');
+        showTemporaryMessage('Aucun lien à copier');
+        return;
+      }
+      
+      // Construire la liste des liens avec URLs complètes
+      const linksList = filteredLinks.map(link => {
+        let url = link.url || '';
+        
+        // Construire l'URL complète si nécessaire
+        if (url.startsWith('/') && baseUrl) {
+          url = baseUrl + url;
+        } else if (url.startsWith('#') && baseUrl) {
+          url = tabs[0].url + url;
+        } else if (!url.startsWith('http') && !url.startsWith('mailto:') && !url.startsWith('tel:') && !url.startsWith('javascript:') && baseUrl) {
+          url = baseUrl + '/' + url;
+        }
+        
+        const anchorText = link.anchorText || '[Sans texte]';
+        return `${anchorText} - ${url}`;
+      }).join('\n');
+      
+      // Copier vers le presse-papiers
+      navigator.clipboard.writeText(linksList).then(() => {
+        console.log(`✅ ${filteredLinks.length} liens copiés`);
+        showTemporaryMessage(`${filteredLinks.length} liens copiés !`);
+        
+        // Fermer le dropdown
+        const dropdown = document.querySelector('.copy-dropdown-menu');
+        if (dropdown) dropdown.style.display = 'none';
+      }).catch(err => {
+        console.error('❌ Erreur lors de la copie:', err);
+        showTemporaryMessage('Erreur lors de la copie');
+      });
+    });
+  }
+  
+  // Fonction pour copier seulement les liens brisés
+  function copyBrokenLinksOnly() {
+    if (!window.lastLinksResults || !window.lastLinksResults.links) {
+      console.warn('Aucun lien à copier');
+      showTemporaryMessage('Aucun lien à copier');
+      return;
+    }
+    
+    // Récupérer l'URL de base
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      const baseUrl = tabs && tabs[0] ? new URL(tabs[0].url).origin : '';
+      
+      // Filtrer seulement les liens brisés
+      const brokenLinks = window.lastLinksResults.links.filter(link => {
+        return link && link.status && link.status >= 400;
+      });
+      
+      if (brokenLinks.length === 0) {
+        showTemporaryMessage('Aucun lien brisé trouvé');
+        return;
+      }
+      
+      // Construire la liste des liens brisés avec URLs complètes
+      const linksList = brokenLinks.map(link => {
+        let url = link.url || '';
+        
+        // Construire l'URL complète si nécessaire
+        if (url.startsWith('/') && baseUrl) {
+          url = baseUrl + url;
+        } else if (url.startsWith('#') && baseUrl) {
+          url = tabs[0].url + url;
+        } else if (!url.startsWith('http') && !url.startsWith('mailto:') && !url.startsWith('tel:') && !url.startsWith('javascript:') && baseUrl) {
+          url = baseUrl + '/' + url;
+        }
+        
+        const anchorText = link.anchorText || '[Sans texte]';
+        return `${anchorText} - ${url} (Erreur ${link.status})`;
+      }).join('\n');
+      
+      // Copier vers le presse-papiers
+      navigator.clipboard.writeText(linksList).then(() => {
+        console.log(`✅ ${brokenLinks.length} liens brisés copiés`);
+        showTemporaryMessage(`${brokenLinks.length} liens brisés copiés !`);
+        
+        // Fermer le dropdown
+        const dropdown = document.querySelector('.copy-dropdown-menu');
+        if (dropdown) dropdown.style.display = 'none';
+      }).catch(err => {
+        console.error('❌ Erreur lors de la copie:', err);
+        showTemporaryMessage('Erreur lors de la copie');
+      });
+    });
+  }
+  
+  // Fonction pour afficher un message temporaire
+  function showTemporaryMessage(message) {
+    const button = document.getElementById('copy-all-links');
+    if (!button) return;
+    
+    const originalText = button.innerHTML;
+    button.innerHTML = `<i class="fas fa-check"></i> ${message}`;
+    button.disabled = true;
+    
+    setTimeout(() => {
+      button.innerHTML = originalText;
+      button.disabled = false;
+    }, 2000);
+  }
+  
+  // Fonction pour initialiser les actions rapides
+  function initializeQuickActions() {
+    const actions = {
+      'copy-broken-list': () => copyBrokenLinksList(),
+      'generate-report': () => generateLinksReport()
+    };
+    
+    Object.entries(actions).forEach(([id, handler]) => {
+      const button = document.getElementById(id);
+      if (button && !button.dataset.initialized) {
+        button.addEventListener('click', handler);
+        button.dataset.initialized = 'true';
+      }
+    });
+  }
+  
+  // Fonction pour initialiser le dropdown d'export
+  function initializeExportDropdown() {
+    const trigger = document.getElementById('export-dropdown-trigger');
+    const menu = document.querySelector('.export-dropdown-menu');
+    
+    if (!trigger || !menu || trigger.dataset.initialized) return;
+    
+    trigger.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const isVisible = menu.style.display === 'block';
+      menu.style.display = isVisible ? 'none' : 'block';
+    });
+    
+    document.addEventListener('click', function(e) {
+      if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+        menu.style.display = 'none';
+      }
+    });
+    
+    trigger.dataset.initialized = 'true';
+  }
+  
+  // Fonction pour afficher une erreur dans l'onglet links
+  function showLinksError(message) {
+    console.error('❌ Erreur links:', message);
+    
+    // Réinitialiser les statistiques
+    const statsElements = ['total-links', 'working-links', 'broken-links', 'redirect-links', 
+                          'internal-links', 'external-links', 'nofollow-links', 'dofollow-links'];
+    
+    statsElements.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.textContent = '0';
+      }
+    });
+    
+    // Afficher le message d'erreur dans le tableau
+    const tableBody = document.getElementById('links-table-body');
+    if (tableBody) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="empty-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Erreur d'analyse</h3>
+            <p style="color: #e74c3c;">${message}</p>
+          </td>
+        </tr>
+      `;
+    }
+  }
+  
+  // === FONCTIONS UTILITAIRES POUR L'ONGLET LINKS ===
+  
+  // Fonction pour copier l'URL d'un lien
+  window.copyLinkUrl = function(url) {
+    navigator.clipboard.writeText(url).then(() => {
+      console.log('URL copiée:', url);
+    }).catch(err => {
+      console.error('Erreur lors de la copie:', err);
+    });
+  };
+  
+  // Fonction pour ouvrir un lien dans un nouvel onglet
+  window.openLinkInNewTab = function(url) {
+    chrome.tabs.create({ url: url });
+  };
+  
+  // Fonction pour exporter les liens
+  window.exportLinks = function(type) {
+    console.log('Export des liens:', type);
+    // TODO: Implémenter l'export selon le type
+  };
+  
+  // Fonction pour surligner les liens sur la page
+  function highlightLinksOnPage(type) {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      if (tabs && tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: 'highlightLinks',
+          type: type
+        });
+      }
+    });
+  }
+  
+  // Fonction pour copier la liste des liens brisés
+  function copyBrokenLinksList() {
+    // TODO: Implémenter la copie de la liste des liens brisés
+    console.log('Copie de la liste des liens brisés');
+  }
+  
+  // Fonction pour générer un rapport des liens
+  function generateLinksReport() {
+    // TODO: Implémenter la génération de rapport
+    console.log('Génération du rapport des liens');
+  }
+  
+  // Fonction pour copier tous les liens vers le presse-papiers (version simple - sans analyse)
+  function copyAllLinksSimple() {
+    if (!window.lastLinksResults || !window.lastLinksResults.links) {
+      console.warn('Aucun lien à copier');
+      showTemporaryMessage('Aucun lien à copier');
+      return;
+    }
+    
+    // Récupérer l'URL de base
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      const baseUrl = tabs && tabs[0] ? new URL(tabs[0].url).origin : '';
+      
+      // Appliquer les filtres pour ne copier que les liens visibles
+      const filteredLinks = applyLinksFilters(window.lastLinksResults.links);
+      
+      if (filteredLinks.length === 0) {
+        console.warn('Aucun lien visible à copier');
+        showTemporaryMessage('Aucun lien à copier');
+        return;
+      }
+      
+      // Construire la liste simple des URLs uniquement
+      const linksList = filteredLinks.map(link => {
+        let url = link.url || '';
+        
+        // Construire l'URL complète si nécessaire
+        if (url.startsWith('/') && baseUrl) {
+          url = baseUrl + url;
+        } else if (url.startsWith('#') && baseUrl) {
+          url = tabs[0].url + url;
+        } else if (!url.startsWith('http') && !url.startsWith('mailto:') && !url.startsWith('tel:') && !url.startsWith('javascript:') && baseUrl) {
+          url = baseUrl + '/' + url;
+        }
+        
+        return url;
+      }).join('\n');
+      
+      // Copier vers le presse-papiers
+      navigator.clipboard.writeText(linksList).then(() => {
+        console.log(`✅ ${filteredLinks.length} liens copiés (simple)`);
+        showTemporaryMessage(`${filteredLinks.length} liens copiés !`);
+        
+        // Fermer le dropdown
+        const dropdown = document.querySelector('.copy-dropdown-menu');
+        if (dropdown) dropdown.style.display = 'none';
+      }).catch(err => {
+        console.error('❌ Erreur lors de la copie:', err);
+        showTemporaryMessage('Erreur lors de la copie');
+      });
+    });
+  }
+  
+  // Fonction pour copier tous les liens avec analyse complète
+  function copyAllLinksWithAnalysis() {
+    if (!window.lastLinksResults || !window.lastLinksResults.links) {
+      console.warn('Aucun lien à copier');
+      showTemporaryMessage('Aucun lien à copier');
+      return;
+    }
+    
+    // Récupérer l'URL de base
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      const baseUrl = tabs && tabs[0] ? new URL(tabs[0].url).origin : '';
+      
+      // Appliquer les filtres pour ne copier que les liens visibles
+      const filteredLinks = applyLinksFilters(window.lastLinksResults.links);
+      
+      if (filteredLinks.length === 0) {
+        console.warn('Aucun lien visible à copier');
+        showTemporaryMessage('Aucun lien à copier');
+        return;
+      }
+      
+      // Construire la liste détaillée avec analyse
+      let reportContent = `RAPPORT D'ANALYSE DES LIENS - ${tabs[0].url}\n`;
+      reportContent += `Date: ${new Date().toLocaleString('fr-FR')}\n`;
+      reportContent += `Total des liens analysés: ${filteredLinks.length}\n\n`;
+      
+      // Statistiques globales
+      const stats = {
+        valid: filteredLinks.filter(l => l.status && l.status < 300).length,
+        broken: filteredLinks.filter(l => l.status && l.status >= 400).length,
+        redirects: filteredLinks.filter(l => l.status && l.status >= 300 && l.status < 400).length,
+        internal: filteredLinks.filter(l => !l.isExternal).length,
+        external: filteredLinks.filter(l => l.isExternal).length,
+        nofollow: filteredLinks.filter(l => l.rel && l.rel.includes('nofollow')).length
+      };
+      
+      reportContent += `STATISTIQUES:\n`;
+      reportContent += `- Liens valides: ${stats.valid}\n`;
+      reportContent += `- Liens brisés: ${stats.broken}\n`;
+      reportContent += `- Redirections: ${stats.redirects}\n`;
+      reportContent += `- Liens internes: ${stats.internal}\n`;
+      reportContent += `- Liens externes: ${stats.external}\n`;
+      reportContent += `- Liens nofollow: ${stats.nofollow}\n\n`;
+      
+      reportContent += `DÉTAIL DES LIENS:\n`;
+      reportContent += `${'='.repeat(80)}\n\n`;
+      
+      filteredLinks.forEach((link, index) => {
+        let url = link.url || '';
+        
+        // Construire l'URL complète si nécessaire
+        if (url.startsWith('/') && baseUrl) {
+          url = baseUrl + url;
+        } else if (url.startsWith('#') && baseUrl) {
+          url = tabs[0].url + url;
+        } else if (!url.startsWith('http') && !url.startsWith('mailto:') && !url.startsWith('tel:') && !url.startsWith('javascript:') && baseUrl) {
+          url = baseUrl + '/' + url;
+        }
+        
+        const status = link.status || 200;
+        const anchorText = link.anchorText || '[Sans texte]';
+        const type = link.isExternal ? 'Externe' : 'Interne';
+        const rel = link.rel || 'dofollow';
+        
+        let statusText = '';
+        if (status >= 400) {
+          statusText = `BRISÉ (${status})`;
+        } else if (status >= 300) {
+          statusText = `REDIRECTION (${status})`;
+        } else {
+          statusText = `VALIDE (${status})`;
+        }
+        
+        reportContent += `${index + 1}. ${anchorText}\n`;
+        reportContent += `   URL: ${url}\n`;
+        reportContent += `   Statut: ${statusText}\n`;
+        reportContent += `   Type: ${type}\n`;
+        reportContent += `   Rel: ${rel}\n\n`;
+      });
+      
+      // Copier vers le presse-papiers
+      navigator.clipboard.writeText(reportContent).then(() => {
+        console.log(`✅ Rapport complet de ${filteredLinks.length} liens copié`);
+        showTemporaryMessage(`Rapport complet copié !`);
+        
+        // Fermer le dropdown
+        const dropdown = document.querySelector('.copy-dropdown-menu');
+        if (dropdown) dropdown.style.display = 'none';
+      }).catch(err => {
+        console.error('❌ Erreur lors de la copie:', err);
+        showTemporaryMessage('Erreur lors de la copie');
+      });
+    });
+  }
+  
+  // === FONCTIONS GLOBALES POUR LES GESTIONNAIRES ONCLICK ===
+  
+  // Fonction globale pour copier tous les liens simple (appelée depuis le HTML)
+  window.copyAllLinksSimple = copyAllLinksSimple;
+  
+  // Fonction globale pour copier tous les liens avec analyse (appelée depuis le HTML)
+  window.copyAllLinksWithAnalysis = copyAllLinksWithAnalysis;
+  
+  // Fonction globale pour exporter en CSV
+  function exportLinksToCSV() {
+    console.log('📊 exportLinksToCSV appelée');
+    
+    // Essayer différentes sources de données
+    let linksData = null;
+    
+    if (window.lastLinksResults && window.lastLinksResults.links) {
+      linksData = window.lastLinksResults.links;
+    } else if (window.lastResults && window.lastResults.links) {
+      linksData = window.lastResults.links;
+    } else {
+      console.warn('❌ Aucune donnée de liens trouvée');
+      showTemporaryMessageGlobal('Aucun lien à exporter');
+      return;
+    }
+    
+    if (!Array.isArray(linksData) || linksData.length === 0) {
+      console.warn('❌ Données de liens invalides');
+      showTemporaryMessageGlobal('Aucun lien à exporter');
+      return;
+    }
+    
+    // Récupérer l'URL de base pour construire les URLs complètes
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      if (tabs && tabs[0]) {
+        const baseUrl = new URL(tabs[0].url).origin;
+        
+        // Appliquer les filtres pour ne exporter que les liens visibles
+        const filteredLinks = applyLinksFiltersGlobal(linksData);
+        
+        if (filteredLinks.length === 0) {
+          console.warn('❌ Aucun lien après filtrage');
+          showTemporaryMessageGlobal('Aucun lien à exporter');
+          return;
+        }
+        
+        console.log(`📝 Génération du fichier CSV pour ${filteredLinks.length} liens`);
+        
+        // Construire le contenu CSV
+        let csvContent = 'Texte du lien,URL,Statut,Type,Rel\n';
+        
+        filteredLinks.forEach(link => {
+          let url = link.url || '';
+          
+          // Construire l'URL complète si nécessaire
+          if (url.startsWith('/') && baseUrl) {
+            url = baseUrl + url;
+          } else if (url.startsWith('#') && baseUrl) {
+            url = tabs[0].url + url;
+          } else if (!url.startsWith('http') && !url.startsWith('mailto:') && !url.startsWith('tel:') && !url.startsWith('javascript:') && baseUrl) {
+            url = baseUrl + '/' + url;
+          }
+          
+          const anchorText = (link.anchorText || '[Sans texte]').replace(/"/g, '""'); // Échapper les guillemets
+          const status = link.status || 200;
+          const type = link.isExternal ? 'Externe' : 'Interne';
+          const rel = link.rel || 'dofollow';
+          
+          csvContent += `"${anchorText}","${url}","${status}","${type}","${rel}"\n`;
+        });
+        
+        // Créer et télécharger le fichier CSV
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        
+        if (link.download !== undefined) {
+          const url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
+          link.setAttribute('download', `liens-${new Date().toISOString().split('T')[0]}.csv`);
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          console.log(`✅ Fichier CSV généré avec ${filteredLinks.length} liens`);
+          showTemporaryMessageGlobal(`CSV exporté (${filteredLinks.length} liens) !`);
+          
+          // Fermer le dropdown
+          const dropdown = document.querySelector('.copy-dropdown-menu');
+          if (dropdown) dropdown.style.display = 'none';
+        } else {
+          console.error('❌ Le téléchargement de fichier n\'est pas supporté');
+          showTemporaryMessageGlobal('Export non supporté par ce navigateur');
+        }
+      } else {
+        showTemporaryMessageGlobal('Erreur: Impossible d\'accéder à l\'onglet');
+      }
+    });
+  }
+  
+  // Fonction globale pour exporter en CSV (appelée depuis le HTML)
+  window.exportLinksToCSV = exportLinksToCSV;
 });

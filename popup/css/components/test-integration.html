@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Intégration Boutons Modulaires</title>
+    <link rel="stylesheet" href="buttons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 40px;
+            background: linear-gradient(135deg, rgba(239, 246, 255, 0.4) 0%, rgba(219, 234, 254, 0.3) 50%, rgba(243, 244, 246, 0.5) 100%);
+            min-height: 100vh;
+        }
+        .test-section {
+            background: white;
+            padding: 30px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+        }
+        .button-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+        .description {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+        h2 {
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+        h3 {
+            color: #3b82f6;
+            margin: 20px 0 10px 0;
+        }
+        .success { color: #22c55e; font-weight: 600; }
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test d'Intégration - Système de Boutons Modulaires</h1>
+    
+    <div class="test-section">
+        <h2>✅ Boutons Migrés dans LinkWatch</h2>
+        <p class="description">Voici les boutons qui ont été migrés du système existant vers le nouveau système modulaire :</p>
+        
+        <h3>1. Boutons d'Export</h3>
+        <div class="button-row">
+            <button class="btn btn--export" id="export-csv-btn">
+                <i class="fas fa-file-csv"></i>
+                Exporter en CSV
+            </button>
+            <span class="description">Remplace <code>export-btn</code></span>
+        </div>
+        
+        <h3>2. Boutons Dropdown</h3>
+        <div class="button-row">
+            <button class="btn btn--dropdown" id="export-dropdown-trigger">
+                <i class="fas fa-download"></i>
+                Exporter
+                <i class="fas fa-chevron-down dropdown-arrow"></i>
+            </button>
+            <span class="description">Remplace <code>action-btn action-btn-success modern-btn modern-btn-outline</code></span>
+        </div>
+        
+        <div class="button-row">
+            <button class="btn btn--dropdown btn--sm" id="copy-dropdown-trigger">
+                <i class="fas fa-copy"></i>
+                Copier
+                <i class="fas fa-chevron-down dropdown-arrow"></i>
+            </button>
+            <span class="description">Remplace <code>modern-btn modern-btn-outline</code> avec styles inline</span>
+        </div>
+        
+        <h3>3. Boutons Principales Actions</h3>
+        <div class="button-row">
+            <button class="btn btn--primary">
+                <i class="fas fa-plus"></i>
+                Nouveau test
+            </button>
+            <span class="description">Remplace <code>modern-btn modern-btn-primary</code></span>
+        </div>
+        
+        <div class="button-row">
+            <button class="btn btn--primary" id="save-settings">
+                <i class="fas fa-save"></i>
+                Enregistrer
+            </button>
+            <span class="description">Remplace <code>modern-btn modern-btn-primary</code></span>
+        </div>
+        
+        <h3>4. Boutons Outline</h3>
+        <div class="button-row">
+            <button class="btn btn--outline" id="copy-links">
+                <i class="fas fa-copy"></i>
+                Copier liste des liens
+            </button>
+            <span class="description">Remplace <code>action-btn action-btn-info</code></span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎨 Comparaison Visuelle</h2>
+        
+        <div class="test-grid">
+            <div>
+                <h3>Nouveaux Boutons (Système Modulaire)</h3>
+                <div class="button-row">
+                    <button class="btn btn--primary">Primaire</button>
+                    <button class="btn btn--outline">Outline</button>
+                </div>
+                <div class="button-row">
+                    <button class="btn btn--success">Succès</button>
+                    <button class="btn btn--warning">Attention</button>
+                </div>
+                <div class="button-row">
+                    <button class="btn btn--export">
+                        <i class="fas fa-download"></i>
+                        Export
+                    </button>
+                    <button class="btn btn--dropdown">
+                        <i class="fas fa-copy"></i>
+                        Dropdown
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div>
+                <h3>Tailles et États</h3>
+                <div class="button-row">
+                    <button class="btn btn--primary btn--sm">Petit</button>
+                    <button class="btn btn--primary">Normal</button>
+                    <button class="btn btn--primary btn--lg">Grand</button>
+                </div>
+                <div class="button-row">
+                    <button class="btn btn--primary btn--active">Actif</button>
+                    <button class="btn btn--primary" disabled>Désactivé</button>
+                </div>
+                <div class="button-row">
+                    <button class="btn btn--primary btn--shimmer">
+                        <i class="fas fa-magic"></i>
+                        Shimmer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚀 Avantages du Nouveau Système</h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div>
+                <h3 style="color: #22c55e;">✅ Cohérence</h3>
+                <ul>
+                    <li>Mêmes variables CSS</li>
+                    <li>Design uniforme</li>
+                    <li>Animations identiques</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 style="color: #3b82f6;">🔧 Maintenabilité</h3>
+                <ul>
+                    <li>Un seul fichier CSS</li>
+                    <li>Variables centralisées</li>
+                    <li>Facile à modifier</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 style="color: #f59e0b;">⚡ Performance</h3>
+                <ul>
+                    <li>CSS optimisé</li>
+                    <li>Moins de duplication</li>
+                    <li>Chargement plus rapide</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 style="color: #8b5cf6;">🎯 Flexibilité</h3>
+                <ul>
+                    <li>Classes modulaires</li>
+                    <li>Combinaisons multiples</li>
+                    <li>Extensions faciles</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Migration Réussie</h2>
+        <p class="success">✅ Système de boutons modulaire intégré avec succès !</p>
+        <p>Tous les boutons de LinkWatch utilisent maintenant le nouveau système CSS modulaire.</p>
+        
+        <h3>Prochaines étapes suggérées :</h3>
+        <ol>
+            <li><strong>Tester visuellement</strong> - Vérifier que tous les boutons s'affichent correctement</li>
+            <li><strong>Tester les interactions</strong> - S'assurer que les clics et événements fonctionnent</li>
+            <li><strong>Créer les cartes modulaires</strong> - Système pour les <code>.heading-card</code></li>
+            <li><strong>Créer les dropdowns modulaires</strong> - Système pour les menus déroulants</li>
+            <li><strong>Variables globales</strong> - Centraliser toutes les variables CSS</li>
+        </ol>
+    </div>
+
+    <script>
+        // Test des interactions des boutons
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulation de l'effet dropdown
+            document.querySelectorAll('.btn--dropdown').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                });
+            });
+            
+            // Test de tous les boutons
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    console.log('✅ Bouton cliqué:', this.className);
+                });
+            });
+            
+            console.log('🧪 Tests de boutons modulaires chargés');
+        });
+    </script>
+</body>
+</html> 

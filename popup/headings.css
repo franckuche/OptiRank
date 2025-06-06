@@ -53,9 +53,11 @@ body:has(#headings.tab-content.active) .tab-navigation,
   backdrop-filter: blur(12px);
   border: 1px solid var(--headings-border);
   border-radius: 12px;
-  margin: 0 2% 16px 2%;
+  margin: 0 auto 16px auto;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
   transition: all 0.3s ease;
+  width: calc(100% - 6%);
+  max-width: none;
 }
 
 .heading-card:hover {
@@ -582,4 +584,96 @@ body:has(#headings.tab-content.active) .tab-navigation,
 /* .headings-list::-webkit-scrollbar { SUPPRIMÉ }
 /* .headings-list::-webkit-scrollbar-track { SUPPRIMÉ }
 /* .headings-list::-webkit-scrollbar-thumb { SUPPRIMÉ }
-/* .headings-list::-webkit-scrollbar-thumb:hover { SUPPRIMÉ } */ 
+/* .headings-list::-webkit-scrollbar-thumb:hover { SUPPRIMÉ } */
+
+/* === SECTIONS MANQUANTES - DESIGN SIMPLIFIÉ === */
+.heading-item.missing-section-item {
+  background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+  border: 2px dashed #f97316;
+  border-radius: 12px;
+  position: relative;
+  overflow: visible;
+  animation: missingPulse 3s ease-in-out infinite;
+}
+
+@keyframes missingPulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 0 8px rgba(249, 115, 22, 0);
+  }
+}
+
+.heading-item.missing-section-item:hover {
+  background: linear-gradient(135deg, #fff4ed 0%, #fdbf8a 100%);
+  border-color: #ea580c;
+  transform: translateX(8px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.25);
+}
+
+/* Level indicator pour sections manquantes */
+.heading-item.missing-section-item .level-indicator {
+  background: linear-gradient(135deg, #f97316, #ea580c) !important;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px #f97316;
+}
+
+/* Texte des sections manquantes */
+.heading-item.missing-section-item .heading-text {
+  color: #9a3412;
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* Indicateur de section manquante simplifié */
+.missing-section-indicator {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: auto;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+}
+
+/* Badge "MANQUANT" selon le niveau */
+.heading-item.missing-section-item .heading-content {
+  position: relative;
+}
+
+.heading-item.missing-section-item .heading-content::after {
+  content: 'MANQUANT';
+  position: absolute;
+  right: -12px;
+  top: -12px;
+  color: white;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 3px 6px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Couleurs des badges selon le niveau */
+.heading-item.missing-section-item[data-level="1"] .heading-content::after {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.heading-item.missing-section-item[data-level="2"] .heading-content::after {
+  background: linear-gradient(135deg, #ea580c, #c2410c);
+}
+
+.heading-item.missing-section-item[data-level="3"] .heading-content::after,
+.heading-item.missing-section-item[data-level="4"] .heading-content::after,
+.heading-item.missing-section-item[data-level="5"] .heading-content::after,
+.heading-item.missing-section-item[data-level="6"] .heading-content::after {
+  background: linear-gradient(135deg, #eab308, #ca8a04);
+} 

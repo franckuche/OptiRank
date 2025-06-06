@@ -5,12 +5,12 @@
 
 // Ordre de chargement des modules
 const MODULES = [
-  'linkValidator.js',
-  'redirectDetector.js',
-  'linkDetector.js',
-  'linkProcessor.js',
-  'linkScanner.js',
-  'linkReporter.js'
+  'links/validation/validator.js',
+  'links/validation/redirectDetector.js',
+  'links/detection/detector.js',
+  'links/processing/processor.js',
+  'links/processing/scanner.js',
+  'links/reporting/reporter.js'
 ];
 
 /**
@@ -499,9 +499,12 @@ function initMessageListeners() {
         
         // Collecter les informations sur tous les liens de la page
         const linksArray = [];
-        document.querySelectorAll('a').forEach(link => {
+        const allLinks = document.querySelectorAll('a');
+        console.log(`OptiRank: ${allLinks.length} liens trouvés dans le DOM`);
+        
+        allLinks.forEach(link => {
           // Ajouter tous les liens, même ceux qui n'ont pas été scannés
-          linksArray.push({
+          const linkData = {
             url: link.href,
             anchorText: link.textContent.trim() || '[Sans texte]',
             status: link.dataset.optirankStatus === 'broken' ? 404 : 
@@ -509,10 +512,14 @@ function initMessageListeners() {
             isExternal: link.dataset.optirankExternal === 'true' || (link.hostname !== window.location.hostname),
             rel: link.rel || '',
             type: link.dataset.optirankType || 'unknown'
-          });
+          };
+          linksArray.push(linkData);
         });
         
         console.log(`OptiRank: Collected ${linksArray.length} links from the page`);
+        console.log('OptiRank: Premier lien d\'exemple:', linksArray[0]);
+        console.log('OptiRank: Dernier lien d\'exemple:', linksArray[linksArray.length - 1]);
+        
         sendResponse({ links: linksArray });
         return true;
       }

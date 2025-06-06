@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Système de Cartes Modulaire - Exemples</title>
+    <link rel="stylesheet" href="cards.css">
+    <link rel="stylesheet" href="buttons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 40px;
+            background: linear-gradient(135deg, rgba(239, 246, 255, 0.4) 0%, rgba(219, 234, 254, 0.3) 50%, rgba(243, 244, 246, 0.5) 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        .demo-section {
+            margin: 40px 0;
+        }
+        .demo-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .demo-subtitle {
+            font-size: 18px;
+            font-weight: 600;
+            color: #3b82f6;
+            margin: 30px 0 15px 0;
+        }
+        .code-sample {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stats-demo {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .stat-box-demo {
+            text-align: center;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .stat-value-demo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 4px;
+        }
+        .stat-label-demo {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="demo-title">🃏 Système de Cartes Modulaire</h1>
+    
+    <div class="demo-section">
+        <h2 class="demo-subtitle">1. Cartes de Base</h2>
+        
+        <div class="demo-grid">
+            <div class="card card--hoverable">
+                <div class="card__content">
+                    <div class="card__header">
+                        <h3 class="card__title">Carte Standard</h3>
+                        <p class="card__description">Une carte simple avec hover</p>
+                    </div>
+                    <p>Contenu de la carte avec effet hover subtle.</p>
+                </div>
+            </div>
+            
+            <div class="card card--hover-lift">
+                <div class="card__content">
+                    <div class="card__header">
+                        <h3 class="card__title">Carte Lift</h3>
+                        <p class="card__description">Effet de soulèvement prononcé</p>
+                    </div>
+                    <p>Cette carte se soulève plus haut au hover.</p>
+                </div>
+            </div>
+            
+            <div class="card card--glass">
+                <div class="card__content">
+                    <div class="card__header">
+                        <h3 class="card__title">Carte Glass</h3>
+                        <p class="card__description">Effet de verre avec blur</p>
+                    </div>
+                    <p>Design glassmorphism moderne.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="code-sample">
+            &lt;div class="card card--hoverable"&gt;<br>
+            &nbsp;&nbsp;&lt;div class="card__content"&gt;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&lt;div class="card__header"&gt;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;h3 class="card__title"&gt;Titre&lt;/h3&gt;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+            &nbsp;&nbsp;&lt;/div&gt;<br>
+            &lt;/div&gt;
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2 class="demo-subtitle">2. Cartes avec Header Flex</h2>
+        
+        <div class="card card--hoverable">
+            <div class="card__content">
+                <div class="card__header">
+                    <div class="card__header-flex">
+                        <div class="card__title-section">
+                            <h3 class="card__title">Statistiques des liens</h3>
+                            <p class="card__description">Répartition par statut et type</p>
+                        </div>
+                        <div class="card__actions">
+                            <button class="btn btn--dropdown btn--sm">
+                                <i class="fas fa-copy"></i>
+                                Copier
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-demo">
+                    <div class="stat-box-demo">
+                        <div class="stat-value-demo">42</div>
+                        <div class="stat-label-demo">Total</div>
+                    </div>
+                    <div class="stat-box-demo">
+                        <div class="stat-value-demo">38</div>
+                        <div class="stat-label-demo">Valides</div>
+                    </div>
+                    <div class="stat-box-demo">
+                        <div class="stat-value-demo">2</div>
+                        <div class="stat-label-demo">Brisés</div>
+                    </div>
+                    <div class="stat-box-demo">
+                        <div class="stat-value-demo">2</div>
+                        <div class="stat-label-demo">Redirections</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="code-sample">
+            &lt;div class="card card--hoverable"&gt;<br>
+            &nbsp;&nbsp;&lt;div class="card__content"&gt;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&lt;div class="card__header"&gt;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div class="card__header-flex"&gt;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div class="card__title-section"&gt;...&lt;/div&gt;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div class="card__actions"&gt;...&lt;/div&gt;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+            &nbsp;&nbsp;&lt;/div&gt;<br>
+            &lt;/div&gt;
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2 class="demo-subtitle">3. Cartes d'Alerte</h2>
+        
+        <div class="demo-grid">
+            <div class="card card--alert-success">
+                <div class="card__content">
+                    <div class="card__header card__header--no-border">
+                        <div class="card__header-flex">
+                            <div class="card__title-section">
+                                <h3 class="card__title">Succès</h3>
+                                <p class="card__description">Opération réussie</p>
+                            </div>
+                            <i class="fas fa-check-circle" style="color: #22c55e; font-size: 24px;"></i>
+                        </div>
+                    </div>
+                    <p>Tous les liens ont été vérifiés avec succès.</p>
+                </div>
+            </div>
+            
+            <div class="card card--alert-error">
+                <div class="card__content">
+                    <div class="card__header card__header--no-border">
+                        <div class="card__header-flex">
+                            <div class="card__title-section">
+                                <h3 class="card__title">Erreur</h3>
+                                <p class="card__description">Problème détecté</p>
+                            </div>
+                            <i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 24px;"></i>
+                        </div>
+                    </div>
+                    <p>Des liens brisés ont été détectés.</p>
+                </div>
+            </div>
+            
+            <div class="card card--alert-info">
+                <div class="card__content">
+                    <div class="card__header card__header--no-border">
+                        <div class="card__header-flex">
+                            <div class="card__title-section">
+                                <h3 class="card__title">Information</h3>
+                                <p class="card__description">Note importante</p>
+                            </div>
+                            <i class="fas fa-info-circle" style="color: #3b82f6; font-size: 24px;"></i>
+                        </div>
+                    </div>
+                    <p>Analyse terminée, consultez les résultats.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2 class="demo-subtitle">4. Cartes avec Footer</h2>
+        
+        <div class="demo-grid">
+            <div class="card card--hoverable">
+                <div class="card__content">
+                    <div class="card__header">
+                        <h3 class="card__title">Action Card</h3>
+                        <p class="card__description">Carte avec actions en footer</p>
+                    </div>
+                    <p>Cette carte contient du contenu principal avec des actions organisées dans le footer.</p>
+                    <div class="card__footer card__footer--center">
+                        <div class="btn-group">
+                            <button class="btn btn--outline btn--sm">Annuler</button>
+                            <button class="btn btn--primary btn--sm">Valider</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card card--insights">
+                <div class="card__content">
+                    <div class="card__header">
+                        <h3 class="card__title">Carte Insights</h3>
+                        <p class="card__description">Design spécialisé pour les analyses</p>
+                    </div>
+                    <p>Arrière-plan subtil bleu pour les insights et recommandations.</p>
+                    <div class="card__footer">
+                        <button class="btn btn--export btn--sm">
+                            <i class="fas fa-download"></i>
+                            Exporter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2 class="demo-subtitle">5. Effets Spéciaux</h2>
+        
+        <div class="demo-grid">
+            <div class="card card--shimmer card--hoverable">
+                <div class="card__content">
+                    <div class="card__header">
+                        <h3 class="card__title">Effet Shimmer</h3>
+                        <p class="card__description">Animation de brillance</p>
+                    </div>
+                    <p>Effet shimmer qui traverse la carte.</p>
+                </div>
+            </div>
+            
+            <div class="card card--glow card--hoverable">
+                <div class="card__content">
+                    <div class="card__header">
+                        <h3 class="card__title">Effet Glow</h3>
+                        <p class="card__description">Bordure animée multicolore</p>
+                    </div>
+                    <p>Bordure qui change de couleur en continu.</p>
+                </div>
+            </div>
+            
+            <div class="card card--selected card--hoverable">
+                <div class="card__content">
+                    <div class="card__header">
+                        <h3 class="card__title">Carte Sélectionnée</h3>
+                        <p class="card__description">État actif/sélectionné</p>
+                    </div>
+                    <p>Carte avec état sélectionné visible.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2 class="demo-subtitle">6. Grilles de Cartes</h2>
+        
+        <div class="cards-grid cards-grid--3">
+            <div class="card card--sm card--hover-scale">
+                <div class="card__content">
+                    <div class="card__header card__header--no-border">
+                        <h3 class="card__title card__title--sm">Carte 1</h3>
+                    </div>
+                    <p style="font-size: 13px;">Grille de 3 colonnes avec cartes petites.</p>
+                </div>
+            </div>
+            
+            <div class="card card--sm card--hover-scale">
+                <div class="card__content">
+                    <div class="card__header card__header--no-border">
+                        <h3 class="card__title card__title--sm">Carte 2</h3>
+                    </div>
+                    <p style="font-size: 13px;">Effet scale au hover.</p>
+                </div>
+            </div>
+            
+            <div class="card card--sm card--hover-scale">
+                <div class="card__content">
+                    <div class="card__header card__header--no-border">
+                        <h3 class="card__title card__title--sm">Carte 3</h3>
+                    </div>
+                    <p style="font-size: 13px;">Responsive automatique.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="code-sample">
+            &lt;div class="cards-grid cards-grid--3"&gt;<br>
+            &nbsp;&nbsp;&lt;div class="card card--sm"&gt;...&lt;/div&gt;<br>
+            &nbsp;&nbsp;&lt;div class="card card--sm"&gt;...&lt;/div&gt;<br>
+            &nbsp;&nbsp;&lt;div class="card card--sm"&gt;...&lt;/div&gt;<br>
+            &lt;/div&gt;
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2 class="demo-subtitle">7. Compatibilité avec l'Existant</h2>
+        
+        <div class="demo-grid">
+            <div class="card card--heading card--hoverable">
+                <div class="card__content">
+                    <div class="card__header">
+                        <h3 class="card__title">Style Heading-Card</h3>
+                        <p class="card__description">Compatible avec .heading-card</p>
+                    </div>
+                    <p>Réplique exacte du style des cartes existantes dans Links/Headings.</p>
+                </div>
+            </div>
+            
+            <div class="card card--modern card--hover-lift">
+                <div class="card__content">
+                    <div class="card__header card__header--no-border">
+                        <h3 class="card__title">Style Modern-Card</h3>
+                        <p class="card__description">Compatible avec .modern-card</p>
+                    </div>
+                    <p>Style transparent avec shadow plus prononcé.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2 class="demo-subtitle">📋 Guide de Migration</h2>
+        
+        <div class="card card--alert-info">
+            <div class="card__content">
+                <div class="card__header">
+                    <h3 class="card__title">Correspondances</h3>
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <th style="text-align: left; padding: 8px; color: #3b82f6;">Ancienne classe</th>
+                            <th style="text-align: left; padding: 8px; color: #3b82f6;">Nouvelle classe</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px; font-family: monospace;">.heading-card</td>
+                            <td style="padding: 8px; font-family: monospace;">.card .card--heading</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px; font-family: monospace;">.modern-card</td>
+                            <td style="padding: 8px; font-family: monospace;">.card .card--modern</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px; font-family: monospace;">.heading-card-content</td>
+                            <td style="padding: 8px; font-family: monospace;">.card__content</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px; font-family: monospace;">.heading-card-header</td>
+                            <td style="padding: 8px; font-family: monospace;">.card__header</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; font-family: monospace;">.heading-card-title</td>
+                            <td style="padding: 8px; font-family: monospace;">.card__title</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🃏 Exemples de cartes modulaires chargés');
+        
+        // Animation d'entrée progressive
+        const cards = document.querySelectorAll('.card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    </script>
+</body>
+</html> 

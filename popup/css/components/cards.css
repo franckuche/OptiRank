@@ -1,0 +1,502 @@
+/* ===== SYSTÈME DE CARTES MODULAIRE ===== */
+
+/* === VARIABLES SPÉCIFIQUES AUX CARTES === */
+:root {
+  --card-bg: #fafafa;
+  --card-bg-transparent: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(59, 130, 246, 0.1);
+  --card-border-hover: rgba(59, 130, 246, 0.15);
+  --card-border-active: rgba(59, 130, 246, 0.2);
+  --card-border-radius: 12px;
+  --card-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+  --card-shadow-hover: 0 6px 16px rgba(59, 130, 246, 0.12);
+  --card-shadow-lg: 0 8px 24px rgba(59, 130, 246, 0.15);
+  --card-transition: all 0.3s ease;
+  --card-padding: 20px;
+  --card-padding-sm: 16px;
+  --card-padding-lg: 24px;
+  --card-margin: 16px;
+  --card-backdrop-blur: blur(12px);
+}
+
+/* === CARTE DE BASE === */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
+  transition: var(--card-transition);
+  margin: 0 auto var(--card-margin) auto;
+  width: 100%;
+  max-width: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.card:last-child {
+  margin-bottom: 0;
+}
+
+/* === VARIANTES DE BACKGROUND === */
+.card--transparent {
+  background: var(--card-bg-transparent);
+  backdrop-filter: var(--card-backdrop-blur);
+}
+
+.card--white {
+  background: #ffffff;
+}
+
+.card--glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+  backdrop-filter: var(--card-backdrop-blur);
+}
+
+/* === VARIANTES HOVER === */
+.card--hoverable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--card-border-hover);
+}
+
+.card--hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-lg);
+}
+
+.card--hover-scale:hover {
+  transform: scale(1.02);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.card--hover-glow:hover {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), var(--card-shadow-hover);
+  border-color: var(--card-border-active);
+}
+
+/* === VARIANTES DE TAILLE === */
+.card--sm {
+  --card-padding: var(--card-padding-sm);
+  --card-margin: 12px;
+}
+
+.card--lg {
+  --card-padding: var(--card-padding-lg);
+  --card-margin: 20px;
+}
+
+.card--full-width {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* === VARIANTES DE BORDURE === */
+.card--no-border {
+  border: none;
+}
+
+.card--thick-border {
+  border-width: 2px;
+}
+
+.card--dashed {
+  border-style: dashed;
+}
+
+/* === CONTENU DE LA CARTE === */
+.card__content {
+  padding: var(--card-padding);
+}
+
+.card__content--no-padding {
+  padding: 0;
+}
+
+.card__content--sm {
+  padding: var(--card-padding-sm);
+}
+
+.card__content--lg {
+  padding: var(--card-padding-lg);
+}
+
+/* === HEADER DE LA CARTE === */
+.card__header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.card__header--no-border {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.card__header--thick-border {
+  border-bottom-width: 2px;
+  padding-bottom: 16px;
+}
+
+.card__header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
+}
+
+.card__header-flex--start {
+  justify-content: flex-start;
+}
+
+.card__header-flex--center {
+  justify-content: center;
+}
+
+.card__header-flex--column {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+/* === TITRE ET DESCRIPTION === */
+.card__title-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.card__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2563eb;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+}
+
+.card__title--sm {
+  font-size: 14px;
+}
+
+.card__title--lg {
+  font-size: 18px;
+}
+
+.card__title--xl {
+  font-size: 20px;
+}
+
+.card__description {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.card__description--sm {
+  font-size: 13px;
+}
+
+.card__description--lg {
+  font-size: 15px;
+}
+
+/* === SECTION D'ACTIONS === */
+.card__actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card__actions--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.card__actions--start {
+  justify-content: flex-start;
+}
+
+.card__actions--end {
+  justify-content: flex-end;
+}
+
+.card__actions--center {
+  justify-content: center;
+}
+
+/* === FOOTER DE LA CARTE === */
+.card__footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--card-border);
+}
+
+.card__footer--no-border {
+  border-top: none;
+  padding-top: 0;
+}
+
+.card__footer--center {
+  text-align: center;
+}
+
+/* === CARTES SPÉCIALISÉES === */
+
+/* Carte avec statistiques */
+.card--stats .card__content {
+  padding: var(--card-padding-sm);
+}
+
+.card--stats .card__header {
+  margin-bottom: 12px;
+}
+
+/* Carte d'insights */
+.card--insights {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03), rgba(147, 197, 253, 0.02));
+  border-color: rgba(59, 130, 246, 0.12);
+}
+
+.card--insights:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 197, 253, 0.03));
+}
+
+/* Carte d'alerte */
+.card--alert {
+  border-left: 4px solid #f59e0b;
+  background: #fffbeb;
+}
+
+.card--alert-success {
+  border-left-color: #22c55e;
+  background: #f0fdf4;
+}
+
+.card--alert-error {
+  border-left-color: #ef4444;
+  background: #fef2f2;
+}
+
+.card--alert-info {
+  border-left-color: #3b82f6;
+  background: #eff6ff;
+}
+
+/* === COMPATIBILITÉ AVEC L'EXISTANT === */
+
+/* Équivalence avec .heading-card */
+.card--heading {
+  background: var(--card-bg);
+  backdrop-filter: var(--card-backdrop-blur);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-border-radius);
+  margin: 0 auto 16px auto;
+  box-shadow: var(--card-shadow);
+  transition: var(--card-transition);
+  width: calc(100% - 6%);
+  max-width: none;
+}
+
+.card--heading:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--card-border-hover);
+}
+
+.card--heading .card__content {
+  padding: 20px;
+}
+
+/* Équivalence avec .modern-card */
+.card--modern {
+  background: transparent;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.card--modern:hover {
+  transform: translateY(-4px);
+}
+
+.card--modern .card__content {
+  padding: 16px;
+}
+
+/* === GRILLE DE CARTES === */
+.cards-grid {
+  display: grid;
+  gap: var(--card-margin);
+  margin: var(--card-margin) 0;
+}
+
+.cards-grid--1 { grid-template-columns: 1fr; }
+.cards-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.cards-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.cards-grid--4 { grid-template-columns: repeat(4, 1fr); }
+.cards-grid--6 { grid-template-columns: repeat(6, 1fr); }
+
+.cards-grid--auto-fit {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.cards-grid--auto-fill {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .card {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .card__header-flex {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .card__actions {
+    justify-content: center;
+  }
+  
+  .cards-grid--2,
+  .cards-grid--3,
+  .cards-grid--4,
+  .cards-grid--6 {
+    grid-template-columns: 1fr;
+  }
+  
+  .card__title--xl {
+    font-size: 18px;
+  }
+  
+  .card__title--lg {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .card__content {
+    padding: var(--card-padding-sm);
+  }
+  
+  .card__title {
+    font-size: 15px;
+  }
+  
+  .card__description {
+    font-size: 13px;
+  }
+}
+
+/* === ANIMATIONS === */
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card--animate-in {
+  animation: cardSlideIn 0.3s ease-out;
+}
+
+.card--animate-delay-1 { animation-delay: 0.1s; }
+.card--animate-delay-2 { animation-delay: 0.2s; }
+.card--animate-delay-3 { animation-delay: 0.3s; }
+
+/* === ÉTATS === */
+.card--loading {
+  pointer-events: none;
+  opacity: 0.7;
+  position: relative;
+}
+
+.card--loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card--disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  filter: grayscale(0.3);
+}
+
+.card--selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), var(--card-shadow);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 197, 253, 0.03));
+}
+
+/* === EFFETS SPÉCIAUX === */
+.card--shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.card--shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: cardShimmer 3s infinite;
+  z-index: 1;
+}
+
+@keyframes cardShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.card--glow {
+  position: relative;
+}
+
+.card--glow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: var(--card-border-radius);
+  padding: 1px;
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #06b6d4, #3b82f6);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  z-index: -1;
+  animation: cardGlow 3s linear infinite;
+}
+
+@keyframes cardGlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+} 

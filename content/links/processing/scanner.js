@@ -290,9 +290,14 @@ async function scanAllLinks(options = {}) {
     console.log(`OptiRank: Checking ${remainingLinks.length} remaining links`);
     
     if (remainingLinks.length > 0) {
+      // Réduire la taille des lots pour améliorer la réactivité
+      const BATCH_SIZE = Math.min(10, remainingLinks.length); // Lots de 10 max au lieu de plus
+      
       // Traiter les liens restants par lots
       await window.OptiRankProcessor.processLinkBatch(remainingLinks, {
         ...currentScanOptions,
+        batchSize: BATCH_SIZE, // Forcer la taille des lots
+        delayBetweenBatches: 100, // Délai plus court entre les lots
         onProgress: (progress) => {
           // Convertir la progression de 0-100 à 50-100 (car le pré-scan compte pour 50%)
           const adjustedProgress = 50 + Math.floor(progress / 2);
@@ -300,24 +305,34 @@ async function scanAllLinks(options = {}) {
           // Stocker la progression dans l'objet de résultats
           window.OptiRankUtils.scanResults.progress = adjustedProgress;
           
-          // Envoyer la mise à jour de progression si possible
+          // Envoyer la mise à jour de progression si possible (avec throttling)
           if (typeof chrome !== 'undefined' && chrome.runtime) {
-            chrome.runtime.sendMessage({
-              action: 'scanProgress', 
-              progress: adjustedProgress 
-            });
+            // Throttling des messages de progression
+            if (!window.lastProgressUpdate || Date.now() - window.lastProgressUpdate > 200) {
+              chrome.runtime.sendMessage({
+                action: 'scanProgress', 
+                progress: adjustedProgress 
+              });
+              window.lastProgressUpdate = Date.now();
+            }
           } else if (window.chromeRuntimeSubstitute) {
-            window.chromeRuntimeSubstitute.sendMessage({
-              action: 'scanProgress', 
-              progress: adjustedProgress
-            });
+            if (!window.lastProgressUpdate || Date.now() - window.lastProgressUpdate > 200) {
+              window.chromeRuntimeSubstitute.sendMessage({
+                action: 'scanProgress', 
+                progress: adjustedProgress
+              });
+              window.lastProgressUpdate = Date.now();
+            }
           }
           
-          // Déclencher un événement personnalisé pour la progression
-          const progressEvent = new CustomEvent('optirank-progress', { 
-            detail: { progress: adjustedProgress } 
-          });
-          document.dispatchEvent(progressEvent);
+          // Déclencher un événement personnalisé pour la progression (avec throttling)
+          if (!window.lastEventUpdate || Date.now() - window.lastEventUpdate > 200) {
+            const progressEvent = new CustomEvent('optirank-progress', { 
+              detail: { progress: adjustedProgress } 
+            });
+            document.dispatchEvent(progressEvent);
+            window.lastEventUpdate = Date.now();
+          }
         },
       });
     } else {
@@ -405,38 +420,7 @@ async function scanAllLinks(options = {}) {
     // Afficher les résultats du scan dans la console pour débogage
     console.log('OptiRank: Scan completed with results:', JSON.stringify(window.OptiRankUtils.scanResults, null, 2));
     
-    // Appliquer des styles visuels aux liens pour montrer les résultats
-    try {
-      // Ajouter des classes CSS aux liens en fonction de leur statut
-      const links = document.querySelectorAll('a');
-      links.forEach(link => {
-        // Réinitialiser les classes
-        link.classList.remove('optirank-valid', 'optirank-broken', 'optirank-redirect', 'optirank-nofollow');
-        
-        // Appliquer les classes en fonction du statut
-        if (link.dataset.optirankStatus === 'broken') {
-          link.classList.add('optirank-broken');
-          link.style.outline = '2px solid red';
-          link.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
-        } else if (link.dataset.optirankStatus === 'redirect') {
-          link.classList.add('optirank-redirect');
-          link.style.outline = '2px solid orange';
-          link.style.backgroundColor = 'rgba(255, 165, 0, 0.1)';
-        } else if (link.dataset.optirankStatus === 'nofollow') {
-          link.classList.add('optirank-nofollow');
-          link.style.outline = '2px solid purple';
-          link.style.backgroundColor = 'rgba(128, 0, 128, 0.1)';
-        } else {
-          link.classList.add('optirank-valid');
-          link.style.outline = '2px solid green';
-          link.style.backgroundColor = 'rgba(0, 128, 0, 0.1)';
-        }
-      });
-      
-      console.log('OptiRank: Applied visual styles to links');
-    } catch (error) {
-      console.error('OptiRank: Error applying visual styles:', error);
-    }
+    console.log('OptiRank: Scan terminé - Surlignage manuel disponible via les statistiques');
     
     // Envoyer les résultats au background script (si possible)
     if (typeof chrome !== 'undefined' && chrome.runtime) {

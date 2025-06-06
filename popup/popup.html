@@ -4,8 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OptiRank</title>
+  <!-- NOUVEAU SYSTÈME CSS MODULAIRE -->
+  <link rel="stylesheet" href="css/components/buttons.css">
+  <link rel="stylesheet" href="css/components/cards.css">
+  <!-- CSS EXISTANTS -->
   <link rel="stylesheet" href="popup.css">
   <link rel="stylesheet" href="headings.css">
+  <link rel="stylesheet" href="links.css">
   <link rel="stylesheet" href="menu-tabs.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -24,6 +29,71 @@
       font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       color: var(--text-color);
       background: var(--global-background) !important;
+    }
+    
+    /* SOLUTION ULTRA-RADICALE : Largeur MAXIMALE pour l'onglet test2 */
+    
+    /* 1. Body et container à largeur maximale */
+    body.test2-active {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      /* Écraser TOUTES les variables qui limitent */
+      --max-content-width: 100% !important;
+      --content-padding: 0px !important;
+    }
+    
+    body.test2-active .container {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important; /* Supprimer bordures qui peuvent créer des marges */
+    }
+    
+    /* 2. Content sans AUCUNE limitation */
+    body.test2-active .content {
+      --max-content-width: 100% !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+    }
+    
+    /* 3. Tab-content test2 sans AUCUN padding */
+    body.test2-active #test2.tab-content,
+    body.test2-active #test2 {
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      --content-padding: 0px !important;
+    }
+    
+    /* 4. Content-section sans marges */
+    body.test2-active #test2 .content-section {
+      padding: 0 !important; /* AUCUN padding même pas 2px */
+      margin: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+    
+    /* 5. Headers et éléments internes */
+    body.test2-active #test2 .dashboard-header,
+    body.test2-active #test2 .dashboard-intro {
+      margin: 0 !important;
+      padding: 10px 0 !important; /* Juste un peu de padding vertical */
+    }
+    
+    /* 6. Cartes à largeur maximale */
+    body.test2-active #test2 .card {
+      margin: 5px 0 !important; /* Juste marges verticales */
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      width: 100% !important;
     }
     
     .modern-card {
@@ -59,34 +129,6 @@
     .modern-badge-h4 { background-color: #007A87; }
     .modern-badge-h5 { background-color: #8CE071; }
     .modern-badge-h6 { background-color: #7B0051; }
-    
-    .modern-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 16px;
-      border-radius: 100px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      border: none;
-    }
-    
-    .modern-btn-primary {
-      background-color: var(--primary-color);
-      color: white;
-    }
-    
-    .modern-btn-outline {
-      background-color: transparent;
-      border: 1px solid var(--primary-color);
-      color: var(--primary-color);
-    }
-    
-    .modern-btn:hover {
-      opacity: 0.9;
-      transform: translateY(-2px);
-    }
     
     .modern-alert {
       display: flex;
@@ -283,26 +325,194 @@
       </div>
 
       <div id="links" class="tab-content">
-        <div class="content-section">
-          <div class="dashboard-header">
-            <h2>Analyse des liens</h2>
-          </div>
-          <div class="dashboard-intro">
-            <p>Vérification complète de tous les liens de votre page - internes, externes, et leur statut HTTP.</p>
-          </div>
-          <div id="results-container">
-            <div class="stats-grid">
-              <div class="stat-card">
-                <div class="stat-value" id="total-links">0</div>
-                <div class="stat-label">Liens totaux</div>
+        <div class="links-container">
+          <!-- Première carte : Statistiques -->
+          <div class="heading-card">
+            <div class="heading-card-content">
+              <div class="heading-card-header">
+                <div class="heading-card-header-flex">
+                  <div class="title-section">
+                    <h3 class="heading-card-title">Statistiques des liens</h3>
+                    <p class="heading-card-description">Répartition des liens par statut et type</p>
+                  </div>
+                  <div class="copy-dropdown-container" style="position: relative;">
+                    <button id="copy-all-links" class="modern-btn modern-btn-outline" style="font-size: 12px; padding: 6px 12px; border-color: #3b82f6; color: #3b82f6;">
+                      <i class="fas fa-copy" style="margin-right: 6px;"></i>
+                      Copier
+                      <i class="fas fa-chevron-down" style="margin-left: 6px; font-size: 10px;"></i>
+                    </button>
+                    <div class="copy-dropdown-menu" style="display: none;">
+                      <div class="copy-option" id="copy-simple-option">
+                        <i class="fas fa-list"></i>
+                        <div>
+                          <span>Tous les liens sans analyse</span>
+                          <div>Liste simple des URLs, une par ligne</div>
+                        </div>
+                      </div>
+                      <div class="copy-option" id="copy-analysis-option">
+                        <i class="fas fa-chart-bar"></i>
+                        <div>
+                          <span>Tous les liens avec analyse</span>
+                          <div>Rapport complet avec statistiques détaillées</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="stat-card">
-                <div class="stat-value" id="working-links">0</div>
-                <div class="stat-label">Liens valides</div>
+
+              <!-- Grille des statistiques optimisée -->
+              <div class="links-stats-grid">
+                <!-- Titre par statut -->
+                <div class="stat-group">
+                  <div class="stat-group-title">Par statut</div>
+                  <div class="stat-boxes">
+                    <div class="stat-box stat-total">
+                      <div class="stat-value" id="total-links">0</div>
+                      <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-box stat-valid">
+                      <div class="stat-value" id="valid-links">0</div>
+                      <div class="stat-label">Valides</div>
+                    </div>
+                    <div class="stat-box stat-broken">
+                      <div class="stat-value" id="broken-links">0</div>
+                      <div class="stat-label">Brisés</div>
+                    </div>
+                    <div class="stat-box stat-redirect">
+                      <div class="stat-value" id="redirect-links">0</div>
+                      <div class="stat-label">Redirections</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Titre par type -->
+                <div class="stat-group">
+                  <div class="stat-group-title">Par type</div>
+                  <div class="stat-boxes">
+                    <div class="stat-box stat-internal">
+                      <div class="stat-value" id="internal-links">0</div>
+                      <div class="stat-label">Internes</div>
+                    </div>
+                    <div class="stat-box stat-external">
+                      <div class="stat-value" id="external-links">0</div>
+                      <div class="stat-label">Externes</div>
+                    </div>
+                    <div class="stat-box stat-nofollow">
+                      <div class="stat-value" id="nofollow-links">0</div>
+                      <div class="stat-label">Nofollow</div>
+                    </div>
+                    <div class="stat-box stat-dofollow">
+                      <div class="stat-value" id="dofollow-links">0</div>
+                      <div class="stat-label">Dofollow</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="stat-card">
-                <div class="stat-value" id="broken-links">0</div>
-                <div class="stat-label">Liens brisés</div>
+            </div>
+          </div>
+
+          <!-- Deuxième carte : Liste des liens avec filtres intégrés -->
+          <div class="heading-card">
+            <div class="heading-card-content">
+              <!-- Header simple avec titre à gauche et recherche à droite -->
+              <div class="links-header">
+                <div class="links-title-section">
+                  <h3>Liste des liens</h3>
+                  <p id="links-count-description">Tous les liens détectés sur la page</p>
+                </div>
+                <div class="links-search-section">
+                  <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="links-search" placeholder="Rechercher...">
+                    <button id="clear-search" style="display: none;">×</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="links-table-container-integrated">
+                <table class="links-table">
+                  <thead>
+                    <tr>
+                      <th class="sortable" data-sort="text">
+                        <span>Texte du lien</span>
+                        <i class="fas fa-sort"></i>
+                      </th>
+                      <th class="sortable" data-sort="url">
+                        <span>URL</span>
+                        <i class="fas fa-sort"></i>
+                      </th>
+                      <th class="sortable" data-sort="status">
+                        <span>Statut</span>
+                        <i class="fas fa-sort"></i>
+                      </th>
+                      <th class="sortable" data-sort="type">
+                        <span>Type</span>
+                        <i class="fas fa-sort"></i>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="links-table-body">
+                    <tr class="loading-row">
+                      <td colspan="4">
+                        <div class="loading-content">
+                          <i class="fas fa-spinner"></i>
+                          <span>Analyse des liens en cours...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <!-- Section export CSV -->
+                <div class="links-export-section">
+                  <button id="export-csv-btn" class="btn btn--export">
+                    <i class="fas fa-file-csv"></i>
+                    Exporter en CSV
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Troisième carte : Actions rapides -->
+          <div class="heading-card">
+            <div class="heading-card-content">
+              <div class="heading-card-header">
+                <div class="heading-card-header-flex">
+                  <div class="title-section">
+                    <h3 class="heading-card-title">Actions rapides</h3>
+                    <p class="heading-card-description">Outils et actions pour optimiser vos liens</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="quick-actions-container">
+                <button class="btn btn--outline" id="copy-links">
+                  <i class="fas fa-copy"></i>
+                  Copier liste des liens
+                </button>
+                <div class="export-dropdown-container" style="position: relative;">
+                  <button class="btn btn--dropdown" id="export-dropdown-trigger">
+                    <i class="fas fa-download"></i>
+                    Exporter
+                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                  </button>
+                  <div class="export-dropdown-menu" id="export-dropdown-menu" style="display: none;">
+                    <div class="export-option" data-action="export-csv">
+                      <i class="fas fa-file-csv"></i>
+                      <span>Exporter en CSV</span>
+                    </div>
+                    <div class="export-option" data-action="export-broken">
+                      <i class="fas fa-exclamation-circle"></i>
+                      <span>Liens brisés uniquement</span>
+                    </div>
+                    <div class="export-option" data-action="export-report">
+                      <i class="fas fa-file-alt"></i>
+                      <span>Rapport complet</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -396,10 +606,10 @@
                   </div>
                   <div class="action-section">
                     <div class="copy-dropdown-container" style="position: relative;">
-                      <button id="copy-dropdown-trigger" class="modern-btn modern-btn-outline" style="font-size: 12px; padding: 6px 12px; border-color: #3b82f6; color: #3b82f6;">
-                        <i class="fas fa-copy" style="margin-right: 6px;"></i>
+                      <button id="copy-dropdown-trigger" class="btn btn--dropdown btn--sm">
+                        <i class="fas fa-copy"></i>
                         Copier
-                        <i class="fas fa-chevron-down" style="margin-left: 6px; font-size: 10px;"></i>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
                       </button>
                       <div class="copy-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 5px); right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; min-width: 220px;">
                         <div class="copy-option" style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0;" onclick="window.optiRankCopy?.copyHeadingsWithoutAnalysis()">
@@ -465,11 +675,117 @@
           <div class="dashboard-intro">
             <p>Tests avancés et analyses personnalisées.</p>
           </div>
-          <div class="modern-card">
-            <div class="modern-card-body">
-              <h4>Tests personnalisés</h4>
-              <p>Créez vos propres tests d'analyse SEO personnalisés.</p>
-              <button class="modern-btn modern-btn-primary">Nouveau test</button>
+          
+          <!-- Test du système de cartes modulaires -->
+          <div class="card card--hoverable card--animate-in">
+            <div class="card__content">
+              <div class="card__header">
+                <div class="card__header-flex">
+                  <div class="card__title-section">
+                    <h3 class="card__title">Tests personnalisés</h3>
+                    <p class="card__description">Créez vos propres tests d'analyse SEO personnalisés</p>
+                  </div>
+                  <div class="card__actions">
+                    <button class="btn btn--primary btn--sm">
+                      <i class="fas fa-plus"></i>
+                      Nouveau test
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p>Système de cartes modulaire opérationnel ! Cette carte utilise les nouvelles classes :</p>
+              <ul style="margin: 12px 0; padding-left: 20px; color: #6b7280;">
+                <li><code>.card .card--hoverable</code> - Carte de base avec hover</li>
+                <li><code>.card__content</code> - Contenu de la carte</li>
+                <li><code>.card__header</code> - Header avec bordure</li>
+                <li><code>.card__header-flex</code> - Layout flexbox</li>
+                <li><code>.card__title-section</code> - Section titre</li>
+                <li><code>.card__actions</code> - Section boutons</li>
+              </ul>
+            </div>
+          </div>
+          
+          <!-- Grille de cartes d'exemple -->
+          <div class="cards-grid cards-grid--3">
+            <div class="card card--sm card--hover-scale card--animate-in card--animate-delay-1">
+              <div class="card__content">
+                <div class="card__header card__header--no-border">
+                  <h3 class="card__title card__title--sm">Test Basique</h3>
+                </div>
+                <p style="font-size: 13px;">Analyse standard des éléments SEO de base.</p>
+                <div class="card__footer card__footer--center">
+                  <button class="btn btn--outline btn--sm">Lancer</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card card--sm card--hover-scale card--animate-in card--animate-delay-2">
+              <div class="card__content">
+                <div class="card__header card__header--no-border">
+                  <h3 class="card__title card__title--sm">Test Avancé</h3>
+                </div>
+                <p style="font-size: 13px;">Analyse approfondie avec recommandations.</p>
+                <div class="card__footer card__footer--center">
+                  <button class="btn btn--primary btn--sm">Lancer</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card card--sm card--hover-scale card--animate-in card--animate-delay-3">
+              <div class="card__content">
+                <div class="card__header card__header--no-border">
+                  <h3 class="card__title card__title--sm">Test Custom</h3>
+                </div>
+                <p style="font-size: 13px;">Créez votre propre test personnalisé.</p>
+                <div class="card__footer card__footer--center">
+                  <button class="btn btn--export btn--sm">
+                    <i class="fas fa-cog"></i>
+                    Config
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Carte d'alerte pour démonstration -->
+          <div class="card card--alert-info card--animate-in">
+            <div class="card__content">
+              <div class="card__header card__header--no-border">
+                <div class="card__header-flex">
+                  <div class="card__title-section">
+                    <h3 class="card__title">🎯 Test du Système Modulaire</h3>
+                    <p class="card__description">Les nouvelles cartes sont opérationnelles</p>
+                  </div>
+                  <i class="fas fa-info-circle" style="color: #3b82f6; font-size: 24px;"></i>
+                </div>
+              </div>
+              <p>✅ Système de boutons modulaire : <strong>Intégré</strong></p>
+              <p>✅ Système de cartes modulaire : <strong>Opérationnel</strong></p>
+              <p>✅ Variables CSS unifiées : <strong>Actives</strong></p>
+              <p>✅ Animations et effets : <strong>Fonctionnels</strong></p>
+            </div>
+          </div>
+          
+          <!-- Carte avec effets spéciaux -->
+          <div class="cards-grid cards-grid--2">
+            <div class="card card--shimmer card--hoverable">
+              <div class="card__content">
+                <div class="card__header">
+                  <h3 class="card__title">Effet Shimmer</h3>
+                  <p class="card__description">Animation de brillance traversante</p>
+                </div>
+                <p>Cette carte utilise l'effet shimmer qui traverse périodiquement la surface.</p>
+              </div>
+            </div>
+            
+            <div class="card card--glow card--hoverable">
+              <div class="card__content">
+                <div class="card__header">
+                  <h3 class="card__title">Effet Glow</h3>
+                  <p class="card__description">Bordure animée multicolore</p>
+                </div>
+                <p>Bordure qui change de couleur avec une animation continue.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -500,7 +816,7 @@
                   <span>Suivre les redirections</span>
                 </label>
               </div>
-              <button id="save-settings" class="modern-btn modern-btn-primary" style="margin-top: 16px;">Enregistrer</button>
+              <button id="save-settings" class="btn btn--primary" style="margin-top: 16px;">Enregistrer</button>
             </div>
           </div>
         </div>
@@ -531,6 +847,80 @@
   }
   
   window.safeConnect = safeConnect;
+  
+  // GESTION LARGEUR PLEINE POUR ONGLET TEST2 - VERSION AMÉLIORÉE
+  function updateTest2FullWidth() {
+    const test2Tab = document.getElementById('test2');
+    const body = document.body;
+    
+    console.log('🔍 Vérification test2:', {
+      test2Tab: !!test2Tab,
+      hasActiveClass: test2Tab ? test2Tab.classList.contains('active') : false,
+      bodyHasTest2Active: body.classList.contains('test2-active')
+    });
+    
+    if (test2Tab && test2Tab.classList.contains('active')) {
+      body.classList.add('test2-active');
+      console.log('✅ Mode largeur pleine ACTIVÉ pour test2');
+      
+      // Debug : vérifier les styles appliqués
+      setTimeout(() => {
+        const contentWidth = document.querySelector('.content')?.offsetWidth;
+        const bodyWidth = body.offsetWidth;
+        console.log('📐 Largeurs:', { contentWidth, bodyWidth });
+      }, 100);
+    } else {
+      body.classList.remove('test2-active');
+      console.log('❌ Mode largeur pleine DÉSACTIVÉ');
+    }
+  }
+  
+  // Observer les changements d'onglets pour test2
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+        const target = mutation.target;
+        if (target.id === 'test2' || target.classList.contains('tab-content')) {
+          console.log('🔄 Changement détecté sur:', target.id);
+          updateTest2FullWidth();
+        }
+      }
+    });
+  });
+  
+  // Initialisation au chargement
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initialisation système largeur test2');
+    
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(tab => {
+      observer.observe(tab, { attributes: true, attributeFilter: ['class'] });
+    });
+    
+    // Vérification initiale
+    updateTest2FullWidth();
+    
+    // Observer aussi les boutons d'onglets
+    const tabButtons = document.querySelectorAll('.tab-link');
+    tabButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const tabId = this.getAttribute('data-tab');
+        console.log('🖱️ Clic sur onglet:', tabId);
+        setTimeout(updateTest2FullWidth, 200); // Délai pour laisser le temps à l'onglet de s'activer
+      });
+    });
+  });
+  
+  // Backup : écouter TOUS les clics
+  document.addEventListener('click', function(e) {
+    const tabLink = e.target.closest('[data-tab]');
+    if (tabLink) {
+      const tabId = tabLink.getAttribute('data-tab');
+      console.log('🎯 Détection clic onglet:', tabId);
+      setTimeout(updateTest2FullWidth, 50);
+      setTimeout(updateTest2FullWidth, 200);
+    }
+  });
   </script>
   
   <!-- Modules headings avec architecture modulaire propre -->

@@ -31,10 +31,11 @@
       "js": [
         "content/common/utils.js",
         "content/common/data.js",
-        "content/links/validation/redirectDetector.js",
         "content/links/validation/validator.js",
-        "content/links/processing/scanner.js",
+        "content/links/validation/redirectDetector.js",
         "content/links/detection/detector.js",
+        "content/links/processing/processor.js",
+        "content/links/processing/scanner.js",
         "content/reports/reporter.js",
         "content/optiRankMain.js"
       ],
