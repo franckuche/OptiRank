@@ -144,7 +144,7 @@ function estimatePageWordCount() {
     
     return words.length;
   } catch (error) {
-    console.warn('Erreur lors de l\'estimation du nombre de mots:', error);
+    logger.warn('Erreur lors de l\'estimation du nombre de mots:', error);
     return 0;
   }
 }

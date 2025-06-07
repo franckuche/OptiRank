@@ -54,7 +54,7 @@ class HeadingsModuleLoader {
   }
 
   async _doInitialize() {
-    console.log('🚀 Headings Module Loader: Initialisation des modules');
+    logger.debug('🚀 Headings Module Loader: Initialisation des modules');
 
     // Vérification des modules requis
     const requiredModules = [
@@ -69,7 +69,7 @@ class HeadingsModuleLoader {
     );
 
     if (missingModules.length > 0) {
-      console.warn('⚠️ Modules manquants:', missingModules);
+      logger.warn('⚠️ Modules manquants:', missingModules);
       // Attendre un peu pour que les scripts se chargent
       await this.waitForModules(missingModules, 5000);
     }
@@ -77,7 +77,7 @@ class HeadingsModuleLoader {
     // Réenregistrer les modules disponibles
     this.registerAvailableModules();
     
-    console.log('✅ Modules headings initialisés:', Array.from(this.modules.keys()));
+    logger.debug('✅ Modules headings initialisés:', Array.from(this.modules.keys()));
     this.initialized = true;
 
     // Lancer l'initialisation des headings
@@ -94,14 +94,14 @@ class HeadingsModuleLoader {
       );
       
       if (stillMissing.length === 0) {
-        console.log('✅ Tous les modules sont maintenant disponibles');
+        logger.debug('✅ Tous les modules sont maintenant disponibles');
         return;
       }
       
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     
-    console.warn('⚠️ Timeout: Certains modules ne sont toujours pas disponibles');
+    logger.warn('⚠️ Timeout: Certains modules ne sont toujours pas disponibles');
   }
 
   // Enregistrer les modules disponibles
@@ -129,12 +129,12 @@ class HeadingsModuleLoader {
 
   // Initialiser les headings de façon robuste
   initializeHeadings() {
-    console.log('🎯 Initialisation des headings avec gestion d\'erreur robuste');
+    logger.debug('🎯 Initialisation des headings avec gestion d\'erreur robuste');
 
     // Vérifier si nous sommes dans l'onglet headings
     const headingsTab = document.getElementById('headings');
     if (!headingsTab || !headingsTab.classList.contains('active')) {
-      console.log('📋 Tab headings pas actif, attente de l\'activation');
+      logger.debug('📋 Tab headings pas actif, attente de l\'activation');
       return;
     }
 
@@ -144,18 +144,18 @@ class HeadingsModuleLoader {
 
   // Version sécurisée de getHeadingsResults
   safeGetHeadingsResults() {
-    console.log('🔍 Récupération sécurisée des résultats headings');
+    logger.debug('🔍 Récupération sécurisée des résultats headings');
 
     try {
       // Tenter la communication avec l'extension
       if (chrome && chrome.tabs && chrome.tabs.query) {
         this.tryExtensionCommunication();
       } else {
-        console.log('📱 Extension Chrome non disponible, utilisation des données de test');
+        logger.debug('📱 Extension Chrome non disponible, utilisation des données de test');
         this.loadTestDataSafely();
       }
     } catch (error) {
-      console.warn('⚠️ Erreur lors de la communication extension:', error);
+      logger.warn('⚠️ Erreur lors de la communication extension:', error);
       this.loadTestDataSafely();
     }
   }
@@ -168,19 +168,19 @@ class HeadingsModuleLoader {
       utils.showLoading('Récupération des données...');
     }
 
-    console.log('🔍 MODULE LOADER: Tentative de communication avec l\'extension Chrome');
+    logger.debug('🔍 MODULE LOADER: Tentative de communication avec l\'extension Chrome');
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (!tabs || tabs.length === 0) {
-        console.log('❌ MODULE LOADER: Aucun onglet actif trouvé → Basculement sur données de test');
+        logger.debug('❌ MODULE LOADER: Aucun onglet actif trouvé → Basculement sur données de test');
         this.loadTestDataSafely();
         return;
       }
 
-      console.log('✅ MODULE LOADER: Onglet actif trouvé:', tabs[0].url);
+      logger.debug('✅ MODULE LOADER: Onglet actif trouvé:', tabs[0].url);
 
       const timeout = setTimeout(() => {
-        console.log('⏱️ MODULE LOADER: Timeout communication extension (3s) → Données de test');
+        logger.debug('⏱️ MODULE LOADER: Timeout communication extension (3s) → Données de test');
         this.loadTestDataSafely();
       }, 3000);
 
@@ -192,39 +192,39 @@ class HeadingsModuleLoader {
         }
 
         if (chrome.runtime.lastError) {
-          console.log('🔄 MODULE LOADER: Extension non connectée:', chrome.runtime.lastError.message);
-          console.log('📋 MODULE LOADER: → Basculement sur données de test (normal en développement)');
+          logger.debug('🔄 MODULE LOADER: Extension non connectée:', chrome.runtime.lastError.message);
+          logger.debug('📋 MODULE LOADER: → Basculement sur données de test (normal en développement)');
           this.loadTestDataSafely();
           return;
         }
 
-        console.log('📨 MODULE LOADER: Réponse reçue de l\'extension:');
-        console.log('  - Type de réponse:', typeof response);
-        console.log('  - Contenu complet:', JSON.stringify(response, null, 2));
+        logger.debug('📨 MODULE LOADER: Réponse reçue de l\'extension:');
+        logger.debug('  - Type de réponse:', typeof response);
+        logger.debug('  - Contenu complet:', JSON.stringify(response, null, 2));
 
         if (response && (response.headingsData || response.items || response.headings)) {
-          console.log('✅ MODULE LOADER: Données RÉELLES reçues de l\'extension');
-          console.log('  - Structure des données:', Object.keys(response.headingsData || response));
+          logger.debug('✅ MODULE LOADER: Données RÉELLES reçues de l\'extension');
+          logger.debug('  - Structure des données:', Object.keys(response.headingsData || response));
           const realData = response.headingsData || response;
           if (realData.headings) {
-            console.log('  - Nombre de headings:', realData.headings.length);
-            console.log('  - Premier heading:', realData.headings[0]);
+            logger.debug('  - Nombre de headings:', realData.headings.length);
+            logger.debug('  - Premier heading:', realData.headings[0]);
           }
           this.displayResultsSafely(realData);
         } else if (response && response.rawHeadingsData) {
-          console.log('🔧 MODULE LOADER: Données BRUTES reçues de l\'extension');
-          console.log('  - rawHeadings:', response.rawHeadingsData.rawHeadings?.length || 0, 'éléments');
-          console.log('  - Appel de processRawHeadingsData');
+          logger.debug('🔧 MODULE LOADER: Données BRUTES reçues de l\'extension');
+          logger.debug('  - rawHeadings:', response.rawHeadingsData.rawHeadings?.length || 0, 'éléments');
+          logger.debug('  - Appel de processRawHeadingsData');
           
           if (window.processRawHeadingsData) {
             window.processRawHeadingsData(response.rawHeadingsData);
           } else {
-            console.error('❌ MODULE LOADER: processRawHeadingsData non disponible');
+            logger.error('❌ MODULE LOADER: processRawHeadingsData non disponible');
             this.loadTestDataSafely();
           }
         } else {
-          console.log('📊 MODULE LOADER: Réponse vide de l\'extension → Données de test');
-          console.log('  - Réponse était:', response);
+          logger.debug('📊 MODULE LOADER: Réponse vide de l\'extension → Données de test');
+          logger.debug('  - Réponse était:', response);
           this.loadTestDataSafely();
         }
       });
@@ -238,21 +238,21 @@ class HeadingsModuleLoader {
       utils.hideLoading();
     }
 
-    console.log('📋 MODULE LOADER: Chargement des données de TEST (codées en dur)');
+    logger.debug('📋 MODULE LOADER: Chargement des données de TEST (codées en dur)');
 
     const testDataModule = this.modules.get('testData')?.module;
     const displayModule = this.modules.get('display')?.module;
 
     if (testDataModule && displayModule) {
       const testData = testDataModule();
-      console.log('📊 DONNÉES DE TEST générées:');
-      console.log('  - Compteurs:', testData.counts);
-      console.log('  - Nombre de headings:', testData.headings?.length || 0);
-      console.log('  - Premier heading:', testData.headings?.[0]);
-      console.log('  - Source: FICHIER test-data.js (PAS la page réelle)');
+      logger.debug('📊 DONNÉES DE TEST générées:');
+      logger.debug('  - Compteurs:', testData.counts);
+      logger.debug('  - Nombre de headings:', testData.headings?.length || 0);
+      logger.debug('  - Premier heading:', testData.headings?.[0]);
+      logger.debug('  - Source: FICHIER test-data.js (PAS la page réelle)');
       this.displayResultsSafely(testData);
     } else {
-      console.error('❌ MODULE LOADER: Modules de test ou d\'affichage manquants');
+      logger.error('❌ MODULE LOADER: Modules de test ou d\'affichage manquants');
       this.showFallbackContent();
     }
   }
@@ -260,35 +260,35 @@ class HeadingsModuleLoader {
   // Afficher les résultats de façon sécurisée
   displayResultsSafely(data) {
     try {
-      console.log('🎨 MODULE LOADER: Affichage des données:');
-      console.log('  - Type de données:', typeof data);
-      console.log('  - Propriétés:', Object.keys(data));
+      logger.debug('🎨 MODULE LOADER: Affichage des données:');
+      logger.debug('  - Type de données:', typeof data);
+      logger.debug('  - Propriétés:', Object.keys(data));
       
       if (data.headings) {
-        console.log('  - Source des headings:', data.headings.length > 0 ? 'Extension (page réelle)' : 'Données de test');
-        console.log('  - Liste des headings:');
+        logger.debug('  - Source des headings:', data.headings.length > 0 ? 'Extension (page réelle)' : 'Données de test');
+        logger.debug('  - Liste des headings:');
         data.headings.forEach((h, i) => {
-          console.log(`    ${i + 1}. H${h.level}: "${h.text}"`);
+          logger.debugEmoji("", `${i + 1}. H${h.level}: "${h.text}"`);
         });
       }
 
       const displayModule = this.modules.get('display')?.module;
       if (displayModule) {
-        console.log('🎯 MODULE LOADER: Appel de displayHeadingsResults');
+        logger.debug('🎯 MODULE LOADER: Appel de displayHeadingsResults');
         displayModule(data);
       } else {
-        console.error('❌ MODULE LOADER: Module d\'affichage non disponible');
+        logger.error('❌ MODULE LOADER: Module d\'affichage non disponible');
         this.showFallbackContent();
       }
     } catch (error) {
-      console.error('❌ MODULE LOADER: Erreur lors de l\'affichage:', error);
+      logger.error('❌ MODULE LOADER: Erreur lors de l\'affichage:', error);
       this.showFallbackContent();
     }
   }
 
   // Contenu de fallback si tout échoue
   showFallbackContent() {
-    console.log('🚨 Affichage du contenu de fallback');
+    logger.debug('🚨 Affichage du contenu de fallback');
     
     const headingsList = document.getElementById('headings-list');
     if (headingsList) {

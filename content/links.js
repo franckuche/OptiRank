@@ -2,13 +2,13 @@
 let highlightedElements = [];
 
 function highlightLinksByTypes(types) {
-  console.log('🎯 Surlignage des liens par types:', types);
+  logger.debug('🎯 Surlignage des liens par types:', types);
   
   // Supprimer le surlignage existant
   clearHighlights();
   
   if (!types || types.length === 0) {
-    console.log('🧹 Suppression de tous les surlignages');
+    logger.debug('🧹 Suppression de tous les surlignages');
     return;
   }
   
@@ -47,7 +47,7 @@ function highlightLinksByTypes(types) {
     }
   });
   
-  console.log(`✨ ${highlightedElements.length} liens surlignés`);
+  logger.debugEmoji("", "✨ ${highlightedElements.length} liens surlignés");
 }
 
 function highlightElement(element, types) {

@@ -37,7 +37,7 @@ function loadSettings() {
       });
     } else {
       // Utiliser les paramètres par défaut si l'API Chrome n'est pas disponible
-      console.warn('OptiRank: chrome.storage n\'est pas disponible, utilisation des paramètres par défaut');
+      logger.warn('OptiRank: chrome.storage n\'est pas disponible, utilisation des paramètres par défaut');
       appData.settings = { ...defaultSettings };
       window.OptiRankUtils.settings = appData.settings; // Partager avec Utils
       resolve(appData.settings);
@@ -47,7 +47,7 @@ function loadSettings() {
 
 // Charger les paramètres immédiatement
 loadSettings().then(settings => {
-  console.log('OptiRank: Paramètres chargés:', settings);
+  logger.debug('OptiRank: Paramètres chargés:', settings);
 });
 
 // Sauvegarder les paramètres dans le stockage local
@@ -62,7 +62,7 @@ function saveSettings(settings) {
       });
     } else {
       // Sauvegarder en mémoire seulement si l'API Chrome n'est pas disponible
-      console.warn('OptiRank: chrome.storage n\'est pas disponible, sauvegarde en mémoire uniquement');
+      logger.warn('OptiRank: chrome.storage n\'est pas disponible, sauvegarde en mémoire uniquement');
       appData.settings = settings;
       window.OptiRankUtils.settings = settings; // Partager avec Utils
       resolve(settings);
@@ -77,4 +77,4 @@ window.OptiRankData = {
   saveSettings
 };
 
-console.log('OptiRank: Data module loaded');
+logger.debug('OptiRank: Data module loaded');

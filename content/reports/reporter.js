@@ -27,18 +27,18 @@
  * @example
  * const allLinks = document.querySelectorAll('a[href]');
  * const skippedReport = reportSkippedLinks(Array.from(allLinks));
- * console.log(`${skippedReport.count} liens ont été ignorés`);
+ * logger.debugEmoji("", "${skippedReport.count} liens ont été ignorés");
  */
 function reportSkippedLinks(links) {
   const skippedLinks = links.filter(link => link.dataset.optirankStatus === 'skipped');
   
   if (skippedLinks.length === 0) {
-    console.log(`OptiRank: Aucun lien ignoré trouvé`);
+    logger.debugEmoji("", "OptiRank: Aucun lien ignoré trouvé");
     return { count: 0, links: [] };
   }
   
-  console.log(`=== LIENS IGNORÉS ===`);
-  console.log(`Total des liens ignorés: ${skippedLinks.length} sur ${links.length} liens`);
+  logger.debugEmoji("", "=== LIENS IGNORÉS ===");
+  logger.debugEmoji("", "Total des liens ignorés: ${skippedLinks.length} sur ${links.length} liens");
   
   // Grouper les liens ignorés par raison
   const reasons = {
@@ -64,19 +64,19 @@ function reportSkippedLinks(links) {
   
   // Afficher les statistiques par raison
   if (reasons.empty.length > 0) {
-    console.log(`- ${reasons.empty.length} liens avec href vide`);
+    logger.debugEmoji("", "- ${reasons.empty.length} liens avec href vide");
   }
   
   if (reasons.anchor.length > 0) {
-    console.log(`- ${reasons.anchor.length} liens ancres`);
+    logger.debugEmoji("", "- ${reasons.anchor.length} liens ancres");
   }
   
   if (reasons.javascript.length > 0) {
-    console.log(`- ${reasons.javascript.length} liens javascript`);
+    logger.debugEmoji("", "- ${reasons.javascript.length} liens javascript");
   }
   
   if (reasons.mailto.length > 0) {
-    console.log(`- ${reasons.mailto.length} liens mailto`);
+    logger.debugEmoji("", "- ${reasons.mailto.length} liens mailto");
   }
   
   return {
@@ -99,7 +99,7 @@ function reportSkippedLinks(links) {
  * @example
  * const allLinks = document.querySelectorAll('a[href]');
  * const mixedContentReport = reportMixedContentRedirects(Array.from(allLinks));
- * console.log(`${mixedContentReport.count} liens HTTP sont redirigés vers HTTPS`);
+ * logger.debugEmoji("", "${mixedContentReport.count} liens HTTP sont redirigés vers HTTPS");
  */
 function reportMixedContentRedirects(links) {
   const mixedContentLinks = links.filter(link => 
@@ -111,17 +111,17 @@ function reportMixedContentRedirects(links) {
     return { count: 0, links: [] };
   }
   
-  console.log(`=== REDIRECTIONS HTTP -> HTTPS ===`);
-  console.log(`Total des redirections HTTP -> HTTPS: ${mixedContentLinks.length}`);
+  logger.debugEmoji("", "=== REDIRECTIONS HTTP -> HTTPS ===");
+  logger.debugEmoji("", "Total des redirections HTTP -> HTTPS: ${mixedContentLinks.length}");
   
   // Afficher les 5 premiers exemples
   const examples = mixedContentLinks.slice(0, 5);
   examples.forEach(link => {
-    console.log(`- ${link.href} -> ${link.dataset.redirectUrl}`);
+    logger.debugEmoji("", "- ${link.href} -> ${link.dataset.redirectUrl}");
   });
   
   if (mixedContentLinks.length > 5) {
-    console.log(`... et ${mixedContentLinks.length - 5} autres`);
+    logger.debugEmoji("", "... et ${mixedContentLinks.length - 5} autres");
   }
   
   return {
@@ -146,8 +146,8 @@ function reportMixedContentRedirects(links) {
  * @example
  * const allLinks = document.querySelectorAll('a[href]');
  * const brokenReport = reportBrokenLinks(Array.from(allLinks));
- * console.log(`${brokenReport.count} liens cassés détectés`);
- * console.log(`${brokenReport.internal.length} liens internes cassés`);
+ * logger.debugEmoji("", "${brokenReport.count} liens cassés détectés");
+ * logger.debugEmoji("", "${brokenReport.internal.length} liens internes cassés");
  */
 function reportBrokenLinks(links) {
   const brokenLinks = links.filter(link => link.dataset.optirankStatus === 'broken');
@@ -156,8 +156,8 @@ function reportBrokenLinks(links) {
     return { count: 0, links: [] };
   }
   
-  console.log(`=== LIENS CASSÉS ===`);
-  console.log(`Total des liens cassés: ${brokenLinks.length}`);
+  logger.debugEmoji("", "=== LIENS CASSÉS ===");
+  logger.debugEmoji("", "Total des liens cassés: ${brokenLinks.length}");
   
   // Grouper par code de statut
   const byStatusCode = {};
@@ -174,16 +174,16 @@ function reportBrokenLinks(links) {
   
   // Afficher les statistiques par code de statut
   Object.entries(byStatusCode).forEach(([statusCode, links]) => {
-    console.log(`- ${links.length} liens avec statut ${statusCode}`);
+    logger.debugEmoji("", "- ${links.length} liens avec statut ${statusCode}");
     
     // Afficher quelques exemples
     const examples = links.slice(0, 3);
     examples.forEach(link => {
-      console.log(`  * ${link.href}`);
+      logger.debugEmoji("", "* ${link.href}");
     });
     
     if (links.length > 3) {
-      console.log(`  * ... et ${links.length - 3} autres`);
+      logger.debugEmoji("", "* ... et ${links.length - 3} autres");
     }
   });
   
@@ -209,8 +209,8 @@ function reportRedirects(links) {
     return { count: 0, links: [] };
   }
   
-  console.log(`=== REDIRECTIONS ===`);
-  console.log(`Total des redirections: ${redirectLinks.length}`);
+  logger.debugEmoji("", "=== REDIRECTIONS ===");
+  logger.debugEmoji("", "Total des redirections: ${redirectLinks.length}");
   
   // Grouper par code de statut
   const byStatusCode = {};
@@ -227,16 +227,16 @@ function reportRedirects(links) {
   
   // Afficher les statistiques par code de statut
   Object.entries(byStatusCode).forEach(([statusCode, links]) => {
-    console.log(`- ${links.length} redirections avec statut ${statusCode}`);
+    logger.debugEmoji("", "- ${links.length} redirections avec statut ${statusCode}");
     
     // Afficher quelques exemples
     const examples = links.slice(0, 3);
     examples.forEach(link => {
-      console.log(`  * ${link.href} -> ${link.dataset.redirectUrl || 'unknown'}`);
+      logger.debugEmoji("", "* ${link.href} -> ${link.dataset.redirectUrl || 'unknown'}");
     });
     
     if (links.length > 3) {
-      console.log(`  * ... et ${links.length - 3} autres`);
+      logger.debugEmoji("", "* ... et ${links.length - 3} autres");
     }
   });
   
@@ -274,18 +274,18 @@ function generateCompleteReport() {
     }
   };
   
-  console.log(`=== RAPPORT COMPLET ===`);
-  console.log(`Page: ${report.pageTitle} (${report.pageUrl})`);
-  console.log(`Total des liens: ${report.totalLinks}`);
-  console.log(`Liens cassés: ${report.brokenLinks.count}`);
-  console.log(`Redirections: ${report.redirects.count}`);
-  console.log(`Redirections HTTP -> HTTPS: ${report.mixedContentRedirects.count}`);
-  console.log(`Liens ignorés: ${report.skippedLinks.count}`);
-  console.log(`Attributs rel:`);
-  console.log(`- nofollow: ${report.relAttributes.nofollow}`);
-  console.log(`- sponsored: ${report.relAttributes.sponsored}`);
-  console.log(`- ugc: ${report.relAttributes.ugc}`);
-  console.log(`- dofollow: ${report.relAttributes.dofollow}`);
+  logger.debugEmoji("", "=== RAPPORT COMPLET ===");
+  logger.debugEmoji("", "Page: ${report.pageTitle} (${report.pageUrl})");
+  logger.debugEmoji("", "Total des liens: ${report.totalLinks}");
+  logger.debugEmoji("", "Liens cassés: ${report.brokenLinks.count}");
+  logger.debugEmoji("", "Redirections: ${report.redirects.count}");
+  logger.debugEmoji("", "Redirections HTTP -> HTTPS: ${report.mixedContentRedirects.count}");
+  logger.debugEmoji("", "Liens ignorés: ${report.skippedLinks.count}");
+  logger.debugEmoji("", "Attributs rel:");
+  logger.debugEmoji("", "- nofollow: ${report.relAttributes.nofollow}");
+  logger.debugEmoji("", "- sponsored: ${report.relAttributes.sponsored}");
+  logger.debugEmoji("", "- ugc: ${report.relAttributes.ugc}");
+  logger.debugEmoji("", "- dofollow: ${report.relAttributes.dofollow}");
   
   return report;
 }
@@ -325,4 +325,4 @@ window.OptiRankReporter = {
   exportResultsAsCsv
 };
 
-console.log('OptiRank: Reporter module loaded');
+logger.debug('OptiRank: Reporter module loaded');

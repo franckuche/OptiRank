@@ -162,24 +162,24 @@ window.HeadingsCopy = (function() {
    * @param {boolean} includeAnalysis - Inclure les analyses ou non
    */
   function copyHeadings(includeAnalysis) {
-    console.log('%c[COPY] Début de la copie des titres', 'background: #f39c12; color: white; padding: 2px 5px; border-radius: 3px;');
-    console.log(`%c[COPY] Mode: ${includeAnalysis ? 'Avec analyses' : 'Titres seulement'}`, 'background: #f39c12; color: white; padding: 2px 5px; border-radius: 3px;');
+    logger.debug('%c[COPY] Début de la copie des titres', 'background: #f39c12; color: white; padding: 2px 5px; border-radius: 3px;');
+    logger.debugEmoji("", "%c[COPY] Mode: ${includeAnalysis ? 'Avec analyses' : 'Titres seulement'}", 'background: #f39c12; color: white; padding: 2px 5px; border-radius: 3px;');
     
     // Vérifier d'abord si des titres sont affichés dans la structure
     const structureList = document.querySelector(config.selectors.structureList);
     
     if (!structureList) {
-      console.error('%c[COPY] ERREUR: Élément headings-structure-list non trouvé dans le DOM', 'background: red; color: white; padding: 2px 5px; border-radius: 3px;');
+      logger.error('%c[COPY] ERREUR: Élément headings-structure-list non trouvé dans le DOM', 'background: red; color: white; padding: 2px 5px; border-radius: 3px;');
       notifications.showCopyNotification('Impossible de trouver la liste des titres', false);
       return;
     }
     
     // Récupérer tous les éléments de titre
     const allHeadingItems = structureList.querySelectorAll(config.selectors.headingItem);
-    console.log(`%c[COPY] Nombre total d'éléments de titre trouvés: ${allHeadingItems.length}`, 'background: #f39c12; color: white; padding: 2px 5px; border-radius: 3px;');
+    logger.debugEmoji("", "%c[COPY] Nombre total d'éléments de titre trouvés: ${allHeadingItems.length}", 'background: #f39c12; color: white; padding: 2px 5px; border-radius: 3px;');
     
     // Filtrer pour ne garder que les titres réels de la page (non ajoutés par l'extension)
-    console.log('%c[COPY] Début du filtrage des titres', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
+    logger.debug('%c[COPY] Début du filtrage des titres', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
     
     const headingItems = Array.from(allHeadingItems).filter(item => {
       const textElement = item.querySelector(config.selectors.headingText);
@@ -188,11 +188,11 @@ window.HeadingsCopy = (function() {
       const levelText = badge ? badge.textContent : 'H?';
       
       // Log de débogage pour chaque titre
-      console.log(`%c[COPY] Examen du titre: "${headingText}" (${levelText})`, 'color: #3498db;');
+      logger.debugEmoji("", `%c[COPY] Examen du titre: "${headingText}" (${levelText})`, 'color: #3498db;');
       
       // 1. Exclure TOUS les titres marqués comme manquants ou avec des classes spéciales
       if (item.classList.contains('missing-heading')) {
-        console.log('%c[COPY] Exclu: titre marqué comme manquant', 'color: #e74c3c;');
+        logger.debug('%c[COPY] Exclu: titre marqué comme manquant', 'color: #e74c3c;');
         return false;
       }
       
@@ -200,14 +200,14 @@ window.HeadingsCopy = (function() {
       if (!includeAnalysis) {
         // a. Exclure EXPLICITEMENT le titre "H2: Titre H2 manquant"
         if (headingText === 'H2: Titre H2 manquant' || headingText === 'Titre H2 manquant') {
-          console.log('%c[COPY] Exclu: titre explicitement filtré "H2: Titre H2 manquant"', 'color: #e74c3c;');
+          logger.debug('%c[COPY] Exclu: titre explicitement filtré "H2: Titre H2 manquant"', 'color: #e74c3c;');
           return false;
         }
         
         // b. Exclure tous les titres contenant "manquant" ou "Titre" 
         if (headingText.toLowerCase().includes('manquant') || 
             (headingText.includes('Titre') && headingText.includes('H'))) {
-          console.log('%c[COPY] Exclu: contient "manquant" ou "Titre"', 'color: #e74c3c;');
+          logger.debug('%c[COPY] Exclu: contient "manquant" ou "Titre"', 'color: #e74c3c;');
           return false;
         }
         
@@ -216,23 +216,23 @@ window.HeadingsCopy = (function() {
             item.dataset.isAnalysisHeading === 'true' || 
             item.dataset.analysisHeading === 'true' ||
             item.hasAttribute('data-missing')) {
-          console.log('%c[COPY] Exclu: marqué comme titre d\'analyse', 'color: #e74c3c;');
+          logger.debug('%c[COPY] Exclu: marqué comme titre d\'analyse', 'color: #e74c3c;');
           return false;
         }
         
         // d. Exclure si le texte commence par le niveau + ":" (format typique des titres générés)
         const levelMatch = new RegExp(`^H${levelText.replace('H', '')}\\s*:`); 
         if (levelMatch.test(headingText)) {
-          console.log('%c[COPY] Exclu: format de titre généré', 'color: #e74c3c;');
+          logger.debug('%c[COPY] Exclu: format de titre généré', 'color: #e74c3c;');
           return false;
         }
       }
       
-      console.log('%c[COPY] Titre accepté pour copie', 'color: #2ecc71;');
+      logger.debug('%c[COPY] Titre accepté pour copie', 'color: #2ecc71;');
       return true;
     });
     
-    console.log(`%c[COPY] Après filtrage - Titres à copier: ${headingItems.length}`, 'background: #f39c12; color: white; padding: 2px 5px; border-radius: 3px;');
+    logger.debugEmoji("", "%c[COPY] Après filtrage - Titres à copier: ${headingItems.length}", 'background: #f39c12; color: white; padding: 2px 5px; border-radius: 3px;');
     
     // Si nous avons des titres dans la structure, les utiliser
     if (headingItems && headingItems.length > 0) {
@@ -287,16 +287,16 @@ window.HeadingsCopy = (function() {
             textToCopy += '\n';
           }
         } catch (err) {
-          console.error('%c[COPY] Erreur lors du traitement d\'un titre:', 'background: red; color: white; padding: 2px 5px; border-radius: 3px;', err);
+          logger.error('%c[COPY] Erreur lors du traitement d\'un titre:', 'background: red; color: white; padding: 2px 5px; border-radius: 3px;', err);
         }
       });
       
-      console.log('%c[COPY] Tentative de copie du texte dans le presse-papier', 'background: #f39c12; color: white;');
-      console.log('%c[COPY] Contenu à copier:', 'background: #f39c12; color: white;', textToCopy);
+      logger.debug('%c[COPY] Tentative de copie du texte dans le presse-papier', 'background: #f39c12; color: white;');
+      logger.debug('%c[COPY] Contenu à copier:', 'background: #f39c12; color: white;', textToCopy);
       
       // Vérifier si nous avons un contenu à copier
       if (!textToCopy || textToCopy.trim() === '') {
-        console.error('%c[COPY] Erreur: Aucun contenu à copier!', 'background: red; color: white;');
+        logger.error('%c[COPY] Erreur: Aucun contenu à copier!', 'background: red; color: white;');
         // Utiliser notifications directement
         notifications.showCopyNotification('Aucun contenu à copier', false);
         return;
@@ -306,22 +306,22 @@ window.HeadingsCopy = (function() {
       try {
         navigator.clipboard.writeText(textToCopy)
           .then(() => {
-            console.log('%c[COPY] Titres copiés avec succès', 'background: #2ecc71; color: white;');
+            logger.debug('%c[COPY] Titres copiés avec succès', 'background: #2ecc71; color: white;');
             // Utiliser notifications directement
             notifications.showCopyNotification('Titres copiés avec succès', true);
           })
           .catch(err => {
-            console.error('%c[COPY] Erreur lors de la copie:', 'background: red; color: white;', err);
+            logger.error('%c[COPY] Erreur lors de la copie:', 'background: red; color: white;', err);
             // Essayer une méthode alternative de copie
             fallbackCopy(textToCopy);
           });
       } catch (err) {
-        console.error('%c[COPY] Exception lors de la tentative de copie:', 'background: red; color: white;', err);
+        logger.error('%c[COPY] Exception lors de la tentative de copie:', 'background: red; color: white;', err);
         // Essayer une méthode alternative de copie
         fallbackCopy(textToCopy);
       }
     } else {
-      console.warn('%c[COPY] Aucun titre trouvé pour la copie', 'background: #e74c3c; color: white; padding: 2px 5px; border-radius: 3px;');
+      logger.warn('%c[COPY] Aucun titre trouvé pour la copie', 'background: #e74c3c; color: white; padding: 2px 5px; border-radius: 3px;');
       // Utiliser notifications directement
       notifications.showCopyNotification('Aucun titre trouvé pour la copie', false);
     }
@@ -332,7 +332,7 @@ window.HeadingsCopy = (function() {
    * @param {string} text - Texte à copier
    */
   function fallbackCopy(text) {
-    console.log('%c[COPY] Tentative de méthode alternative de copie', 'background: #f39c12; color: white;');
+    logger.debug('%c[COPY] Tentative de méthode alternative de copie', 'background: #f39c12; color: white;');
     
     try {
       // Créer un élément textarea temporaire
@@ -356,14 +356,14 @@ window.HeadingsCopy = (function() {
       
       // Afficher le résultat
       if (successful) {
-        console.log('%c[COPY] Copie alternative réussie', 'background: #2ecc71; color: white;');
+        logger.debug('%c[COPY] Copie alternative réussie', 'background: #2ecc71; color: white;');
         notifications.showCopyNotification('Titres copiés avec succès', true);
       } else {
-        console.error('%c[COPY] Échec de la copie alternative', 'background: red; color: white;');
+        logger.error('%c[COPY] Échec de la copie alternative', 'background: red; color: white;');
         notifications.showCopyNotification('Erreur lors de la copie', false);
       }
     } catch (err) {
-      console.error('%c[COPY] Exception lors de la méthode alternative de copie:', 'background: red; color: white;', err);
+      logger.error('%c[COPY] Exception lors de la méthode alternative de copie:', 'background: red; color: white;', err);
       alert('Impossible de copier le texte : ' + err.message);
     }
   }
@@ -374,18 +374,18 @@ window.HeadingsCopy = (function() {
    * Configure le bouton de copie en remplaçant l'original par un nouveau bouton
    */
   function setupCopyButton() {
-    console.log('%c[COPY] Configuration du bouton de copie', 'background: #2ecc71; color: white; padding: 2px 5px;');
+    logger.debug('%c[COPY] Configuration du bouton de copie', 'background: #2ecc71; color: white; padding: 2px 5px;');
     
     // 1. Trouver le bouton original et son parent
     const originalButton = document.getElementById('copy-structure');
     if (!originalButton) {
-      console.warn('%c[COPY] Bouton original non trouvé', 'background: #e74c3c; color: white;');
+      logger.warn('%c[COPY] Bouton original non trouvé', 'background: #e74c3c; color: white;');
       return;
     }
     
     const parentContainer = originalButton.parentElement;
     if (!parentContainer) {
-      console.warn('%c[COPY] Parent du bouton non trouvé', 'background: #e74c3c; color: white;');
+      logger.warn('%c[COPY] Parent du bouton non trouvé', 'background: #e74c3c; color: white;');
       return;
     }
     
@@ -475,14 +475,14 @@ window.HeadingsCopy = (function() {
       dropdownMenu.style.display = 'none';
     });
     
-    console.log('%c[COPY] Bouton de copie configuré avec succès', 'background: #2ecc71; color: white;');
+    logger.debug('%c[COPY] Bouton de copie configuré avec succès', 'background: #2ecc71; color: white;');
   }
   
   /**
    * Initialise le module de copie
    */
   function init() {
-    console.log('%c[COPY] Initialisation du module de copie des titres', 'background: #9b59b6; color: white; padding: 3px 5px;');
+    logger.debug('%c[COPY] Initialisation du module de copie des titres', 'background: #9b59b6; color: white; padding: 3px 5px;');
     
     // Configurer le bouton une fois que le DOM est chargé
     if (document.readyState === 'loading') {
@@ -494,7 +494,7 @@ window.HeadingsCopy = (function() {
     // Reconfigurer le bouton lorsqu'on clique sur l'onglet (au cas où le DOM change)
     document.addEventListener('click', event => {
       if (event.target.closest('.tab-link[data-tab="headings"]')) {
-        console.log('%c[COPY] Onglet Headings activé, configuration du bouton', 'background: #9b59b6; color: white;');
+        logger.debug('%c[COPY] Onglet Headings activé, configuration du bouton', 'background: #9b59b6; color: white;');
         setTimeout(setupCopyButton, 300);
       }
     });
@@ -529,13 +529,13 @@ window.HeadingsCopy = (function() {
 // Auto-initialisation du module
 document.addEventListener('DOMContentLoaded', function() {
   if (window.copyHeadings) {
-    console.log('Copy module: Auto-initialisation OK');
+    logger.debug('Copy module: Auto-initialisation OK');
   }
 });
 
 // Fonction d'initialisation du module de copie
 function initCopyModule() {
-  console.log('OptiRank Copy: Initialisation du module de copie avec dropdown');
+  logger.debug('OptiRank Copy: Initialisation du module de copie avec dropdown');
   
   // Éléments du dropdown
   const dropdownTrigger = document.getElementById('copy-dropdown-trigger');
@@ -544,7 +544,7 @@ function initCopyModule() {
   const copyWithoutAnalysis = document.getElementById('copy-without-analysis');
   
   if (!dropdownTrigger || !dropdownMenu) {
-    console.warn('OptiRank Copy: Éléments dropdown non trouvés');
+    logger.warn('OptiRank Copy: Éléments dropdown non trouvés');
     return;
   }
   
@@ -588,7 +588,7 @@ function initCopyModule() {
     }
   });
   
-  console.log('OptiRank Copy: Module de copie initialisé avec succès');
+  logger.debug('OptiRank Copy: Module de copie initialisé avec succès');
 }
 
 // Fonction pour ouvrir/fermer le dropdown
@@ -612,7 +612,7 @@ function openDropdown() {
   dropdownTrigger.classList.add('active');
   dropdownMenu.classList.add('active');
   
-  console.log('OptiRank Copy: Dropdown ouvert');
+  logger.debug('OptiRank Copy: Dropdown ouvert');
 }
 
 // Fonction pour fermer le dropdown
@@ -624,12 +624,12 @@ function closeDropdown() {
   dropdownTrigger.classList.remove('active');
   dropdownMenu.classList.remove('active');
   
-  console.log('OptiRank Copy: Dropdown fermé');
+  logger.debug('OptiRank Copy: Dropdown fermé');
 }
 
 // Fonction pour copier avec analyse (comportement original)
 function copyHeadingsWithAnalysis() {
-  console.log('OptiRank Copy: Copie avec analyse demandée');
+  logger.debug('OptiRank Copy: Copie avec analyse demandée');
   
   try {
     // Utiliser les données stockées dans window.headingsResults si disponibles
@@ -637,9 +637,9 @@ function copyHeadingsWithAnalysis() {
     
     if (window.headingsResults) {
       headingsData = window.headingsResults;
-      console.log('OptiRank Copy: Utilisation des données cached', headingsData);
+      logger.debug('OptiRank Copy: Utilisation des données cached', headingsData);
     } else {
-      console.warn('OptiRank Copy: Aucune donnée d\'analyse disponible');
+      logger.warn('OptiRank Copy: Aucune donnée d\'analyse disponible');
       showCopyFeedback('Aucune donnée d\'analyse disponible', 'error');
       return;
     }
@@ -651,14 +651,14 @@ function copyHeadingsWithAnalysis() {
     copyToClipboard(textWithAnalysis, 'Structure copiée avec analyse');
     
   } catch (error) {
-    console.error('OptiRank Copy: Erreur lors de la copie avec analyse', error);
+    logger.error('OptiRank Copy: Erreur lors de la copie avec analyse', error);
     showCopyFeedback('Erreur lors de la copie', 'error');
   }
 }
 
 // Fonction pour copier sans analyse (structure simple)
 function copyHeadingsWithoutAnalysis() {
-  console.log('OptiRank Copy: Copie sans analyse demandée');
+  logger.debug('OptiRank Copy: Copie sans analyse demandée');
   
   try {
     // Utiliser les données stockées dans window.headingsResults si disponibles
@@ -666,9 +666,9 @@ function copyHeadingsWithoutAnalysis() {
     
     if (window.headingsResults) {
       headingsData = window.headingsResults;
-      console.log('OptiRank Copy: Utilisation des données cached', headingsData);
+      logger.debug('OptiRank Copy: Utilisation des données cached', headingsData);
     } else {
-      console.warn('OptiRank Copy: Aucune donnée d\'analyse disponible');
+      logger.warn('OptiRank Copy: Aucune donnée d\'analyse disponible');
       showCopyFeedback('Aucune donnée d\'analyse disponible', 'error');
       return;
     }
@@ -680,7 +680,7 @@ function copyHeadingsWithoutAnalysis() {
     copyToClipboard(textWithoutAnalysis, 'Structure copiée (simple)');
     
   } catch (error) {
-    console.error('OptiRank Copy: Erreur lors de la copie sans analyse', error);
+    logger.error('OptiRank Copy: Erreur lors de la copie sans analyse', error);
     showCopyFeedback('Erreur lors de la copie', 'error');
   }
 }
@@ -760,7 +760,7 @@ async function copyToClipboard(text, successMessage = 'Texte copié') {
     if (navigator.clipboard && window.isSecureContext) {
       // Utiliser l'API moderne
       await navigator.clipboard.writeText(text);
-      console.log('OptiRank Copy: Texte copié avec navigator.clipboard');
+      logger.debug('OptiRank Copy: Texte copié avec navigator.clipboard');
     } else {
       // Fallback pour les navigateurs plus anciens
       const textArea = document.createElement('textarea');
@@ -773,13 +773,13 @@ async function copyToClipboard(text, successMessage = 'Texte copié') {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      console.log('OptiRank Copy: Texte copié avec execCommand fallback');
+      logger.debug('OptiRank Copy: Texte copié avec execCommand fallback');
     }
     
     showCopyFeedback(successMessage, 'success');
     
   } catch (error) {
-    console.error('OptiRank Copy: Erreur lors de la copie dans le presse-papiers', error);
+    logger.error('OptiRank Copy: Erreur lors de la copie dans le presse-papiers', error);
     showCopyFeedback('Erreur lors de la copie', 'error');
   }
 }

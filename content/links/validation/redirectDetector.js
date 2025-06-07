@@ -30,7 +30,7 @@
  * // Vérifier si une URL est une redirection
  * const redirectInfo = await checkRedirectWithBackgroundScript('https://example.com');
  * if (redirectInfo && redirectInfo.isRedirect) {
- *   console.log(`Redirection détectée vers ${redirectInfo.redirectUrl}`);
+ *   logger.debugEmoji("", "Redirection détectée vers ${redirectInfo.redirectUrl}");
  * }
  */
 function checkRedirectWithBackgroundScript(url) {
@@ -40,7 +40,7 @@ function checkRedirectWithBackgroundScript(url) {
       if (typeof chrome !== 'undefined' && chrome.runtime) {
         chrome.runtime.sendMessage({ action: 'checkRedirect', url: url }, (response) => {
           if (chrome.runtime.lastError) {
-            console.error(`OptiRank: Error during redirect check: ${chrome.runtime.lastError.message}`);
+            logger.error(`OptiRank: Error during redirect check: ${chrome.runtime.lastError.message}`);
             resolve(null); // Résoudre avec null en cas d'erreur
             return;
           }
@@ -49,7 +49,7 @@ function checkRedirectWithBackgroundScript(url) {
           if (response && response.isRedirect) {
             // URL cible de redirection (l'URL actuelle est une destination, pas une source)
             if (response.isRedirectTarget) {
-              console.log(`OptiRank: URL détectée comme destination de redirection depuis ${response.sourceUrl}`);
+              logger.debugEmoji("", "OptiRank: URL détectée comme destination de redirection depuis ${response.sourceUrl}");
               resolve({
                 isRedirect: false, // Pas considéré comme une redirection dans notre contexte d'affichage
                 isRedirectTarget: true,
@@ -58,7 +58,7 @@ function checkRedirectWithBackgroundScript(url) {
               return;
             }
             
-            console.log(`OptiRank: Background a confirmé une redirection pour ${url}: ${response.statusCode}`);
+            logger.debugEmoji("", "OptiRank: Background a confirmé une redirection pour ${url}: ${response.statusCode}");
             resolve({
               isRedirect: true,
               isBroken: false,
@@ -97,12 +97,12 @@ function checkRedirectWithBackgroundScript(url) {
             }
           );
         } catch (error) {
-          console.error(`OptiRank: Erreur lors de l'utilisation du substitut: ${error.message}`);
+          logger.error(`OptiRank: Erreur lors de l'utilisation du substitut: ${error.message}`);
           resolve(null);
         }
       } else {
         // Mode de compatibilité sans API Chrome ni substitut
-        console.log(`OptiRank: API Chrome non disponible, utilisation de la détection de redirection simplifiée`);
+        logger.debugEmoji("", "OptiRank: API Chrome non disponible, utilisation de la détection de redirection simplifiée");
         
         // Détection simplifiée des redirections courantes
         // Vérifier si l'URL est une redirection HTTP vers HTTPS
@@ -156,7 +156,7 @@ function checkRedirectWithBackgroundScript(url) {
         resolve(null);
       }
     } catch (error) {
-      console.error(`OptiRank: Erreur lors de la vérification avec le background: ${error.message}`);
+      logger.error(`OptiRank: Erreur lors de la vérification avec le background: ${error.message}`);
       resolve(null);
     }
   });
@@ -180,11 +180,11 @@ function checkRedirectWithBackgroundScript(url) {
  * const result = await checkExternalLinkWithBackground('https://external-site.com');
  * if (result) {
  *   if (result.isRedirect) {
- *     console.log(`Redirection vers ${result.redirectUrl}`);
+ *     logger.debugEmoji("", "Redirection vers ${result.redirectUrl}");
  *   } else if (result.isBroken) {
- *     console.log(`Lien cassé (${result.statusCode})`);
+ *     logger.debugEmoji("", "Lien cassé (${result.statusCode})");
  *   } else {
- *     console.log('Lien valide');
+ *     logger.debug('Lien valide');
  *   }
  * }
  */
@@ -197,7 +197,7 @@ async function checkExternalLinkWithBackground(url) {
           { action: 'checkExternalLink', url: url },
           (response) => {
             if (chrome.runtime.lastError) {
-              console.error(`OptiRank: Erreur lors de la vérification externe: ${chrome.runtime.lastError.message}`);
+              logger.error(`OptiRank: Erreur lors de la vérification externe: ${chrome.runtime.lastError.message}`);
               resolve(null);
               return;
             }
@@ -257,7 +257,7 @@ async function checkExternalLinkWithBackground(url) {
             }
           );
         } catch (error) {
-          console.error(`OptiRank: Erreur lors de l'utilisation du substitut: ${error.message}`);
+          logger.error(`OptiRank: Erreur lors de l'utilisation du substitut: ${error.message}`);
           // Considérer les liens externes comme valides en mode de compatibilité
           resolve({
             isRedirect: false,
@@ -268,7 +268,7 @@ async function checkExternalLinkWithBackground(url) {
         }
       } else {
         // Mode de compatibilité sans API Chrome ni substitut
-        console.log(`OptiRank: API Chrome non disponible, impossible de vérifier les liens externes`);
+        logger.debugEmoji("", "OptiRank: API Chrome non disponible, impossible de vérifier les liens externes");
         // Considérer les liens externes comme valides en mode de compatibilité
         resolve({
           isRedirect: false,
@@ -278,7 +278,7 @@ async function checkExternalLinkWithBackground(url) {
         });
       }
     } catch (error) {
-      console.error(`OptiRank: Erreur lors de la vérification externe: ${error.message}`);
+      logger.error(`OptiRank: Erreur lors de la vérification externe: ${error.message}`);
       // Considérer les liens externes comme valides en mode de compatibilité
       resolve({
         isRedirect: false,
@@ -310,7 +310,7 @@ async function checkExternalLinkWithBackground(url) {
  * // Vérifier si une URL est une redirection
  * const result = await checkRedirectWithFetch('https://example.com');
  * if (result && result.isRedirect) {
- *   console.log(`Redirection détectée vers ${result.redirectUrl}`);
+ *   logger.debugEmoji("", "Redirection détectée vers ${result.redirectUrl}");
  * }
  */
 async function checkRedirectWithFetch(url, options = {}) {
@@ -346,7 +346,7 @@ async function checkRedirectWithFetch(url, options = {}) {
       statusCode: response.status
     };
   } catch (error) {
-    console.error(`OptiRank: Erreur lors de la vérification de redirection: ${error.message}`);
+    logger.error(`OptiRank: Erreur lors de la vérification de redirection: ${error.message}`);
     return null;
   }
 }
@@ -405,4 +405,4 @@ window.OptiRankRedirect = {
   checkLinkRedirect
 };
 
-console.log('OptiRank: Redirect Detector module loaded');
+logger.debug('OptiRank: Redirect Detector module loaded');

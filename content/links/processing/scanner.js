@@ -48,7 +48,7 @@ function verifyAndFixTotals(results) {
   
   // Si le total ne correspond pas à la somme, corriger
   if (results.total !== sum) {
-    console.log(`OptiRank: Correcting total count from ${results.total} to ${sum}`);
+    logger.debugEmoji("", "OptiRank: Correcting total count from ${results.total} to ${sum}");
     results.total = sum;
   }
   
@@ -104,17 +104,17 @@ function checkActualRedirects(results) {
  * @example
  * const urls = ['https://example.com', 'https://redirect.example.com'];
  * const preScanResults = await preScanLinks(urls);
- * console.log(`${preScanResults.knownRedirects.length} redirections déjà connues`);
- * console.log(`${preScanResults.unknownUrls.length} URLs à vérifier`);
+ * logger.debugEmoji("", "${preScanResults.knownRedirects.length} redirections déjà connues");
+ * logger.debugEmoji("", "${preScanResults.unknownUrls.length} URLs à vérifier");
  */
 async function preScanLinks(urls) {
-  console.log(`OptiRank: Pre-checking ${urls.length} links`);
+  logger.debugEmoji("", `OptiRank: Pre-checking ${urls.length} links`);
   
   // Envoyer les URLs au background script pour vérification
   return new Promise((resolve) => {
     // Définir un timeout pour éviter de bloquer indéfiniment
     const timeoutId = setTimeout(() => {
-      console.log('OptiRank: Pre-scan timeout, proceeding with all URLs');
+      logger.debug('OptiRank: Pre-scan timeout, proceeding with all URLs');
       resolve({
         knownRedirects: [],
         knownBroken: [],
@@ -133,7 +133,7 @@ async function preScanLinks(urls) {
             clearTimeout(timeoutId);
             
             if (chrome.runtime.lastError) {
-              console.error(`OptiRank: Error in pre-scan: ${chrome.runtime.lastError.message}`);
+              logger.error(`OptiRank: Error in pre-scan: ${chrome.runtime.lastError.message}`);
               resolve({
                 knownRedirects: [],
                 knownBroken: [],
@@ -146,7 +146,7 @@ async function preScanLinks(urls) {
             if (response) {
               // S'assurer que response.results existe avant d'utiliser Object.keys
               const resultsCount = response.results ? Object.keys(response.results).length : 0;
-              console.log(`OptiRank: Pre-check complete, found ${resultsCount} results`);
+              logger.debugEmoji("", `OptiRank: Pre-check complete, found ${resultsCount} results`);
               resolve({ 
                 knownRedirects: response.knownRedirects || [],
                 knownBroken: response.knownBroken || [],
@@ -154,7 +154,7 @@ async function preScanLinks(urls) {
                 unknownUrls: response.unknownUrls || urls
               });
             } else {
-              console.log(`OptiRank: Pre-check failed or returned no results`);
+              logger.debugEmoji("", `OptiRank: Pre-check failed or returned no results`);
               resolve({
                 knownRedirects: [],
                 knownBroken: [],
@@ -165,7 +165,7 @@ async function preScanLinks(urls) {
           }
         );
       } catch (error) {
-        console.error(`OptiRank: Error sending message to background script:`, error);
+        logger.error(`OptiRank: Error sending message to background script:`, error);
         resolve({
           knownRedirects: [],
           knownBroken: [],
@@ -175,7 +175,7 @@ async function preScanLinks(urls) {
       }
     } else {
       // Mode de compatibilité sans API Chrome
-      console.log(`OptiRank: Chrome API not available, skipping pre-scan`);
+      logger.debugEmoji("", `OptiRank: Chrome API not available, skipping pre-scan`);
       resolve({
         knownRedirects: [],
         knownBroken: [],
@@ -186,7 +186,7 @@ async function preScanLinks(urls) {
     
     // En cas de timeout
     setTimeout(() => {
-      console.log(`OptiRank: Pre-scan timeout, proceeding with all URLs`);
+      logger.debugEmoji("", `OptiRank: Pre-scan timeout, proceeding with all URLs`);
       resolve({
         knownRedirects: [],
         knownBroken: [],
@@ -206,7 +206,7 @@ async function scanAllLinks(options = {}) {
   try {
     // Vérifier si un scan est déjà en cours
     if (window.OptiRankUtils.scanInProgress) {
-      console.log('OptiRank: Scan already in progress, ignoring new scan request');
+      logger.debug('OptiRank: Scan already in progress, ignoring new scan request');
       return window.OptiRankUtils.scanResults;
     }
     
@@ -226,7 +226,7 @@ async function scanAllLinks(options = {}) {
     // Collecter tous les liens de la page
     const links = window.OptiRankDetector.collectAllLinks();
     window.OptiRankUtils.scanResults.total = links.length;
-    console.log(`OptiRank: Found ${links.length} links on the page`);
+    logger.debugEmoji("🔗", `OptiRank: Found ${links.length} links on the page`);
     
     // Notifier le background script que le scan a commencé (si possible)
     if (typeof chrome !== 'undefined' && chrome.runtime) {
@@ -256,7 +256,7 @@ async function scanAllLinks(options = {}) {
     }
     
     // Pré-vérifier les liens avec le background script
-    console.log(`OptiRank: Pre-checking ${allUrls.length} links with background script`);
+    logger.debugEmoji("⏳", `OptiRank: Pre-checking ${allUrls.length} links with background script`);
     const preScanResults = await preScanLinks(allUrls);
     
     // Mettre à jour la progression à 50%
@@ -287,7 +287,7 @@ async function scanAllLinks(options = {}) {
       return !link.dataset.optirankStatus;
     });
     
-    console.log(`OptiRank: Checking ${remainingLinks.length} remaining links`);
+    logger.debugEmoji("🔍", `OptiRank: Checking ${remainingLinks.length} remaining links`);
     
     if (remainingLinks.length > 0) {
       // Réduire la taille des lots pour améliorer la réactivité
@@ -381,7 +381,7 @@ async function scanAllLinks(options = {}) {
       });
       document.dispatchEvent(completeEvent);
       
-      console.log('OptiRank: Scan terminé avec succès (tous les liens traités pendant le pré-scan)', window.OptiRankUtils.scanResults);
+      logger.debug('OptiRank: Scan terminé avec succès (tous les liens traités pendant le pré-scan)', window.OptiRankUtils.scanResults);
     }
     
     // Vérifier et corriger les totaux
@@ -415,12 +415,12 @@ async function scanAllLinks(options = {}) {
     
     // Ajouter la propriété links aux résultats
     window.OptiRankUtils.scanResults.links = linksArray;
-    console.log(`OptiRank: Added ${linksArray.length} links to scan results`);
+    logger.debugEmoji("", "OptiRank: Added ${linksArray.length} links to scan results");
     
     // Afficher les résultats du scan dans la console pour débogage
-    console.log('OptiRank: Scan completed with results:', JSON.stringify(window.OptiRankUtils.scanResults, null, 2));
+    logger.debug('OptiRank: Scan completed with results:', JSON.stringify(window.OptiRankUtils.scanResults, null, 2));
     
-    console.log('OptiRank: Scan terminé - Surlignage manuel disponible via les statistiques');
+    logger.debug('OptiRank: Scan terminé - Surlignage manuel disponible via les statistiques');
     
     // Envoyer les résultats au background script (si possible)
     if (typeof chrome !== 'undefined' && chrome.runtime) {
@@ -439,7 +439,7 @@ async function scanAllLinks(options = {}) {
           success: true
         });
       } catch (error) {
-        console.error('OptiRank: Erreur lors de l\'envoi des résultats:', error);
+        logger.error('OptiRank: Erreur lors de l\'envoi des résultats:', error);
       }
     } else if (window.chromeRuntimeSubstitute) {
       try {
@@ -457,7 +457,7 @@ async function scanAllLinks(options = {}) {
           success: true
         });
       } catch (error) {
-        console.error('OptiRank: Erreur lors de l\'envoi des résultats:', error);
+        logger.error('OptiRank: Erreur lors de l\'envoi des résultats:', error);
       }
     }
     
@@ -467,11 +467,11 @@ async function scanAllLinks(options = {}) {
     });
     document.dispatchEvent(completeEvent);
     
-    console.log(`OptiRank: Scan complete`, window.OptiRankUtils.scanResults);
+    logger.debugEmoji("", "OptiRank: Scan complete", window.OptiRankUtils.scanResults);
     
     return window.OptiRankUtils.scanResults;
   } catch (error) {
-    console.error(`OptiRank: Error during scan:`, error);
+    logger.error(`OptiRank: Error during scan:`, error);
     
     // Marquer la fin du scan même en cas d'erreur
     window.OptiRankUtils.scanInProgress = false;
@@ -507,11 +507,11 @@ async function scanAllLinks(options = {}) {
  * @param {Object} options - Options de scan
  */
 async function autoScanLinks(options = {}) {
-  console.log(`OptiRank: autoScanLinks called, checking if settings are loaded`);
+  logger.debugEmoji("", "OptiRank: autoScanLinks called, checking if settings are loaded");
   
   // Essayer d'attendre les paramètres, mais avec un timeout
   if (!window.OptiRankUtils.settings) {
-    console.log(`OptiRank: Settings not loaded yet, waiting with timeout...`);
+    logger.debugEmoji("", "OptiRank: Settings not loaded yet, waiting with timeout...");
     try {
       await Promise.race([
         new Promise(resolve => {
@@ -526,7 +526,7 @@ async function autoScanLinks(options = {}) {
         }),
         // Timeout après 2 secondes
         new Promise((resolve) => setTimeout(() => {
-          console.warn('OptiRank: Timeout waiting for settings, using defaults');
+          logger.warn('OptiRank: Timeout waiting for settings, using defaults');
           // Créer des paramètres par défaut si nécessaire
           window.OptiRankUtils.settings = window.OptiRankUtils.settings || {
             autoScanEnabled: false,
@@ -541,7 +541,7 @@ async function autoScanLinks(options = {}) {
         }, 2000))
       ]);
     } catch (error) {
-      console.warn('OptiRank: Error waiting for settings:', error);
+      logger.warn('OptiRank: Error waiting for settings:', error);
       // Créer des paramètres par défaut en cas d'erreur
       window.OptiRankUtils.settings = {
         autoScanEnabled: false,
@@ -555,19 +555,19 @@ async function autoScanLinks(options = {}) {
     }
   }
   
-  console.log(`OptiRank: Current settings:`, window.OptiRankUtils.settings);
+  logger.debugEmoji("", "OptiRank: Current settings:", window.OptiRankUtils.settings);
   
   // Vérifier si le scan automatique est activé
   if (window.OptiRankUtils.settings.autoScanEnabled) {
-    console.log(`OptiRank: Auto-scan is ENABLED in settings, scanning will start soon`);
+    logger.debugEmoji("", "OptiRank: Auto-scan is ENABLED in settings, scanning will start soon");
     
     // Attendre un court instant pour que la page soit complètement chargée
     setTimeout(() => {
-      console.log(`OptiRank: Auto-scanning links on page load`);
+      logger.debugEmoji("", "OptiRank: Auto-scanning links on page load");
       scanAllLinks(options);
     }, 500);
   } else {
-    console.log(`OptiRank: Auto-scan is DISABLED in settings, skipping scan`);
+    logger.debugEmoji("", "OptiRank: Auto-scan is DISABLED in settings, skipping scan");
   }
 }
 
@@ -594,9 +594,9 @@ window.scanLinks = function() {
   if (window.OptiRankScan && window.OptiRankScan.scanAllLinks) {
     return window.OptiRankScan.scanAllLinks();
   } else {
-    console.error('OptiRank: Scanner module not available for global scan function');
+    logger.error('OptiRank: Scanner module not available for global scan function');
     return Promise.reject(new Error('Scanner module not available'));
   }
 };
 
-console.log('OptiRank: Scanner module loaded and exposed globally as window.OptiRankScan');
+logger.debug('OptiRank: Scanner module loaded and exposed globally as window.OptiRankScan');

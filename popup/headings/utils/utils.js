@@ -1,3 +1,30 @@
+
+// 🚀 OptiRank SEO-friendly Logging
+const logger = window.OptiRankLogger || {
+  info: (msg, data) => console.log('[OptiRank] ' + msg, data || ''),
+  error: (msg, data) => console.error('[OptiRank Error] ' + msg, data || ''),
+  warn: (msg, data) => console.warn('[OptiRank Warning] ' + msg, data || ''),
+  scanStarted: (count) => console.log('[OptiRank] Analyse démarrée : ' + count + ' liens à analyser'),
+  scanProgress: (current, total, percent) => console.log('[OptiRank] Progression : ' + percent + '% (' + current + '/' + total + ')'),
+  scanCompleted: (stats) => console.log('[OptiRank] Analyse terminée', stats),
+  linkValidationFailed: (url, status) => console.warn('[OptiRank] Lien inaccessible : ' + url + ' (' + status + ')')
+};
+
+const eventManager = window.OptiRankEventManager || {
+  onClick: (el, handler) => eventManager.onClick(el, handler),
+  setTimeout: (callback, delay, name) => setTimeout(callback, delay),
+  removeEventListener: (id) => console.log('Event cleanup simulated for:', id)
+};
+
+// Helpers pour migration
+function anonymizeUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.protocol + '//' + urlObj.hostname + '/[path]';
+  } catch {
+    return '[invalid-url]';
+  }
+}
 /**
  * OptiRank - Module d'analyse des titres (headings) - Utilitaires
  * Ce fichier contient les fonctions utilitaires pour le module d'analyse des titres
@@ -153,7 +180,7 @@ function showCopySuccess() {
   // Récupérer le bouton de copie
   const copyButton = document.getElementById('copy-dropdown-trigger');
   if (!copyButton) {
-    console.error('Headings Utils: Bouton de copie non trouvé');
+            console.error('Headings Utils: Bouton de copie non trouvé');
     return;
   }
   
@@ -202,13 +229,13 @@ function setupCopyDropdown() {
   }
   
   // Toggle du dropdown
-  dropdownTrigger.addEventListener('click', function(e) {
+  eventManager.onClick(dropdownTrigger, function(e) {
     e.stopPropagation();
     copyDropdown.classList.toggle('active');
   });
   
   // Fermer le dropdown en cliquant ailleurs
-  document.addEventListener('click', function(e) {
+  eventManager.onClick(document, function(e) {
     if (!copyDropdown.contains(e.target)) {
       copyDropdown.classList.remove('active');
     }
@@ -219,7 +246,7 @@ function setupCopyDropdown() {
   const copyWithoutAnalysisBtn = document.getElementById('copy-without-analysis');
   
   if (copyWithAnalysisBtn) {
-    copyWithAnalysisBtn.addEventListener('click', function(e) {
+    eventManager.onClick(copyWithAnalysisBtn, function(e) {
       e.preventDefault();
       copyHeadingStructure(true);
       copyDropdown.classList.remove('active');
@@ -227,7 +254,7 @@ function setupCopyDropdown() {
   }
   
   if (copyWithoutAnalysisBtn) {
-    copyWithoutAnalysisBtn.addEventListener('click', function(e) {
+    eventManager.onClick(copyWithoutAnalysisBtn, function(e) {
       e.preventDefault();
       copyHeadingStructure(false);
       copyDropdown.classList.remove('active');
@@ -236,7 +263,7 @@ function setupCopyDropdown() {
 }
 
 // Initialiser le système
-document.addEventListener('DOMContentLoaded', function() {
+eventManager.addEventListener(document, 'DOMContentLoaded', function() {
   console.log('Headings Utils: Initialisation du système de copie');
   setupCopyDropdown();
 });

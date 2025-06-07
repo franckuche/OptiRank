@@ -74,7 +74,7 @@ function collectAllLinks(options = {}) {
  * @returns {Array<HTMLAnchorElement>} returns.elements - Tous les éléments de lien collectés
  * @example
  * const stats = collectLinkDetails();
- * console.log(`La page contient ${stats.total} liens dont ${stats.external} externes`);
+ * logger.debugEmoji("", "La page contient ${stats.total} liens dont ${stats.external} externes");
  */
 function collectLinkDetails() {
   const links = collectAllLinks();
@@ -201,4 +201,4 @@ window.OptiRankDetector = {
   detectVisibleLinks
 };
 
-console.log('OptiRank: Link Detector module loaded');
+logger.debug('OptiRank: Link Detector module loaded');

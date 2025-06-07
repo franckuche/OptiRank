@@ -187,4 +187,4 @@ window.OptiRankValidator = {
   checkHttpToHttpsRedirect
 };
 
-console.log('OptiRank: Validator module loaded');
+logger.debug('OptiRank: Validator module loaded');

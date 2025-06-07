@@ -25,10 +25,12 @@
     "48": "images/icon48.png",
     "128": "images/icon128.png"
   },
-  "content_scripts": [
+    "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": [
+        "shared/logger.js",
+        "shared/event-manager.js",
         "content/common/utils.js",
         "content/common/data.js",
         "content/links/validation/validator.js",

@@ -325,7 +325,7 @@ function detectTitleDuplicatesAndSimilarities(headings, issues) {
  */
 function createIssue(type, messageConfig, params) {
   if (!messageConfig) {
-    console.warn(`Configuration manquante pour le type d'issue: ${type}`);
+    logger.warn(`Configuration manquante pour le type d'issue: ${type}`);
     return null;
   }
   

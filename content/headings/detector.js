@@ -5,7 +5,7 @@
 
 // Fonction pour détecter et analyser les titres de la page
 function detectHeadings() {
-  console.log('%c[DETECTOR] Début de la détection des titres', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
+  logger.debug('%c[DETECTOR] Début de la détection des titres', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
   
   // Résultats de l'analyse
   const headingsData = {
@@ -21,36 +21,36 @@ function detectHeadings() {
     issues: []
   };
   
-  console.log('%c[DETECTOR] Structure initiale des données:', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;', JSON.stringify(headingsData, null, 2));
+  logger.debug('%c[DETECTOR] Structure initiale des données:', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;', JSON.stringify(headingsData, null, 2));
   
   try {
     // Détecter tous les titres - ANALYSE DU DOM
-    console.log('%c[DETECTOR] Analyse du DOM pour détecter les titres', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
+    logger.debug('%c[DETECTOR] Analyse du DOM pour détecter les titres', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
     
     // D'abord, comptons tous les titres dans le DOM, visibles ou non
     for (let i = 1; i <= 6; i++) {
       const allHeadings = document.querySelectorAll(`h${i}`);
-      console.log(`%c[DETECTOR] Total des titres H${i} dans le DOM: ${allHeadings.length}`, 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
+      logger.debugEmoji("", "%c[DETECTOR] Total des titres H${i} dans le DOM: ${allHeadings.length}", 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
       
       if (allHeadings.length > 0) {
-        console.log(`%c[DETECTOR] Exemples de titres H${i} dans le DOM:`, 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
+        logger.debugEmoji("", "%c[DETECTOR] Exemples de titres H${i} dans le DOM:", 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
         Array.from(allHeadings).slice(0, 3).forEach((h, idx) => {
-          console.log(`  - H${i} #${idx+1}: "${h.textContent.trim().substring(0, 30)}${h.textContent.trim().length > 30 ? '...' : ''}"`);
-          console.log(`    - display: ${window.getComputedStyle(h).display}`);
-          console.log(`    - visibility: ${window.getComputedStyle(h).visibility}`);
-          console.log(`    - offsetParent: ${h.offsetParent !== null ? 'existe' : 'null'}`);
-          console.log(`    - height: ${h.getBoundingClientRect().height}px`);
+          logger.debugEmoji("", "- H${i} #${idx+1}: "${h.textContent.trim().substring(0, 30)}${h.textContent.trim().length > 30 ? '...' : ''}"");
+          logger.debugEmoji("", "- display: ${window.getComputedStyle(h).display}");
+          logger.debugEmoji("", "- visibility: ${window.getComputedStyle(h).visibility}");
+          logger.debugEmoji("", "- offsetParent: ${h.offsetParent !== null ? 'existe' : 'null'}");
+          logger.debugEmoji("", "- height: ${h.getBoundingClientRect().height}px");
         });
       }
     }
     
     // Maintenant, filtrons pour ne garder que les titres visibles
     for (let i = 1; i <= 6; i++) {
-      console.log(`%c[DETECTOR] Filtrage des titres H${i} visibles`, 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
+      logger.debugEmoji("", "%c[DETECTOR] Filtrage des titres H${i} visibles", 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
       
       // Récupérer tous les titres de ce niveau
       const allHeadings = document.querySelectorAll(`h${i}`);
-      console.log(`[DETECTOR] Nombre total de titres H${i} avant filtrage: ${allHeadings.length}`);
+      logger.debugEmoji("", "[DETECTOR] Nombre total de titres H${i} avant filtrage: ${allHeadings.length}");
       
       // Filtrer pour ne garder que les titres visibles
       const headings = Array.from(allHeadings).filter(heading => {
@@ -63,29 +63,29 @@ function detectHeadings() {
                           heading.getBoundingClientRect().height > 0;
           
           // Log détaillé pour chaque titre
-          console.log(`[DETECTOR] Vérification de visibilité pour H${i} "${heading.textContent.trim().substring(0, 30)}${heading.textContent.trim().length > 30 ? '...' : ''}":`);
-          console.log(`  - display: ${style.display} (${style.display !== 'none' ? 'OK' : 'NON VISIBLE'})`);
-          console.log(`  - visibility: ${style.visibility} (${style.visibility !== 'hidden' ? 'OK' : 'NON VISIBLE'})`);
-          console.log(`  - offsetParent: ${heading.offsetParent !== null ? 'existe' : 'null'} (${heading.offsetParent !== null ? 'OK' : 'NON VISIBLE'})`);
-          console.log(`  - height: ${heading.getBoundingClientRect().height}px (${heading.getBoundingClientRect().height > 0 ? 'OK' : 'NON VISIBLE'})`);
-          console.log(`  - Résultat final: ${isVisible ? 'VISIBLE' : 'NON VISIBLE'}`);
+          logger.debugEmoji("", "[DETECTOR] Vérification de visibilité pour H${i} "${heading.textContent.trim().substring(0, 30)}${heading.textContent.trim().length > 30 ? '...' : ''}":");
+          logger.debugEmoji("", "- display: ${style.display} (${style.display !== 'none' ? 'OK' : 'NON VISIBLE'})");
+          logger.debugEmoji("", "- visibility: ${style.visibility} (${style.visibility !== 'hidden' ? 'OK' : 'NON VISIBLE'})");
+          logger.debugEmoji("", "- offsetParent: ${heading.offsetParent !== null ? 'existe' : 'null'} (${heading.offsetParent !== null ? 'OK' : 'NON VISIBLE'})");
+          logger.debugEmoji("", "- height: ${heading.getBoundingClientRect().height}px (${heading.getBoundingClientRect().height > 0 ? 'OK' : 'NON VISIBLE'})");
+          logger.debugEmoji("", "- Résultat final: ${isVisible ? 'VISIBLE' : 'NON VISIBLE'}");
           
           return isVisible;
         } catch (e) {
-          console.error(`%c[DETECTOR] Erreur lors de la vérification de visibilité d'un titre H${i}:`, 'background: red; color: white; padding: 2px 5px; border-radius: 3px;', e);
+          logger.error(`%c[DETECTOR] Erreur lors de la vérification de visibilité d'un titre H${i}:`, 'background: red; color: white; padding: 2px 5px; border-radius: 3px;', e);
           return false;
         }
       });
       
       // Mettre à jour le compteur
       headingsData.counts[`h${i}`] = headings.length;
-      console.log(`%c[DETECTOR] Après filtrage: ${headings.length} titres H${i} visibles`, 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
+      logger.debugEmoji("", "%c[DETECTOR] Après filtrage: ${headings.length} titres H${i} visibles", 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
       
       // Collecter les informations sur chaque titre
       headings.forEach((heading, index) => {
         try {
           const text = heading.textContent.trim();
-          console.log(`[DETECTOR] Ajout du titre H${i} #${index+1} aux données: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`);
+          logger.debugEmoji("", "[DETECTOR] Ajout du titre H${i} #${index+1} aux données: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"");
           
           headingsData.items.push({
             level: i,
@@ -94,15 +94,15 @@ function detectHeadings() {
             hasAnchor: heading.querySelector('a') !== null
           });
         } catch (e) {
-          console.error(`%c[DETECTOR] Erreur lors du traitement d'un titre H${i}:`, 'background: red; color: white; padding: 2px 5px; border-radius: 3px;', e);
+          logger.error(`%c[DETECTOR] Erreur lors du traitement d'un titre H${i}:`, 'background: red; color: white; padding: 2px 5px; border-radius: 3px;', e);
         }
       });
     }
     
     // Vérification de cohérence
-    console.log('%c[DETECTOR] Vérification de cohérence des données', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
-    console.log(`[DETECTOR] Nombre total d'items: ${headingsData.items.length}`);
-    console.log(`[DETECTOR] Compteurs par niveau:`, headingsData.counts);
+    logger.debug('%c[DETECTOR] Vérification de cohérence des données', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
+    logger.debugEmoji("", "[DETECTOR] Nombre total d'items: ${headingsData.items.length}");
+    logger.debugEmoji("", "[DETECTOR] Compteurs par niveau:", headingsData.counts);
     
     if (headingsData.items.length > 0) {
       let totalCount = 0;
@@ -110,10 +110,10 @@ function detectHeadings() {
         totalCount += headingsData.counts[`h${i}`];
       }
       
-      console.log(`[DETECTOR] Total des compteurs: ${totalCount}, Nombre d'items: ${headingsData.items.length}`);
+      logger.debugEmoji("", "[DETECTOR] Total des compteurs: ${totalCount}, Nombre d'items: ${headingsData.items.length}");
       
       if (totalCount !== headingsData.items.length) {
-        console.warn(`%c[DETECTOR] Incohérence détectée - Total des compteurs (${totalCount}) != nombre d'items (${headingsData.items.length})`, 'background: orange; color: black; padding: 2px 5px; border-radius: 3px;');
+        logger.warn(`%c[DETECTOR] Incohérence détectée - Total des compteurs (${totalCount}) != nombre d'items (${headingsData.items.length})`, 'background: orange; color: black; padding: 2px 5px; border-radius: 3px;');
         
         // Recalculer les compteurs à partir des items
         const newCounts = { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 };
@@ -124,14 +124,14 @@ function detectHeadings() {
         });
         
         headingsData.counts = newCounts;
-        console.log('%c[DETECTOR] Compteurs recalculés:', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;', newCounts);
+        logger.debug('%c[DETECTOR] Compteurs recalculés:', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;', newCounts);
       }
     }
     
     // Log final des données
-    console.log('%c[DETECTOR] Données finales des titres:', 'background: #2ecc71; color: white; padding: 2px 5px; border-radius: 3px;', JSON.stringify(headingsData, null, 2));
+    logger.debug('%c[DETECTOR] Données finales des titres:', 'background: #2ecc71; color: white; padding: 2px 5px; border-radius: 3px;', JSON.stringify(headingsData, null, 2));
   } catch (e) {
-    console.error('%c[DETECTOR] Erreur générale lors de la détection des titres:', 'background: red; color: white; padding: 2px 5px; border-radius: 3px;', e);
+    logger.error('%c[DETECTOR] Erreur générale lors de la détection des titres:', 'background: red; color: white; padding: 2px 5px; border-radius: 3px;', e);
   }
   
   // Analyser la structure hiérarchique des titres
@@ -224,4 +224,4 @@ window.OptiRankHeadings = {
   detectHeadings: detectHeadings
 };
 
-console.log('OptiRank: Headings Detector module loaded');
+logger.debug('OptiRank: Headings Detector module loaded');

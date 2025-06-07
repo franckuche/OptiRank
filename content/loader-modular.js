@@ -1,40 +1,40 @@
 // OptiRank - Script de chargement léger pour architecture modulaire
 // Ce script vérifie si l'autoscan est activé et charge les modules dans le bon ordre
 
-console.log('OptiRank: Modular Loader initialized');
+logger.debug('OptiRank: Modular Loader initialized');
 
 // Diagnostic pour comprendre pourquoi l'API Chrome n'est pas disponible
 (function diagnosticChromeAPI() {
-  console.log('OptiRank Diagnostic: Checking Chrome API availability');
+  logger.debug('OptiRank Diagnostic: Checking Chrome API availability');
   
   // Vérifier si l'objet chrome existe
   if (typeof chrome === 'undefined') {
-    console.error('OptiRank Diagnostic: chrome object is completely undefined');
+    logger.error('OptiRank Diagnostic: chrome object is completely undefined');
     return;
   }
   
   // Vérifier les propriétés de l'objet chrome
-  console.log('OptiRank Diagnostic: chrome object properties:', Object.keys(chrome));
+  logger.debug('OptiRank Diagnostic: chrome object properties:', Object.keys(chrome));
   
   // Vérifier si chrome.runtime existe
   if (!chrome.runtime) {
-    console.error('OptiRank Diagnostic: chrome.runtime is undefined');
+    logger.error('OptiRank Diagnostic: chrome.runtime is undefined');
   } else {
-    console.log('OptiRank Diagnostic: chrome.runtime is available');
-    console.log('OptiRank Diagnostic: chrome.runtime properties:', Object.keys(chrome.runtime));
+    logger.debug('OptiRank Diagnostic: chrome.runtime is available');
+    logger.debug('OptiRank Diagnostic: chrome.runtime properties:', Object.keys(chrome.runtime));
     
     // Vérifier si getURL fonctionne
     try {
       const url = chrome.runtime.getURL('content/common/utils.js');
-      console.log('OptiRank Diagnostic: chrome.runtime.getURL works, result:', url);
+      logger.debug('OptiRank Diagnostic: chrome.runtime.getURL works, result:', url);
     } catch (error) {
-      console.error('OptiRank Diagnostic: Error using chrome.runtime.getURL:', error);
+      logger.error('OptiRank Diagnostic: Error using chrome.runtime.getURL:', error);
     }
   }
   
   // Vérifier le contexte d'exécution
-  console.log('OptiRank Diagnostic: Execution context:', window.location.href);
-  console.log('OptiRank Diagnostic: Is extension context:', window.location.protocol === 'chrome-extension:');
+  logger.debug('OptiRank Diagnostic: Execution context:', window.location.href);
+  logger.debug('OptiRank Diagnostic: Is extension context:', window.location.protocol === 'chrome-extension:');
 })();
 
 // Liste des modules à charger dans l'ordre
@@ -67,13 +67,13 @@ function loadScript(src) {
         // Obtenir l'ID de l'onglet actif
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           if (chrome.runtime.lastError) {
-            console.error(`OptiRank: Error getting active tab: ${chrome.runtime.lastError.message}`);
+            logger.error(`OptiRank: Error getting active tab: ${chrome.runtime.lastError.message}`);
             fallbackLoadScript(src, resolve, reject);
             return;
           }
           
           if (!tabs || tabs.length === 0) {
-            console.error('OptiRank: No active tab found');
+            logger.error('OptiRank: No active tab found');
             fallbackLoadScript(src, resolve, reject);
             return;
           }
@@ -86,12 +86,12 @@ function loadScript(src) {
             files: [`content/${src}`]
           }, (results) => {
             if (chrome.runtime.lastError) {
-              console.error(`OptiRank: Error executing script: ${chrome.runtime.lastError.message}`);
+              logger.error(`OptiRank: Error executing script: ${chrome.runtime.lastError.message}`);
               fallbackLoadScript(src, resolve, reject);
               return;
             }
             
-            console.log(`OptiRank: Loaded module ${src} in extension context`);
+            logger.debugEmoji("", "OptiRank: Loaded module ${src} in extension context");
             
             // Pour le module principal, configurer les références globales
             if (src === 'optiRankMain.js') {
@@ -108,7 +108,7 @@ function loadScript(src) {
                     window.OptiRankUtils.modules.scanner = window.OptiRankScan;
                   }
                   
-                  console.log('OptiRank: Module references updated in OptiRankUtils');
+                  logger.debug('OptiRank: Module references updated in OptiRankUtils');
                 }
               }, 100);
             }
@@ -121,7 +121,7 @@ function loadScript(src) {
         fallbackLoadScript(src, resolve, reject);
       }
     } catch (error) {
-      console.error(`OptiRank: Error in loadScript for ${src}:`, error);
+      logger.error(`OptiRank: Error in loadScript for ${src}:`, error);
       fallbackLoadScript(src, resolve, reject);
     }
   });
@@ -142,11 +142,11 @@ function fallbackLoadScript(src, resolve, reject) {
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
       // Utiliser l'URL de l'extension pour préserver le contexte
       script.src = chrome.runtime.getURL(`content/${src}`);
-      console.log(`OptiRank: Loading module from extension URL: ${script.src}`);
+      logger.debugEmoji("", "OptiRank: Loading module from extension URL: ${script.src}");
     } else {
       // Mode de compatibilité - utiliser un chemin relatif
       script.src = `content/${src}`;
-      console.log(`OptiRank: Loading module in compatibility mode: ${src}`);
+      logger.debugEmoji("", "OptiRank: Loading module in compatibility mode: ${src}");
     }
     
     // Ajouter des attributs pour le débogage
@@ -154,20 +154,20 @@ function fallbackLoadScript(src, resolve, reject) {
     
     // Gérer le chargement
     script.onload = () => {
-      console.log(`OptiRank: Loaded module ${src} via fallback method`);
+      logger.debugEmoji("", "OptiRank: Loaded module ${src} via fallback method");
       resolve();
     };
     
     // Gérer les erreurs
     script.onerror = (error) => {
-      console.error(`OptiRank: Error loading module ${src}`, error);
+      logger.error(`OptiRank: Error loading module ${src}`, error);
       reject(error);
     };
     
     // Ajouter le script au document
     (document.head || document.documentElement).appendChild(script);
   } catch (error) {
-    console.error(`OptiRank: Error in fallbackLoadScript for ${src}:`, error);
+    logger.error(`OptiRank: Error in fallbackLoadScript for ${src}:`, error);
     reject(error);
   }
 }
@@ -178,11 +178,11 @@ function fallbackLoadScript(src, resolve, reject) {
  */
 async function loadAllModules() {
   if (modulesLoaded) {
-    console.log('OptiRank: Modules already loaded');
+    logger.debug('OptiRank: Modules already loaded');
     return;
   }
   
-  console.log(`OptiRank: Loading ${MODULES.length} modules...`);
+  logger.debugEmoji("", "OptiRank: Loading ${MODULES.length} modules...");
   
   try {
     // Charger les modules un par un dans l'ordre
@@ -193,7 +193,7 @@ async function loadAllModules() {
     }
     
     modulesLoaded = true;
-    console.log('OptiRank: All modules loaded successfully');
+    logger.debug('OptiRank: All modules loaded successfully');
     
     // Informer le background script que les modules sont chargés (si possible)
     if (typeof chrome !== 'undefined' && chrome.runtime) {
@@ -220,20 +220,20 @@ async function loadAllModules() {
       // Créer des alias pour les modules qui pourraient être référencés sous différents noms
       if (!window.OptiRankMain && window.OptiRankUtils.modules.main) {
         window.OptiRankMain = window.OptiRankUtils.modules.main;
-        console.log('OptiRank: Created global alias for OptiRankMain');
+        logger.debug('OptiRank: Created global alias for OptiRankMain');
       }
       
       if (!window.OptiRankScan && window.OptiRankUtils.modules.scanner) {
         window.OptiRankScan = window.OptiRankUtils.modules.scanner;
-        console.log('OptiRank: Created global alias for OptiRankScan');
+        logger.debug('OptiRank: Created global alias for OptiRankScan');
       }
       
-      console.log('OptiRank: Module references stored in window.OptiRankUtils.modules');
+      logger.debug('OptiRank: Module references stored in window.OptiRankUtils.modules');
     }
     
     return { success: true };
   } catch (error) {
-    console.error('OptiRank: Error loading modules:', error);
+    logger.error('OptiRank: Error loading modules:', error);
     return { success: false, error: error.message };
   }
 }
@@ -242,16 +242,16 @@ async function loadAllModules() {
  * Vérifie si l'autoscan est activé
  */
 function checkAutoScanEnabled() {
-  console.log('OptiRank: Checking if auto-scan is enabled');
+  logger.debug('OptiRank: Checking if auto-scan is enabled');
   
   // Vérifier si l'API Chrome est disponible
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
     chrome.storage.local.get('settings', (data) => {
       if (data.settings && data.settings.autoScanEnabled === true) {
-        console.log('OptiRank: Auto-scan is enabled, loading modules');
+        logger.debug('OptiRank: Auto-scan is enabled, loading modules');
         loadAllModules();
       } else {
-        console.log('OptiRank: Auto-scan is disabled, modules will be loaded on demand');
+        logger.debug('OptiRank: Auto-scan is disabled, modules will be loaded on demand');
         
         // Informer le background script que les modules ne sont pas chargés (si possible)
         if (chrome.runtime) {
@@ -265,7 +265,7 @@ function checkAutoScanEnabled() {
     });
   } else {
     // Mode de compatibilité sans API Chrome
-    console.log('OptiRank: Chrome API not available, loading modules in compatibility mode');
+    logger.debug('OptiRank: Chrome API not available, loading modules in compatibility mode');
     loadAllModules();
   }
 }
@@ -273,18 +273,18 @@ function checkAutoScanEnabled() {
 // Écouter tous les messages si l'API Chrome est disponible
 if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('OptiRank Loader: Received message', message.action);
+    logger.debug('OptiRank Loader: Received message', message.action);
     
     // Répondre au ping pour indiquer que le content script est accessible
     if (message.action === 'ping') {
-      console.log('OptiRank Loader: Ping received, responding');
+      logger.debug('OptiRank Loader: Ping received, responding');
       sendResponse({ success: true, modulesLoaded: modulesLoaded });
       return true;
     }
     
     // Charger les modules si demandé
     if (message.action === 'loadScripts' || message.action === 'loadModules') {
-      console.log('OptiRank Loader: Received request to load modules');
+      logger.debug('OptiRank Loader: Received request to load modules');
       loadAllModules().then((response) => {
         sendResponse(response);
       });
@@ -293,11 +293,11 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
     
     // Si on reçoit une demande de scan mais que les modules ne sont pas chargés
     if (message.action === 'scanLinks' && !modulesLoaded) {
-      console.log('OptiRank Loader: Scan requested but modules not loaded, loading them now');
+      logger.debug('OptiRank Loader: Scan requested but modules not loaded, loading them now');
       
       loadAllModules().then((response) => {
         if (!response || !response.success) {
-          console.error('OptiRank Loader: Failed to load modules for scan');
+          logger.error('OptiRank Loader: Failed to load modules for scan');
           sendResponse({
             success: false,
             message: 'Failed to load modules for scan'
@@ -307,36 +307,36 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
         
         // Attendre que les modules soient complètement initialisés avec un délai plus long
         setTimeout(() => {
-          console.log('OptiRank Loader: Modules loaded, forwarding scan request');
+          logger.debug('OptiRank Loader: Modules loaded, forwarding scan request');
           
           // Vérifier si les modules sont disponibles sous différents noms
           if (!window.OptiRankMain && window.OptiRankUtils && window.OptiRankUtils.modules && window.OptiRankUtils.modules.main) {
             window.OptiRankMain = window.OptiRankUtils.modules.main;
-            console.log('OptiRank Loader: Using OptiRankMain from modules.main');
+            logger.debug('OptiRank Loader: Using OptiRankMain from modules.main');
           }
           
           if (!window.OptiRankScan && window.OptiRankUtils && window.OptiRankUtils.modules && window.OptiRankUtils.modules.scanner) {
             window.OptiRankScan = window.OptiRankUtils.modules.scanner;
-            console.log('OptiRank Loader: Using OptiRankScan from modules.scanner');
+            logger.debug('OptiRank Loader: Using OptiRankScan from modules.scanner');
           }
           
           // Créer des objets de secours pour les modules principaux
           // Créer un objet OptiRankMain de secours si nécessaire
           if (!window.OptiRankMain) {
-            console.warn('OptiRank Loader: Creating fallback OptiRankMain object');
+            logger.warn('OptiRank Loader: Creating fallback OptiRankMain object');
             window.OptiRankMain = {
               initOptiRank: function() {
-                console.log('OptiRank: Fallback initOptiRank called');
+                logger.debug('OptiRank: Fallback initOptiRank called');
                 return Promise.resolve();
               },
               scanAllLinks: function() {
-                console.log('OptiRank: Fallback scanAllLinks redirecting to scanner');
+                logger.debug('OptiRank: Fallback scanAllLinks redirecting to scanner');
                 if (window.OptiRankScan && window.OptiRankScan.scanAllLinks) {
                   return window.OptiRankScan.scanAllLinks();
                 } else if (window.scanLinks) {
                   return window.scanLinks();
                 } else {
-                  console.error('OptiRank: No scan function available');
+                  logger.error('OptiRank: No scan function available');
                   return Promise.reject(new Error('No scan function available'));
                 }
               }
@@ -345,15 +345,15 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
           
           // Créer un objet OptiRankScan de secours si nécessaire
           if (!window.OptiRankScan) {
-            console.warn('OptiRank Loader: Creating fallback OptiRankScan object');
+            logger.warn('OptiRank Loader: Creating fallback OptiRankScan object');
             window.OptiRankScan = {
               scanAllLinks: function() {
-                console.log('OptiRank: Fallback scanAllLinks called');
+                logger.debug('OptiRank: Fallback scanAllLinks called');
                 // Implémentation minimale pour la détection des liens
                 try {
                   // Collecter tous les liens de la page
                   const links = Array.from(document.querySelectorAll('a'));
-                  console.log(`OptiRank: Found ${links.length} links on the page`);
+                  logger.debugEmoji("🔗", `OptiRank: Found ${links.length} links on the page`);
                   
                   // Créer un objet de résultats minimal
                   const results = {
@@ -377,12 +377,12 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
                   
                   return Promise.resolve(results);
                 } catch (error) {
-                  console.error('OptiRank: Error in fallback scanAllLinks:', error);
+                  logger.error('OptiRank: Error in fallback scanAllLinks:', error);
                   return Promise.reject(error);
                 }
               },
               autoScanLinks: function() {
-                console.log('OptiRank: Fallback autoScanLinks called');
+                logger.debug('OptiRank: Fallback autoScanLinks called');
                 return this.scanAllLinks();
               }
             };
@@ -390,7 +390,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
           
           // Créer un objet OptiRankUtils de secours si nécessaire
           if (!window.OptiRankUtils) {
-            console.warn('OptiRank Loader: Creating fallback OptiRankUtils object');
+            logger.warn('OptiRank Loader: Creating fallback OptiRankUtils object');
             window.OptiRankUtils = {
               modules: {},
               scanResults: {
@@ -423,7 +423,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
           }
           
           // Vérifier les variables globales pour débogage
-          console.log('OptiRank Loader: Available global objects:', Object.keys(window).filter(key => key.startsWith('OptiRank')));
+          logger.debug('OptiRank Loader: Available global objects:', Object.keys(window).filter(key => key.startsWith('OptiRank')));
           
           // Transmettre la demande de scan au module principal
           if (window.OptiRankMain) {
@@ -432,14 +432,14 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
               // Lancer le scan
               if (window.OptiRankScan) {
                 window.OptiRankScan.scanAllLinks().then((results) => {
-                  console.log('OptiRank Loader: Scan completed, results will be sent by optiRankMain.js');
+                  logger.debug('OptiRank Loader: Scan completed, results will be sent by optiRankMain.js');
                   sendResponse({ success: true, results: results });
                 }).catch((error) => {
-                  console.error('OptiRank Loader: Error during scan:', error);
+                  logger.error('OptiRank Loader: Error during scan:', error);
                   sendResponse({ success: false, error: error.message });
                 });
               } else {
-                console.error('OptiRank Loader: OptiRankScan not found after modules loaded');
+                logger.error('OptiRank Loader: OptiRankScan not found after modules loaded');
                 // Essayer de lancer le scan directement via le substitut
                 if (window.chromeRuntimeSubstitute) {
                   window.chromeRuntimeSubstitute.sendMessage({ action: 'scanLinks' });
@@ -449,15 +449,15 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
                 }
               }
             }).catch((error) => {
-              console.error('OptiRank Loader: Error initializing OptiRankMain:', error);
+              logger.error('OptiRank Loader: Error initializing OptiRankMain:', error);
               sendResponse({ success: false, error: error.message });
             });
           } else {
-            console.error('OptiRank Loader: OptiRankMain not found after modules loaded');
+            logger.error('OptiRank Loader: OptiRankMain not found after modules loaded');
             
             // Essayer de démarrer le scan directement via le substitut
             if (window.chromeRuntimeSubstitute) {
-              console.log('OptiRank Loader: Attempting to start scan via substitute');
+              logger.debug('OptiRank Loader: Attempting to start scan via substitute');
               window.chromeRuntimeSubstitute.sendMessage({ action: 'scanLinks' });
               sendResponse({ success: true, message: 'Scan started via substitute' });
             } else {
@@ -466,7 +466,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
           }
         }, 1000); // Délai plus long pour s'assurer que tous les modules sont correctement initialisés
       }).catch((error) => {
-        console.error('OptiRank Loader: Error loading modules for scan:', error);
+        logger.error('OptiRank Loader: Error loading modules for scan:', error);
         sendResponse({ success: false, error: error.message });
       });
       
@@ -475,14 +475,14 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
     
     // Si les modules sont déjà chargés, transmettre directement au module principal
     if (modulesLoaded && (message.action === 'scanLinks' || message.action === 'getResults')) {
-      console.log(`OptiRank Loader: Forwarding ${message.action} to main module`);
+      logger.debugEmoji("", "OptiRank Loader: Forwarding ${message.action} to main module");
       
       // Transmettre la demande au module principal
       if (window.OptiRankMain) {
         // Retourner true pour indiquer que nous répondrons de manière asynchrone
         return true;
       } else {
-        console.error('OptiRank Loader: OptiRankMain not found, cannot forward message');
+        logger.error('OptiRank Loader: OptiRankMain not found, cannot forward message');
         sendResponse({ success: false, message: 'OptiRankMain not found' });
       }
     }
@@ -492,33 +492,33 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
   });
 } else {
   // Mode de compatibilité sans API Chrome
-  console.log('OptiRank Loader: Chrome API not available, loading modules in compatibility mode');
+  logger.debug('OptiRank Loader: Chrome API not available, loading modules in compatibility mode');
   
   // Charger tous les modules immédiatement
   document.addEventListener('DOMContentLoaded', () => {
-    console.log('OptiRank Loader: DOMContentLoaded event fired, loading modules');
+    logger.debug('OptiRank Loader: DOMContentLoaded event fired, loading modules');
     loadAllModules().then(() => {
-      console.log('OptiRank Loader: Modules loaded in compatibility mode');
+      logger.debug('OptiRank Loader: Modules loaded in compatibility mode');
       
       // Déclencher un événement personnalisé pour indiquer que les modules sont chargés
       const event = new CustomEvent('optirank-modules-loaded');
       document.dispatchEvent(event);
     }).catch(error => {
-      console.error('OptiRank Loader: Error loading modules in compatibility mode:', error);
+      logger.error('OptiRank Loader: Error loading modules in compatibility mode:', error);
     });
   });
   
   // Si le document est déjà chargé, charger les modules immédiatement
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    console.log('OptiRank Loader: Document already loaded, loading modules now');
+    logger.debug('OptiRank Loader: Document already loaded, loading modules now');
     loadAllModules().then(() => {
-      console.log('OptiRank Loader: Modules loaded in compatibility mode');
+      logger.debug('OptiRank Loader: Modules loaded in compatibility mode');
       
       // Déclencher un événement personnalisé pour indiquer que les modules sont chargés
       const event = new CustomEvent('optirank-modules-loaded');
       document.dispatchEvent(event);
     }).catch(error => {
-      console.error('OptiRank Loader: Error loading modules in compatibility mode:', error);
+      logger.error('OptiRank Loader: Error loading modules in compatibility mode:', error);
     });
   }
 }

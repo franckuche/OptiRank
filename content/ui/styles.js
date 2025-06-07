@@ -76,4 +76,4 @@ window.OptiRankStyles = {
   applyLinkStyle
 };
 
-console.log('OptiRank: Styles module loaded');
+logger.debug('OptiRank: Styles module loaded');

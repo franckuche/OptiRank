@@ -799,6 +799,7 @@
           <div class="dashboard-intro">
             <p>Configurez OptiRank selon vos besoins et préférences.</p>
           </div>
+          <!-- Options d'analyse existantes -->
           <div class="modern-card">
             <div class="modern-card-body">
               <h4>Options d'analyse</h4>
@@ -819,12 +820,161 @@
               <button id="save-settings" class="btn btn--primary" style="margin-top: 16px;">Enregistrer</button>
             </div>
           </div>
+
+          <!-- 🚀 Paramètres Avancés OptiRank -->
+          <div class="heading-card" id="optirank-advanced-settings">
+            <div class="heading-card-content">
+              <div class="heading-card-header">
+                <div class="heading-card-header-flex">
+                  <div class="title-section">
+                    <h3 class="heading-card-title">⚙️ Paramètres Avancés</h3>
+                    <p class="heading-card-description">Configuration du système de diagnostic</p>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Options avec tooltips -->
+              <div class="settings-options-grid">
+                <div class="setting-option">
+                  <label class="option-toggle">
+                    <input type="checkbox" id="enable-diagnostic-logs">
+                    <span>Logs de diagnostic</span>
+                  </label>
+                  <div class="setting-tooltip" data-tooltip="Fournit des informations détaillées pour résoudre les problèmes. Peut impacter les performances sur les gros sites.">
+                    <i class="fas fa-info-circle"></i>
+                  </div>
+                </div>
+
+                <div class="setting-option">
+                  <label class="option-toggle">
+                    <input type="checkbox" id="auto-export-errors">
+                    <span>Export automatique</span>
+                  </label>
+                  <div class="setting-tooltip" data-tooltip="Sauvegarde automatique des erreurs pour le support. Données anonymisées RGPD.">
+                    <i class="fas fa-shield-alt"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions rapides -->
+              <div class="settings-actions">
+                <button id="export-logs-btn" class="modern-btn modern-btn-outline">
+                  <i class="fas fa-download"></i>
+                  Exporter
+                </button>
+                <button id="clear-logs-btn" class="modern-btn modern-btn-outline">
+                  <i class="fas fa-trash-alt"></i>
+                  Effacer
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 📊 Statistiques Système -->
+          <div class="heading-card">
+            <div class="heading-card-content">
+              <div class="heading-card-header">
+                <div class="heading-card-header-flex">
+                  <div class="title-section">
+                    <h3 class="heading-card-title">📊 Statistiques</h3>
+                    <p class="heading-card-description">Monitoring en temps réel</p>
+                  </div>
+                  <div class="stats-live-indicator">
+                    <span class="live-dot"></span>
+                    <span class="live-text">LIVE</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Grille de statistiques style OptiRank -->
+              <div class="stats-grid-optirank">
+                <div class="stat-group">
+                  <div class="stat-boxes">
+                    <div class="stat-box stat-listeners">
+                      <div class="stat-value" id="stat-listeners">0</div>
+                      <div class="stat-label">Event Listeners</div>
+                      <div class="stat-status" id="stat-listeners-status">Active</div>
+                    </div>
+                    
+                    <div class="stat-box stat-timers">
+                      <div class="stat-value" id="stat-timers">0</div>
+                      <div class="stat-label">Active Timers</div>
+                      <div class="stat-status" id="stat-timers-status">Running</div>
+                    </div>
+                    
+                    <div class="stat-box stat-errors">
+                      <div class="stat-value" id="stat-errors">0</div>
+                      <div class="stat-label">Error Reports</div>
+                      <div class="stat-status" id="stat-errors-status">Clean</div>
+                    </div>
+                    
+                    <div class="stat-box stat-mode">
+                      <div class="stat-value-text" id="stat-mode">DEV</div>
+                      <div class="stat-label">Environment</div>
+                      <div class="stat-status" id="stat-mode-status">Debug</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Santé du Système -->
+          <div class="heading-card">
+            <div class="heading-card-content">
+              <div class="heading-card-header">
+                <div class="heading-card-header-flex">
+                  <div class="title-section">
+                    <h3 class="heading-card-title">❤️ System Health</h3>
+                    <p class="heading-card-description">État global du système</p>
+                  </div>
+                  <div class="health-score" id="health-score">98%</div>
+                </div>
+              </div>
+              
+              <div class="health-bar-container">
+                <div class="health-bar-optirank">
+                  <div class="health-progress-optirank" id="health-progress"></div>
+                </div>
+                <div class="health-indicators">
+                  <div class="health-indicator">
+                    <span class="indicator-dot good"></span>
+                    <span>Performances</span>
+                  </div>
+                  <div class="health-indicator">
+                    <span class="indicator-dot good"></span>
+                    <span>Mémoire</span>
+                  </div>
+                  <div class="health-indicator">
+                    <span class="indicator-dot good"></span>
+                    <span>Stabilité</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notification système -->
+          <div id="settings-save-notification" class="card card--alert-success card--animate-in" style="display: none;">
+            <div class="card__content card__content--sm">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                <span style="font-weight: 500;">Paramètres sauvegardés avec succès !</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
   
+  <!-- 🚀 Système de Logging OptiRank -->
+  <script src="../shared/logger.js"></script>
+  <script src="../shared/event-manager.js"></script>
+  <script src="js/settings.js"></script>
+  
   <!-- Scripts principaux de l'extension -->
+  <script src="js/logger.js"></script>
   <script src="popup.js"></script>
   <script src="improved-filters.js"></script>
   
@@ -922,6 +1072,604 @@
     }
   });
   </script>
+  
+  <!-- 🎨 CSS Avancé pour les paramètres -->
+  <style>
+    /* === PARAMÈTRES AVANCÉS STYLE OPTIRANK === */
+    .settings-options-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    
+    @media (max-width: 480px) {
+      .settings-options-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .setting-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #fafafa;
+      border: 1px solid rgba(59, 130, 246, 0.08);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .setting-option:hover {
+      background: #ffffff;
+      border-color: rgba(59, 130, 246, 0.15);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+    }
+    
+    .setting-tooltip {
+      position: relative;
+      cursor: help;
+      color: #2563eb;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    .setting-tooltip:hover {
+      color: #1d4ed8;
+      transform: scale(1.1);
+    }
+    
+    .setting-tooltip::before {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 130%;
+      right: 0;
+      background: #1f2937;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      max-width: 250px;
+      white-space: normal;
+      width: 250px;
+      line-height: 1.4;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .setting-tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: 115%;
+      right: 20px;
+      border: 5px solid transparent;
+      border-top-color: #1f2937;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .setting-tooltip:hover::before,
+    .setting-tooltip:hover::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .settings-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    
+         /* === STATISTIQUES STYLE OPTIRANK === */
+     #settings .stats-live-indicator {
+       display: flex;
+       align-items: center;
+       gap: 6px;
+     }
+     
+     #settings .live-dot {
+       width: 8px;
+       height: 8px;
+       background: #ef4444;
+       border-radius: 50%;
+       animation: live-pulse 2s infinite;
+     }
+     
+     #settings .live-text {
+       font-size: 10px;
+       font-weight: 600;
+       color: #ef4444;
+       letter-spacing: 0.5px;
+     }
+     
+     #settings .stats-grid-optirank {
+       margin-bottom: 0;
+     }
+     
+     #settings .stat-boxes {
+       display: grid;
+       grid-template-columns: repeat(4, 1fr);
+       gap: 12px;
+     }
+     
+     @media (max-width: 768px) {
+       #settings .stat-boxes {
+         grid-template-columns: repeat(2, 1fr);
+       }
+     }
+     
+     @media (max-width: 480px) {
+       #settings .stat-boxes {
+         grid-template-columns: 1fr;
+       }
+     }
+     
+     #settings .stat-box {
+       text-align: center;
+       padding: 16px 12px;
+       border-radius: 8px;
+       background: #fafafa;
+       border: 1px solid rgba(59, 130, 246, 0.08);
+       transition: all 0.3s ease;
+       cursor: pointer;
+       min-width: 120px;
+     }
+     
+     #settings .stat-box:hover {
+       transform: translateY(-2px);
+       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+       border-color: rgba(59, 130, 246, 0.15);
+       background: #ffffff;
+     }
+     
+     #settings .stat-value {
+       font-size: 24px;
+       font-weight: 800;
+       margin-bottom: 6px;
+       color: #2563eb;
+       transition: all 0.3s ease;
+     }
+     
+     #settings .stat-value-text {
+       font-size: 18px;
+       font-weight: 700;
+       margin-bottom: 6px;
+       color: #2563eb;
+       font-family: 'JetBrains Mono', monospace;
+     }
+     
+     #settings .stat-box:hover .stat-value,
+     #settings .stat-box:hover .stat-value-text {
+       transform: scale(1.05);
+     }
+     
+     #settings .stat-label {
+       font-size: 10px;
+       font-weight: 600;
+       text-transform: uppercase;
+       letter-spacing: 0.5px;
+       color: #6b7280;
+       margin-bottom: 4px;
+     }
+     
+     #settings .stat-status {
+       font-size: 9px;
+       font-weight: 600;
+       text-transform: uppercase;
+       letter-spacing: 0.3px;
+       padding: 2px 6px;
+       border-radius: 6px;
+       background: rgba(59, 130, 246, 0.1);
+       color: #2563eb;
+     }
+     
+     /* === SANTÉ DU SYSTÈME STYLE OPTIRANK === */
+     #settings .health-score {
+       font-size: 20px;
+       font-weight: 700;
+       color: #10b981;
+     }
+     
+     #settings .health-bar-container {
+       margin-top: 16px;
+     }
+     
+     #settings .health-bar-optirank {
+       height: 12px;
+       background: rgba(59, 130, 246, 0.1);
+       border-radius: 6px;
+       overflow: hidden;
+       margin-bottom: 12px;
+     }
+     
+     #settings .health-progress-optirank {
+       height: 100%;
+       background: linear-gradient(90deg, #10b981, #059669);
+       border-radius: 6px;
+       width: 98%;
+       transition: all 0.5s ease;
+     }
+     
+     #settings .health-indicators {
+       display: flex;
+       justify-content: space-between;
+       gap: 12px;
+     }
+     
+     #settings .health-indicator {
+       display: flex;
+       align-items: center;
+       gap: 6px;
+       font-size: 12px;
+       color: #6b7280;
+       font-weight: 500;
+     }
+     
+     #settings .indicator-dot {
+       width: 8px;
+       height: 8px;
+       border-radius: 50%;
+     }
+     
+     #settings .indicator-dot.good {
+       background: #10b981;
+     }
+     
+     #settings .indicator-dot.warning {
+       background: #f59e0b;
+     }
+     
+     #settings .indicator-dot.error {
+       background: #ef4444;
+     }
+     
+     /* === BOUTONS STYLE OPTIRANK === */
+     #settings .modern-btn {
+       background: var(--settings-blue);
+       color: white;
+       border: none;
+       padding: 8px 16px;
+       border-radius: 8px;
+       font-size: 13px;
+       font-weight: 600;
+       cursor: pointer;
+       transition: all 0.3s ease;
+       display: inline-flex;
+       align-items: center;
+       gap: 6px;
+     }
+     
+     #settings .modern-btn:hover {
+       background: var(--settings-blue-dark);
+       transform: translateY(-1px);
+       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+     }
+     
+     #settings .modern-btn-outline {
+       background: transparent;
+       color: var(--settings-blue);
+       border: 1px solid var(--settings-blue);
+       padding: 8px 16px;
+       border-radius: 8px;
+       font-size: 13px;
+       font-weight: 600;
+       cursor: pointer;
+       transition: all 0.3s ease;
+       display: inline-flex;
+       align-items: center;
+       gap: 6px;
+     }
+     
+     #settings .modern-btn-outline:hover {
+       background: var(--settings-blue);
+       color: white;
+       transform: translateY(-1px);
+       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+     }
+    
+         /* === SETTINGS STYLE COMPLET OPTIRANK === */
+     
+     /* Variables pour Settings */
+     :root {
+       --settings-blue: #3b82f6;
+       --settings-blue-light: #60a5fa;
+       --settings-blue-dark: #2563eb;
+       --settings-bg: linear-gradient(135deg, rgba(239, 246, 255, 0.4) 0%, rgba(219, 234, 254, 0.3) 50%, rgba(243, 244, 246, 0.5) 100%);
+       --settings-border: rgba(59, 130, 246, 0.1);
+     }
+     
+     /* Background global pour Settings */
+     body:has(#settings.tab-content.active) .content,
+     .content:has(#settings.tab-content.active) {
+       background: var(--settings-bg) !important;
+       backdrop-filter: blur(8px);
+     }
+     
+     body:has(#settings.tab-content.active) .container,
+     .container:has(#settings.tab-content.active) {
+       background: var(--settings-bg) !important;
+     }
+     
+     body:has(#settings.tab-content.active) .tab-navigation,
+     .tab-navigation:has(+ * #settings.tab-content.active) {
+       background: var(--settings-bg) !important;
+     }
+     
+     /* Largeur pleine pour Settings */
+     #settings.tab-content.active ~ * .content,
+     #settings.tab-content .content,
+     .content:has(#settings.tab-content.active) {
+       --max-content-width: 100% !important;
+       max-width: 100% !important;
+       padding: 0 !important;
+       margin: 0 !important;
+     }
+     
+     #settings.tab-content {
+       background: transparent;
+       backdrop-filter: none;
+       min-height: 100vh;
+       padding: 0;
+     }
+     
+     #settings .content-section {
+       padding: 20px 16px !important;
+       margin: 0 auto !important;
+       max-width: calc(100% - 32px) !important;
+     }
+
+     @media (min-width: 768px) {
+       #settings .content-section {
+         padding: 24px 20px !important;
+       }
+     }
+     
+     /* Cartes style OptiRank pour Settings */
+     #settings .heading-card {
+       background: #fafafa;
+       backdrop-filter: blur(12px);
+       border: 1px solid var(--settings-border);
+       border-radius: 12px;
+       margin: 0 auto 16px auto;
+       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+       transition: all 0.3s ease;
+       width: calc(100% - 6%);
+       max-width: none;
+     }
+     
+     #settings .heading-card:hover {
+       transform: translateY(-2px);
+       box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12);
+       border-color: rgba(59, 130, 246, 0.15);
+     }
+     
+     #settings .heading-card:last-child {
+       margin-bottom: 0;
+     }
+     
+     #settings .heading-card-content {
+       padding: 20px;
+     }
+     
+     #settings .heading-card-header {
+       margin-bottom: 16px;
+       padding-bottom: 12px;
+       border-bottom: 1px solid rgba(59, 130, 246, 0.08);
+     }
+     
+     #settings .heading-card-title {
+       font-size: 16px;
+       font-weight: 700;
+       color: var(--settings-blue-dark);
+       margin: 0 0 4px 0;
+       line-height: 1.2;
+     }
+     
+     #settings .heading-card-description {
+       color: #6b7280;
+       font-size: 14px;
+       margin: 0;
+       line-height: 1.3;
+     }
+     
+     /* === ANIMATIONS SIMPLES === */
+     @keyframes live-pulse {
+       0%, 100% { opacity: 1; transform: scale(1); }
+       50% { opacity: 0.6; transform: scale(1.2); }
+     }
+    
+    /* === AMÉLIORATIONS OPTION TOGGLE === */
+    .option-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    
+    .option-toggle input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #3b82f6;
+    }
+    
+    .option-toggle span {
+      cursor: pointer;
+      flex: 1;
+    }
+    
+    /* === BOUTONS ACTIONS === */
+    .btn--sm {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
+    .card__actions .btn {
+      min-width: 120px;
+    }
+    
+    /* === NOTIFICATION AMÉLIORÉE === */
+    #settings-save-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      max-width: 300px;
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+    }
+    
+    /* === STYLES SUPPLÉMENTAIRES OPTIRANK === */
+    #settings .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    
+    @media (max-width: 600px) {
+      #settings .settings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* === TOOLTIPS === */
+    #settings .tooltip-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.1);
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      cursor: help;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    
+    #settings .tooltip-icon:hover {
+      background: #2563eb;
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    #settings .tooltip-text {
+      visibility: hidden;
+      width: 200px;
+      background: #1f2937;
+      color: white;
+      text-align: center;
+      border-radius: 8px;
+      padding: 8px 12px;
+      position: absolute;
+      z-index: 1000;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -100px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 12px;
+      line-height: 1.3;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    #settings .tooltip-text::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #1f2937 transparent transparent transparent;
+    }
+    
+    #settings .tooltip-icon:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+    
+    /* === ÉLÉMENTS FORM === */
+    #settings .toggle-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(59, 130, 246, 0.08);
+    }
+    
+    #settings .toggle-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    
+    #settings .toggle-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    
+    #settings .toggle-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0;
+    }
+    
+    #settings .toggle-subtitle {
+      font-size: 12px;
+      color: #6b7280;
+      margin: 0;
+      font-weight: 400;
+    }
+    
+    /* === ESPACEMENT ET PADDING AMÉLIORÉS === */
+    #settings {
+      padding: 0 !important;
+    }
+    
+    #settings .heading-card + .heading-card {
+      margin-top: 20px;
+    }
+    
+    @media (min-width: 768px) {
+      #settings .heading-card + .heading-card {
+        margin-top: 24px;
+      }
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 400px) {
+      .advanced-setting-description {
+        margin-left: 0;
+        margin-top: 8px;
+      }
+      
+      .card__actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .card__actions .btn {
+        min-width: auto;
+        width: 100%;
+      }
+    }
+  </style>
   
   <!-- Modules headings avec architecture modulaire propre -->
   <script src="headings/utils/utils.js"></script>

@@ -83,4 +83,4 @@ window.OptiRankUtils = {
   }
 };
 
-console.log('OptiRank: Utils module loaded');
+logger.debug('OptiRank: Utils module loaded');

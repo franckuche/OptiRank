@@ -8,16 +8,16 @@
  * Fait tout le comptage et l'analyse dans le popup pour éviter les incohérences
  */
 function processRawHeadingsData(rawData) {
-  console.log('%c[PROCESS_RAW] === TRAITEMENT COMPLET DES DONNÉES BRUTES ===', 'background: #2563eb; color: white; padding: 5px; font-weight: bold;');
-  console.log('%c[PROCESS_RAW] Données brutes reçues:', 'background: #2563eb; color: white; padding: 2px 5px;', rawData);
+  logger.debug('%c[PROCESS_RAW] === TRAITEMENT COMPLET DES DONNÉES BRUTES ===', 'background: #2563eb; color: white; padding: 5px; font-weight: bold;');
+  logger.debug('%c[PROCESS_RAW] Données brutes reçues:', 'background: #2563eb; color: white; padding: 2px 5px;', rawData);
   
   if (!rawData || !rawData.rawHeadings) {
-    console.error('%c[PROCESS_RAW] ERREUR: Pas de données brutes valides', 'background: red; color: white; padding: 2px 5px;');
+    logger.error('%c[PROCESS_RAW] ERREUR: Pas de données brutes valides', 'background: red; color: white; padding: 2px 5px;');
     return;
   }
   
   const rawHeadings = rawData.rawHeadings;
-  console.log(`%c[PROCESS_RAW] ${rawHeadings.length} titres bruts à traiter`, 'background: #2563eb; color: white; padding: 2px 5px;');
+  logger.debugEmoji("", "%c[PROCESS_RAW] ${rawHeadings.length} titres bruts à traiter", 'background: #2563eb; color: white; padding: 2px 5px;');
   
   // ÉTAPE 1: Compter les headings par niveau (fait dans le popup maintenant)
   const counts = {
@@ -36,7 +36,7 @@ function processRawHeadingsData(rawData) {
     }
   });
   
-  console.log('%c[PROCESS_RAW] Comptage terminé:', 'background: #2563eb; color: white; padding: 2px 5px;', counts);
+  logger.debug('%c[PROCESS_RAW] Comptage terminé:', 'background: #2563eb; color: white; padding: 2px 5px;', counts);
   
   // ÉTAPE 2: Créer la structure de données compatible avec l'affichage existant
   const processedData = {
@@ -47,46 +47,46 @@ function processRawHeadingsData(rawData) {
     timestamp: rawData.timestamp
   };
   
-  console.log('%c[PROCESS_RAW] Structure de données créée:', 'background: #2563eb; color: white; padding: 2px 5px;', processedData);
+  logger.debug('%c[PROCESS_RAW] Structure de données créée:', 'background: #2563eb; color: white; padding: 2px 5px;', processedData);
   
   // ÉTAPE 3: Appeler l'affichage normal avec les données traitées
-  console.log('%c[PROCESS_RAW] Appel de displayHeadingsResults avec les données traitées', 'background: #10b981; color: white; padding: 2px 5px;');
+  logger.debug('%c[PROCESS_RAW] Appel de displayHeadingsResults avec les données traitées', 'background: #10b981; color: white; padding: 2px 5px;');
   displayHeadingsResults(processedData);
 }
 
 // Fonction pour afficher les résultats de l'analyse des titres
 function displayHeadingsResults(headingsData) {
-  console.log('%c[DISPLAY] Début de l\'affichage des résultats', 'background: #e74c3c; color: white; padding: 2px 5px; border-radius: 3px;');
-  console.log('%c[DISPLAY] Données reçues:', 'background: #e74c3c; color: white; padding: 2px 5px; border-radius: 3px;', headingsData);
+  logger.debug('%c[DISPLAY] Début de l\'affichage des résultats', 'background: #e74c3c; color: white; padding: 2px 5px; border-radius: 3px;');
+  logger.debug('%c[DISPLAY] Données reçues:', 'background: #e74c3c; color: white; padding: 2px 5px; border-radius: 3px;', headingsData);
   
   if (!headingsData) {
-    console.warn('⚠️ DISPLAY: Aucune donnée fournie à displayHeadingsResults');
+    logger.warn('⚠️ DISPLAY: Aucune donnée fournie à displayHeadingsResults');
     return;
   }
 
-  console.log('📊 DISPLAY: Analyse des données:');
-  console.log('  - headingsData.counts:', headingsData.counts);
-  console.log('  - headingsData.headings:', headingsData.headings?.length || 0, 'éléments');
-  console.log('  - headingsData.items:', headingsData.items?.length || 0, 'éléments');
-  console.log('  - headingsData.issues:', headingsData.issues?.length || 0, 'éléments');
+  logger.debug('📊 DISPLAY: Analyse des données:');
+  logger.debug('  - headingsData.counts:', headingsData.counts);
+  logger.debug('  - headingsData.headings:', headingsData.headings?.length || 0, 'éléments');
+  logger.debug('  - headingsData.items:', headingsData.items?.length || 0, 'éléments');
+  logger.debug('  - headingsData.issues:', headingsData.issues?.length || 0, 'éléments');
 
   try {
     // Mise à jour des compteurs
     if (headingsData.counts) {
-      console.log('📈 DISPLAY: Mise à jour des compteurs:', headingsData.counts);
+      logger.debug('📈 DISPLAY: Mise à jour des compteurs:', headingsData.counts);
       updateHeadingCounts(headingsData.counts);
     } else {
-      console.warn('⚠️ DISPLAY: Pas de compteurs dans les données');
+      logger.warn('⚠️ DISPLAY: Pas de compteurs dans les données');
     }
 
     // Affichage de la structure des titres
     const headingsList = headingsData.headings || headingsData.items || [];
-    console.log('📝 DISPLAY: Liste des headings à afficher:', headingsList.length, 'éléments');
+    logger.debug('📝 DISPLAY: Liste des headings à afficher:', headingsList.length, 'éléments');
     
     if (headingsList.length > 0) {
-      console.log('🔍 DISPLAY: Détail des headings:');
+      logger.debug('🔍 DISPLAY: Détail des headings:');
       headingsList.forEach((heading, index) => {
-        console.log(`  ${index + 1}. H${heading.level}: "${heading.text}" ${heading.missing ? '(MANQUANT)' : ''}`);
+        logger.debugEmoji("", `${index + 1}. H${heading.level}: "${heading.text}" ${heading.missing ? '(MANQUANT)' : ''}`);
       });
     }
     
@@ -94,10 +94,10 @@ function displayHeadingsResults(headingsData) {
 
     // Mise à jour des insights
     if (headingsData.issues !== undefined) {
-      console.log('🧠 DISPLAY: Mise à jour des insights avec', headingsData.issues.length, 'problèmes');
+      logger.debug('🧠 DISPLAY: Mise à jour des insights avec', headingsData.issues.length, 'problèmes');
       updateInsights(headingsData);
     } else {
-      console.log('🧠 DISPLAY: Génération automatique des insights');
+      logger.debug('🧠 DISPLAY: Génération automatique des insights');
       updateInsights({
         counts: headingsData.counts,
         headings: headingsList,
@@ -106,14 +106,14 @@ function displayHeadingsResults(headingsData) {
     }
 
   } catch (error) {
-    console.error('❌ DISPLAY: Erreur dans displayHeadingsResults:', error);
-    console.error('Stack trace:', error.stack);
+    logger.error('❌ DISPLAY: Erreur dans displayHeadingsResults:', error);
+    logger.error('Stack trace:', error.stack);
   }
 }
 
 // Fonction pour mettre à jour les compteurs de headings avec le design élégant
 function updateHeadingCounts(counts) {
-  console.log('%c[UPDATE_COUNTS] Mise à jour des compteurs:', 'background: #8b5cf6; color: white; padding: 2px 5px;', counts);
+  logger.debug('%c[UPDATE_COUNTS] Mise à jour des compteurs:', 'background: #8b5cf6; color: white; padding: 2px 5px;', counts);
   
   // Mettre à jour chaque niveau de titre
   for (let i = 1; i <= 6; i++) {
@@ -123,9 +123,9 @@ function updateHeadingCounts(counts) {
     const element = document.getElementById(`h${i}-count`);
     if (element) {
       element.textContent = count;
-      console.log(`%c[UPDATE_COUNTS] Compteur H${i} mis à jour: ${count}`, 'background: #3b82f6; color: white; padding: 2px 5px;');
+      logger.debugEmoji("", "%c[UPDATE_COUNTS] Compteur H${i} mis à jour: ${count}", 'background: #3b82f6; color: white; padding: 2px 5px;');
     } else {
-      console.warn(`%c[UPDATE_COUNTS] Élément h${i}-count non trouvé`, 'background: orange; color: white; padding: 2px 5px;');
+      logger.warn(`%c[UPDATE_COUNTS] Élément h${i}-count non trouvé`, 'background: orange; color: white; padding: 2px 5px;');
     }
     
     // SUPPRIMÉ : Plus de gestion des classes missing pour les compteurs
@@ -134,7 +134,7 @@ function updateHeadingCounts(counts) {
     if (badge) {
       // Toujours retirer la classe missing des badges de compteurs
       badge.classList.remove('missing');
-      console.log(`%c[UPDATE_COUNTS] Badge H${i} maintenu en BLEU (count=${count})`, 'background: #3b82f6; color: white; padding: 2px 5px;');
+      logger.debugEmoji("", "%c[UPDATE_COUNTS] Badge H${i} maintenu en BLEU (count=${count})", 'background: #3b82f6; color: white; padding: 2px 5px;');
     }
   }
   
@@ -148,7 +148,7 @@ function updateHeadingCounts(counts) {
 
 // Fonction pour mettre à jour un compteur de heading spécifique
 function updateHeadingCount(level, count) {
-  console.log(`%c[UPDATE_COUNT] Mise à jour du compteur H${level} avec la valeur ${count}`, 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
+  logger.debugEmoji("", "%c[UPDATE_COUNT] Mise à jour du compteur H${level} avec la valeur ${count}", 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
   
   // CORRECTION: Cibler directement les éléments DOM avec les IDs exacts du HTML
   // L'élément visible pour l'utilisateur
@@ -158,7 +158,7 @@ function updateHeadingCount(level, count) {
   
   // Si nous ne les trouvons pas par ID, essayons de les trouver par la structure
   if (!countElement || !countLabel) {
-    console.log(`%c[UPDATE_COUNT] Tentative de recherche alternative pour H${level}`, 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
+    logger.debugEmoji("", "%c[UPDATE_COUNT] Tentative de recherche alternative pour H${level}", 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
     
     // Parcourir toutes les cartes
     const cards = document.querySelectorAll('.card');
@@ -166,14 +166,14 @@ function updateHeadingCount(level, count) {
       // Chercher les titres H5 contenant "H1", "H2", etc.
       const cardTitle = card.querySelector('h5');
       if (cardTitle && cardTitle.textContent.trim() === `H${level}`) {
-        console.log(`%c[UPDATE_COUNT] Carte trouvée pour H${level} via titre`, 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
+        logger.debugEmoji("", "%c[UPDATE_COUNT] Carte trouvée pour H${level} via titre", 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
         
         // Chercher le compteur dans cette carte
         const counter = card.querySelector('.counter-value');
         if (counter) {
           countLabel = counter;
           countElement = card.querySelector('.counter') || card;
-          console.log(`%c[UPDATE_COUNT] Éléments trouvés via recherche alternative`, 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
+          logger.debugEmoji("", "%c[UPDATE_COUNT] Éléments trouvés via recherche alternative", 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
         }
       }
     });
@@ -183,37 +183,37 @@ function updateHeadingCount(level, count) {
   const countItem = document.querySelector(`.h${level}-item`);
   
   // Vérifier si les éléments existent après notre recherche approfondie
-  console.log(`[UPDATE_COUNT] Élément compteur H${level}: ${countElement ? 'trouvé' : 'NON TROUVÉ'}`);
-  console.log(`[UPDATE_COUNT] Élément label H${level}: ${countLabel ? 'trouvé' : 'NON TROUVÉ'}`);
-  console.log(`[UPDATE_COUNT] Élément item H${level}: ${countItem ? 'trouvé' : 'NON TROUVÉ'}`);
+  logger.debugEmoji("", "[UPDATE_COUNT] Élément compteur H${level}: ${countElement ? 'trouvé' : 'NON TROUVÉ'}");
+  logger.debugEmoji("", "[UPDATE_COUNT] Élément label H${level}: ${countLabel ? 'trouvé' : 'NON TROUVÉ'}");
+  logger.debugEmoji("", "[UPDATE_COUNT] Élément item H${level}: ${countItem ? 'trouvé' : 'NON TROUVÉ'}");
   
   if (countLabel) {
-    console.log(`[UPDATE_COUNT] Valeur actuelle du label H${level}: "${countLabel.textContent}"`);
+    logger.debugEmoji("", `[UPDATE_COUNT] Valeur actuelle du label H${level}: "${countLabel.textContent}"`);
   }
   
   const cardElement = countElement ? (countElement.closest('.card') || countElement.parentElement) : null;
-  console.log(`[UPDATE_COUNT] Carte parente: ${cardElement ? 'trouvée' : 'NON TROUVÉE'}`);
+  logger.debugEmoji("", "[UPDATE_COUNT] Carte parente: ${cardElement ? 'trouvée' : 'NON TROUVÉE'}");
   
   if (!countElement || !countLabel) {
-    console.error(`%c[UPDATE_COUNT] ERREUR: Éléments pour H${level} non trouvés`, 'background: red; color: white; padding: 2px 5px; border-radius: 3px;');
+    logger.error(`%c[UPDATE_COUNT] ERREUR: Éléments pour H${level} non trouvés`, 'background: red; color: white; padding: 2px 5px; border-radius: 3px;');
     
     // Afficher tous les compteurs disponibles pour le débogage
     const allCounters = document.querySelectorAll('.counter, .counter-value, [id*="count"]');
-    console.log(`%c[UPDATE_COUNT] Tous les compteurs trouvés (${allCounters.length}):`, 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
+    logger.debugEmoji("", "%c[UPDATE_COUNT] Tous les compteurs trouvés (${allCounters.length}):", 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
     allCounters.forEach((el, index) => {
-      console.log(`  - Compteur #${index+1}: ID=${el.id || 'aucun'}, Class=${el.className}, Text=${el.textContent.trim()}`);
+      logger.debugEmoji("", "- Compteur #${index+1}: ID=${el.id || 'aucun'}, Class=${el.className}, Text=${el.textContent.trim()}");
     });
     
     // Afficher la structure du DOM pour débogage
     const headingsSection = document.querySelector('#headings-tab-content');
     if (headingsSection) {
-      console.log(`%c[UPDATE_COUNT] Structure du DOM de la section des titres:`, 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
-      console.log(headingsSection.innerHTML.substring(0, 500) + '...');
+      logger.debugEmoji("", "%c[UPDATE_COUNT] Structure du DOM de la section des titres:", 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
+      logger.debug(headingsSection.innerHTML.substring(0, 500) + '...');
     }
     
     // Créer les éléments s'ils n'existent pas
     if (cardElement) {
-      console.log(`%c[UPDATE_COUNT] Tentative de création des éléments manquants dans la carte H${level}`, 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
+      logger.debugEmoji("", "%c[UPDATE_COUNT] Tentative de création des éléments manquants dans la carte H${level}", 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
       
       if (!countElement) {
         countElement = document.createElement('div');
@@ -240,27 +240,27 @@ function updateHeadingCount(level, count) {
     
     // Définir la nouvelle valeur
     countLabel.textContent = count;
-    console.log(`%c[UPDATE_COUNT] Label H${level} mis à jour: ${oldValue} -> ${count}`, 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
+    logger.debugEmoji("", "%c[UPDATE_COUNT] Label H${level} mis à jour: ${oldValue} -> ${count}", 'background: #1abc9c; color: white; padding: 2px 5px; border-radius: 3px;');
     
     // Animation du changement de nombre
     countLabel.style.transform = 'scale(1.2)';
     setTimeout(() => {
       countLabel.style.transform = 'scale(1)';
       // Vérifier que la valeur est toujours correcte après l'animation
-      console.log(`[UPDATE_COUNT] Valeur du label H${level} après animation: ${countLabel.textContent}`);
+      logger.debugEmoji("", "[UPDATE_COUNT] Valeur du label H${level} après animation: ${countLabel.textContent}");
     }, 200);
   } else {
-    console.warn(`%c[UPDATE_COUNT] Label h${level}-count-label non trouvé, impossible de mettre à jour le texte`, 'background: orange; color: black; padding: 2px 5px; border-radius: 3px;');
+    logger.warn(`%c[UPDATE_COUNT] Label h${level}-count-label non trouvé, impossible de mettre à jour le texte`, 'background: orange; color: black; padding: 2px 5px; border-radius: 3px;');
   }
   
   // Stocker la valeur dans l'attribut data-value pour référence future
   countElement.setAttribute('data-value', count);
-  console.log(`[UPDATE_COUNT] Attribut data-value de h${level}-count mis à jour: ${count}`);
+  logger.debugEmoji("", "[UPDATE_COUNT] Attribut data-value de h${level}-count mis à jour: ${count}");
   
   // Ajouter l'attribut data-count à l'élément heading-count-item pour les effets CSS
   if (countItem) {
     countItem.setAttribute('data-count', count);
-    console.log(`[UPDATE_COUNT] Attribut data-count ajouté à h${level}-item: ${count}`);
+    logger.debugEmoji("", "[UPDATE_COUNT] Attribut data-count ajouté à h${level}-item: ${count}");
   }
   
   // Ajouter des styles spéciaux en fonction du compteur
@@ -268,7 +268,7 @@ function updateHeadingCount(level, count) {
     // Si aucun titre, état désactivé
     if (cardElement) {
       cardElement.style.opacity = '0.7';
-      console.log(`[UPDATE_COUNT] Carte H${level} grisée (opacity: 0.7) car compteur = 0`);
+      logger.debugEmoji("", "[UPDATE_COUNT] Carte H${level} grisée (opacity: 0.7) car compteur = 0");
     }
     
     // NOUVEAU : Ajouter la classe 'missing' au badge quand le count est 0
@@ -276,13 +276,13 @@ function updateHeadingCount(level, count) {
                   document.querySelector(`.h${level}-badge`);
     if (badge) {
       badge.classList.add('missing');
-      console.log(`[UPDATE_COUNT] Classe 'missing' ajoutée au badge H${level} (compteur = 0)`);
+      logger.debugEmoji("", "[UPDATE_COUNT] Classe 'missing' ajoutée au badge H${level} (compteur = 0)");
     }
   } else {
     // Sinon, rendre la carte pleinement visible
     if (cardElement) {
       cardElement.style.opacity = '1';
-      console.log(`[UPDATE_COUNT] Carte H${level} rendue pleinement visible (opacity: 1) car compteur = ${count}`);
+      logger.debugEmoji("", "[UPDATE_COUNT] Carte H${level} rendue pleinement visible (opacity: 1) car compteur = ${count}");
     }
     
     // NOUVEAU : Retirer la classe 'missing' du badge quand le count > 0
@@ -290,7 +290,7 @@ function updateHeadingCount(level, count) {
                   document.querySelector(`.h${level}-badge`);
     if (badge) {
       badge.classList.remove('missing');
-      console.log(`[UPDATE_COUNT] Classe 'missing' retirée du badge H${level} (compteur = ${count})`);
+      logger.debugEmoji("", "[UPDATE_COUNT] Classe 'missing' retirée du badge H${level} (compteur = ${count})");
     }
     
     // Changer la couleur si le nombre est élevé
@@ -330,7 +330,7 @@ function updateHeadingCount(level, count) {
     }
   }
   
-  console.log(`Headings: Compteur H${level} mis à jour avec la valeur ${count}`);
+  logger.debugEmoji("", "Headings: Compteur H${level} mis à jour avec la valeur ${count}");
 }
 
 // Fonction pour mettre à jour les insights
@@ -352,7 +352,7 @@ function updateInsights(headingsData) {
   // Utiliser le même processus que l'affichage de la structure
   if (window.headingStructureAnalyzer && typeof window.headingStructureAnalyzer.detectMissingHeadings === 'function') {
     enhancedHeadings = window.headingStructureAnalyzer.detectMissingHeadings(headingsList);
-    console.log('🔧 INSIGHTS: Structure enrichie avec titres manquants:', enhancedHeadings.length, 'vs original:', headingsList.length);
+    logger.debug('🔧 INSIGHTS: Structure enrichie avec titres manquants:', enhancedHeadings.length, 'vs original:', headingsList.length);
     
     // Recalculer les compteurs en incluant les titres "manquants"
     enhancedCounts = { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 };
@@ -362,8 +362,8 @@ function updateInsights(headingsData) {
       }
     });
     
-    console.log('🔧 INSIGHTS: Compteurs originaux:', counts);
-    console.log('🔧 INSIGHTS: Compteurs avec titres manquants:', enhancedCounts);
+    logger.debug('🔧 INSIGHTS: Compteurs originaux:', counts);
+    logger.debug('🔧 INSIGHTS: Compteurs avec titres manquants:', enhancedCounts);
   }
   
   // Récupérer l'élément insight unique
@@ -416,18 +416,18 @@ function updateInsights(headingsData) {
  * ALGORITHME AMÉLIORÉ - Détection complète des problèmes de hiérarchie
  */
 function analyzeHeadingsAdvanced(counts, headingsList) {
-  console.log('🔍 ANALYSE_AVANCÉE: Début de l\'analyse');
-  console.log('🔍 ANALYSE_AVANCÉE: Compteurs reçus:', counts);
-  console.log('🔍 ANALYSE_AVANCÉE: Liste des titres:', headingsList.length, 'titres');
+  logger.debug('🔍 ANALYSE_AVANCÉE: Début de l\'analyse');
+  logger.debug('🔍 ANALYSE_AVANCÉE: Compteurs reçus:', counts);
+  logger.debug('🔍 ANALYSE_AVANCÉE: Liste des titres:', headingsList.length, 'titres');
   
   const issues = [];
   let severity = 'success';
   let message = 'Structure de titres excellente ! La hiérarchie est parfaitement optimisée pour le SEO.';
   
-  console.log('🔍 ANALYSE_AVANCÉE: === VÉRIFICATION H1 ===');
+  logger.debug('🔍 ANALYSE_AVANCÉE: === VÉRIFICATION H1 ===');
   // 1. Vérifier les problèmes de base H1 (PRIORITÉ ROUGE)
   if (counts.h1 === 0) {
-    console.log('🔍 ANALYSE_AVANCÉE: ❌ H1 manquant détecté');
+    logger.debug('🔍 ANALYSE_AVANCÉE: ❌ H1 manquant détecté');
     issues.push({
       type: 'noH1',
       severity: '🔴',
@@ -439,7 +439,7 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
     severity = 'critical';
     message = 'Problèmes critiques détectés';
   } else if (counts.h1 > 1) {
-    console.log('🔍 ANALYSE_AVANCÉE: ❌ Multiples H1 détectés:', counts.h1);
+    logger.debug('🔍 ANALYSE_AVANCÉE: ❌ Multiples H1 détectés:', counts.h1);
     issues.push({
       type: 'multipleH1',
       severity: '🔴',
@@ -451,19 +451,19 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
     severity = 'critical';
     message = 'Problèmes critiques détectés';
   } else {
-    console.log('🔍 ANALYSE_AVANCÉE: ✅ H1 OK (1 trouvé)');
+    logger.debug('🔍 ANALYSE_AVANCÉE: ✅ H1 OK (1 trouvé)');
     
     // Vérifier la qualité du H1
     const h1Headings = headingsList.filter(h => h.level === 1);
     if (h1Headings.length > 0) {
       const h1Text = h1Headings[0].text.trim();
       const h1Html = h1Headings[0].html || '';
-      console.log('🔍 ANALYSE_AVANCÉE: Texte du H1:', `"${h1Text}"`);
-      console.log('🔍 ANALYSE_AVANCÉE: HTML du H1:', h1Html);
+      logger.debug('🔍 ANALYSE_AVANCÉE: Texte du H1:', `"${h1Text}"`);
+      logger.debug('🔍 ANALYSE_AVANCÉE: HTML du H1:', h1Html);
       
       // Cas 1: H1 complètement vide
       if (h1Text === '') {
-        console.log('🔍 ANALYSE_AVANCÉE: ❌ H1 vide détecté');
+        logger.debug('🔍 ANALYSE_AVANCÉE: ❌ H1 vide détecté');
         issues.push({
           type: 'emptyH1',
           severity: '🔴',
@@ -477,7 +477,7 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
       }
       // Cas 2: H1 ne contient qu'une image (détection avancée)
       else if (h1Html && h1Text.length <= 20 && (h1Html.includes('<img') || h1Html.includes('<svg'))) {
-        console.log('🔍 ANALYSE_AVANCÉE: ⚠️ H1 avec image détecté');
+        logger.debug('🔍 ANALYSE_AVANCÉE: ⚠️ H1 avec image détecté');
         
         // Vérifier si c'est principalement une image
         const hasSignificantText = h1Text.length > 10 && !h1Text.match(/^[a-zA-Z0-9-_.]+$/);
@@ -500,7 +500,7 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
       }
       // Cas 3: H1 trop court (moins de 3 caractères utiles)
       else if (h1Text.length < 3) {
-        console.log('🔍 ANALYSE_AVANCÉE: ⚠️ H1 très court détecté');
+        logger.debug('🔍 ANALYSE_AVANCÉE: ⚠️ H1 très court détecté');
         issues.push({
           type: 'shortH1',
           severity: '🟡',
@@ -518,7 +518,7 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
     }
   }
   
-  console.log('🔍 ANALYSE_AVANCÉE: === VÉRIFICATION HIÉRARCHIE AMÉLIORÉE V2.0 ===');
+  logger.debug('🔍 ANALYSE_AVANCÉE: === VÉRIFICATION HIÉRARCHIE AMÉLIORÉE V2.0 ===');
   
   // 2. ALGORITHME SUPER AMÉLIORÉ - Détection complète et intelligente
   
@@ -530,14 +530,14 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
   };
   
   // === ÉTAPE 1: ORPHELINS (Priorité critique) ===
-  console.log('🔍 ANALYSE_AVANCÉE: === ÉTAPE 1: DÉTECTION DES ORPHELINS ===');
+  logger.debug('🔍 ANALYSE_AVANCÉE: === ÉTAPE 1: DÉTECTION DES ORPHELINS ===');
   for (let parentLevel = 1; parentLevel <= 5; parentLevel++) {
     const childLevel = parentLevel + 1;
     const parentCount = counts[`h${parentLevel}`] || 0;
     const childCount = counts[`h${childLevel}`] || 0;
     
     if (parentCount === 0 && childCount > 0) {
-      console.log(`🔍 ANALYSE_AVANCÉE: ❌ Orphelins détectés: ${childCount} H${childLevel} sans H${parentLevel}`);
+      logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: ❌ Orphelins détectés: ${childCount} H${childLevel} sans H${parentLevel}");
       issues.push({
         type: 'orphanHeadings',
         severity: '🔴',
@@ -553,7 +553,7 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
   }
   
   // === ÉTAPE 2: RATIOS ADJACENTS (H1→H2, H2→H3, etc.) ===
-  console.log('🔍 ANALYSE_AVANCÉE: === ÉTAPE 2: RATIOS ADJACENTS ===');
+  logger.debug('🔍 ANALYSE_AVANCÉE: === ÉTAPE 2: RATIOS ADJACENTS ===');
   for (let parentLevel = 1; parentLevel <= 5; parentLevel++) {
     const childLevel = parentLevel + 1;
     const parentCount = counts[`h${parentLevel}`] || 0;
@@ -561,17 +561,17 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
     
     // EXCEPTION: H2/H1 - Il est NORMAL d'avoir plusieurs H2 pour 1 seul H1
     if (parentLevel === 1 && childLevel === 2) {
-      console.log(`🔍 ANALYSE_AVANCÉE: ✅ H2/H1 ignoré (normal d'avoir plusieurs H2 pour 1 H1)`);
+      logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: ✅ H2/H1 ignoré (normal d'avoir plusieurs H2 pour 1 H1)");
       continue;
     }
     
     if (parentCount > 0 && childCount > 0) {
       const ratio = childCount / parentCount;
-      console.log(`🔍 ANALYSE_AVANCÉE: Ratio H${childLevel}/H${parentLevel}: ${ratio.toFixed(1)}`);
+      logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: Ratio H${childLevel}/H${parentLevel}: ${ratio.toFixed(1)}");
       
       // Ratio excessif (critique)
       if (ratio > RATIO_THRESHOLDS.excessive) {
-        console.log(`🔍 ANALYSE_AVANCÉE: ❌ Déséquilibre EXCESSIF détecté: ratio ${ratio.toFixed(1)}`);
+        logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: ❌ Déséquilibre EXCESSIF détecté: ratio ${ratio.toFixed(1)}");
         issues.push({
           type: 'excessiveRatio',
           severity: '🔴',
@@ -586,7 +586,7 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
       }
       // Ratio élevé (warning)
       else if (ratio > RATIO_THRESHOLDS.high) {
-        console.log(`🔍 ANALYSE_AVANCÉE: ⚠️ Déséquilibre ÉLEVÉ détecté: ratio ${ratio.toFixed(1)}`);
+        logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: ⚠️ Déséquilibre ÉLEVÉ détecté: ratio ${ratio.toFixed(1)}");
         issues.push({
           type: 'highRatio',
           severity: '🟡',
@@ -606,7 +606,7 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
   }
   
   // === ÉTAPE 3: NOUVELLE - DÉSÉQUILIBRES GLOBAUX ===
-  console.log('🔍 ANALYSE_AVANCÉE: === ÉTAPE 3: DÉSÉQUILIBRES GLOBAUX ===');
+  logger.debug('🔍 ANALYSE_AVANCÉE: === ÉTAPE 3: DÉSÉQUILIBRES GLOBAUX ===');
   
   // Détecter les cas comme H3:27, H4:1, H5:20 = problème structurel majeur
   // Chercher les "goulots d'étranglement" dans la hiérarchie
@@ -628,7 +628,7 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
       
       // Si le ratio est très élevé, c'est un problème de "cascade"
       if (ratio > 10) {
-        console.log(`🔍 ANALYSE_AVANCÉE: ❌ DÉSÉQUILIBRE GLOBAL: H${belowLevel}:${belowCount} vs H${bottleneckLevel}:${bottleneckCount} = ratio ${ratio.toFixed(1)}`);
+        logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: ❌ DÉSÉQUILIBRE GLOBAL: H${belowLevel}:${belowCount} vs H${bottleneckLevel}:${bottleneckCount} = ratio ${ratio.toFixed(1)}");
         
         // Vérifier s'il y a des niveaux manquants entre les deux
         const missingLevels = [];
@@ -675,7 +675,7 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
   }
   
   // === ÉTAPE 4: STRUCTURES INCOHÉRENTES ===
-  console.log('🔍 ANALYSE_AVANCÉE: === ÉTAPE 4: STRUCTURES INCOHÉRENTES ===');
+  logger.debug('🔍 ANALYSE_AVANCÉE: === ÉTAPE 4: STRUCTURES INCOHÉRENTES ===');
   
   // Détecter les cas comme "Beaucoup de H3, très peu de H4, beaucoup de H5"
   // C'est un signe d'une mauvaise utilisation de la hiérarchie
@@ -701,7 +701,7 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
     const valleyRatio = avgNeighbors / current.count;
     
     if (valleyRatio > 8 && current.count <= 2 && avgNeighbors >= 10) {
-      console.log(`🔍 ANALYSE_AVANCÉE: ⚠️ VALLÉE DÉTECTÉE: H${current.level}:${current.count} entre H${prev.level}:${prev.count} et H${next.level}:${next.count}`);
+      logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: ⚠️ VALLÉE DÉTECTÉE: H${current.level}:${current.count} entre H${prev.level}:${prev.count} et H${next.level}:${next.count}");
       
       issues.push({
         type: 'hierarchyValley',
@@ -728,10 +728,10 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
   }
   
   // === ÉTAPE 5: GAPS DANS LA HIÉRARCHIE ===
-  console.log('🔍 ANALYSE_AVANCÉE: === ÉTAPE 5: GAPS ===');
+  logger.debug('🔍 ANALYSE_AVANCÉE: === ÉTAPE 5: GAPS ===');
   
   // Debug : Afficher les compteurs reçus
-  console.log('🔍 ANALYSE_AVANCÉE: Compteurs pour gaps:', {
+  logger.debug('🔍 ANALYSE_AVANCÉE: Compteurs pour gaps:', {
     h1: counts.h1 || 0,
     h2: counts.h2 || 0, 
     h3: counts.h3 || 0,
@@ -745,11 +745,11 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
     const count = counts[`h${i}`] || 0;
     if (count > 0) {
       levelsWithContent.push(i);
-      console.log(`🔍 ANALYSE_AVANCÉE: Niveau H${i} a du contenu: ${count}`);
+      logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: Niveau H${i} a du contenu: ${count}");
     }
   }
   
-  console.log('🔍 ANALYSE_AVANCÉE: Niveaux avec contenu:', levelsWithContent);
+  logger.debug('🔍 ANALYSE_AVANCÉE: Niveaux avec contenu:', levelsWithContent);
   
   // Vérifier s'il y a des sauts de niveaux
   for (let i = 0; i < levelsWithContent.length - 1; i++) {
@@ -757,25 +757,25 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
     const nextLevel = levelsWithContent[i + 1];
     const levelDiff = nextLevel - currentLevel;
     
-    console.log(`🔍 ANALYSE_AVANCÉE: Comparaison H${currentLevel} → H${nextLevel} (diff: ${levelDiff})`);
+    logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: Comparaison H${currentLevel} → H${nextLevel} (diff: ${levelDiff})");
     
     if (levelDiff > 1) {
       const missingLevels = [];
       for (let level = currentLevel + 1; level < nextLevel; level++) {
         const missingCount = counts[`h${level}`] || 0;
-        console.log(`🔍 ANALYSE_AVANCÉE: Vérification H${level}: ${missingCount}`);
+        logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: Vérification H${level}: ${missingCount}");
         
         // VÉRIFICATION DOUBLE : s'assurer que le niveau est vraiment absent
         if (missingCount === 0) {
           missingLevels.push(`H${level}`);
         } else {
-          console.log(`🔍 ANALYSE_AVANCÉE: ⚠️ ERREUR DE LOGIQUE: H${level} a ${missingCount} éléments mais n'était pas dans levelsWithContent !`);
+          logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: ⚠️ ERREUR DE LOGIQUE: H${level} a ${missingCount} éléments mais n'était pas dans levelsWithContent !");
         }
       }
       
       // Ne créer un problème QUE s'il y a vraiment des niveaux manquants
       if (missingLevels.length > 0) {
-        console.log(`🔍 ANALYSE_AVANCÉE: ⚠️ Gap valide détecté: H${currentLevel} → H${nextLevel} (manque: ${missingLevels.join(', ')})`);
+        logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: ⚠️ Gap valide détecté: H${currentLevel} → H${nextLevel} (manque: ${missingLevels.join(', ')})");
         
         issues.push({
           type: 'hierarchyGap',
@@ -792,20 +792,20 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
           message = 'Problèmes de hiérarchie détectés';
         }
       } else {
-        console.log(`🔍 ANALYSE_AVANCÉE: ✅ Gap ignoré: H${currentLevel} → H${nextLevel} (pas de niveaux réellement manquants)`);
+        logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: ✅ Gap ignoré: H${currentLevel} → H${nextLevel} (pas de niveaux réellement manquants)");
       }
     }
   }
   
-  console.log('🔍 ANALYSE_AVANCÉE: === RÉSULTATS ===');
-  console.log('🔍 ANALYSE_AVANCÉE: Nombre de problèmes détectés:', issues.length);
+  logger.debug('🔍 ANALYSE_AVANCÉE: === RÉSULTATS ===');
+  logger.debug('🔍 ANALYSE_AVANCÉE: Nombre de problèmes détectés:', issues.length);
   issues.forEach((issue, index) => {
-    console.log(`🔍 ANALYSE_AVANCÉE: Problème ${index + 1}: ${issue.severity} ${issue.title}`);
+    logger.debugEmoji("🔍", "ANALYSE_AVANCÉE: Problème ${index + 1}: ${issue.severity} ${issue.title}");
   });
   
   // Si aucun problème détecté ET qu'on a au moins un H1, c'est vraiment optimal
   if (issues.length === 0 && counts.h1 === 1) {
-    console.log('🔍 ANALYSE_AVANCÉE: ✅ Structure parfaite détectée !');
+    logger.debug('🔍 ANALYSE_AVANCÉE: ✅ Structure parfaite détectée !');
     severity = 'success';
     message = 'Structure de titres excellente ! La hiérarchie est parfaitement optimisée pour le SEO.';
   }
@@ -852,7 +852,7 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
     }
   };
   
-  console.log('🔍 ANALYSE_AVANCÉE: Résultat final:', result);
+  logger.debug('🔍 ANALYSE_AVANCÉE: Résultat final:', result);
   return result;
 }
 
@@ -862,12 +862,12 @@ function analyzeHeadingsAdvanced(counts, headingsList) {
 function displayAdvancedInsights(insightElement, analysisResult) {
   const { summary, issues, scores } = analysisResult;
   
-  console.log('🔍 DEBUG: Problèmes détectés:', issues.length, issues.map(i => i.title));
+  logger.debug('🔍 DEBUG: Problèmes détectés:', issues.length, issues.map(i => i.title));
   
   // Récupérer la liste des insights pour y ajouter plusieurs éléments
   const insightsList = document.getElementById('insights-list');
   if (!insightsList) {
-    console.error('Liste insights-list non trouvée');
+    logger.error('Liste insights-list non trouvée');
     return;
   }
   
@@ -876,7 +876,7 @@ function displayAdvancedInsights(insightElement, analysisResult) {
   
   // CAS SPÉCIAL : Aucun problème détecté = Structure parfaite !
   if (issues.length === 0) {
-    console.log('🔍 DEBUG: Aucun problème détecté - Affichage du message de succès');
+    logger.debug('🔍 DEBUG: Aucun problème détecté - Affichage du message de succès');
     
     const successItem = document.createElement('li');
     successItem.className = 'insight-item success';
@@ -890,13 +890,13 @@ function displayAdvancedInsights(insightElement, analysisResult) {
     `;
     
     insightsList.appendChild(successItem);
-    console.log('🔍 DEBUG: Message de succès ajouté au DOM');
+    logger.debug('🔍 DEBUG: Message de succès ajouté au DOM');
     return;
   }
   
   // CAS NORMAL : Afficher chaque problème détecté
   issues.forEach((issue, index) => {
-    console.log(`🔍 DEBUG: Ajout problème ${index + 1}:`, issue.title);
+    logger.debugEmoji("🔍", "DEBUG: Ajout problème ${index + 1}:", issue.title);
     
     const iconClass = getSeverityIcon(issue.severity);
     const severityClass = getSeverityClass(issue.severity);
@@ -967,10 +967,10 @@ function displayAdvancedInsights(insightElement, analysisResult) {
     // Ajouter à la liste
     insightsList.appendChild(listItem);
     
-    console.log(`🔍 DEBUG: Problème ${index + 1} ajouté au DOM`);
+    logger.debugEmoji("🔍", "DEBUG: Problème ${index + 1} ajouté au DOM");
   });
   
-  console.log('🔍 DEBUG: Total éléments dans la liste:', insightsList.children.length);
+  logger.debug('🔍 DEBUG: Total éléments dans la liste:', insightsList.children.length);
 }
 
 /**
@@ -1052,7 +1052,7 @@ function displayHeadingIssues(issues) {
   const noIssuesMessage = document.getElementById('no-issues-message');
   
   if (!issuesList || !noIssuesMessage) {
-    console.error('Headings: Éléments de problèmes non trouvés dans le DOM');
+    logger.error('Headings: Éléments de problèmes non trouvés dans le DOM');
     return;
   }
   
@@ -1099,7 +1099,7 @@ function displayHeadingIssues(issues) {
 
 // NOUVELLE FONCTION : Détecter les niveaux de titres manquants dans la structure hiérarchique
 function detectMissingHeadingsInStructure(headings) {
-  console.log('%c[MISSING_DETECTION] Analyse des niveaux manquants', 'background: #f59e0b; color: white; padding: 2px 5px;', headings);
+  logger.debug('%c[MISSING_DETECTION] Analyse des niveaux manquants', 'background: #f59e0b; color: white; padding: 2px 5px;', headings);
   
   if (!headings || headings.length === 0) {
     return [];
@@ -1119,7 +1119,7 @@ function detectMissingHeadingsInStructure(headings) {
           text: `Niveau H${missingLevel} manquant`,
           missing: true
         });
-        console.log(`%c[MISSING_DETECTION] Niveau manquant détecté: H${missingLevel}`, 'background: #f59e0b; color: white; padding: 2px 5px;');
+        logger.debugEmoji("", "%c[MISSING_DETECTION] Niveau manquant détecté: H${missingLevel}", 'background: #f59e0b; color: white; padding: 2px 5px;');
       }
     }
     
@@ -1128,18 +1128,18 @@ function detectMissingHeadingsInStructure(headings) {
     lastLevel = currentLevel;
   });
   
-  console.log('%c[MISSING_DETECTION] Structure avec niveaux manquants:', 'background: #f59e0b; color: white; padding: 2px 5px;', result);
+  logger.debug('%c[MISSING_DETECTION] Structure avec niveaux manquants:', 'background: #f59e0b; color: white; padding: 2px 5px;', result);
   return result;
 }
 
 // Fonction pour afficher la structure des titres avec le design élégant
 function displayHeadingStructure(headings) {
-  console.log('Headings: Affichage de la structure des titres', headings);
+  logger.debug('Headings: Affichage de la structure des titres', headings);
   
   // Récupérer le conteneur de la liste
   const structureContainer = document.getElementById('headings-list');
   if (!structureContainer) {
-    console.error('Headings: Conteneur headings-list non trouvé');
+    logger.error('Headings: Conteneur headings-list non trouvé');
     return;
   }
   
@@ -1148,7 +1148,7 @@ function displayHeadingStructure(headings) {
   
   // Si aucun titre, afficher l'état vide
   if (!headings || headings.length === 0) {
-    console.log('Headings: Aucun titre à afficher - état vide');
+    logger.debug('Headings: Aucun titre à afficher - état vide');
     
     // Utiliser l'état vide simple du CSS
     const emptyState = document.createElement('div');
@@ -1164,7 +1164,7 @@ function displayHeadingStructure(headings) {
   
   // NOUVELLE LOGIQUE : Détecter les niveaux manquants avec notre fonction locale
   const enhancedHeadings = detectMissingHeadingsInStructure(headings);
-  console.log('Headings: Structure hiérarchique analysée', enhancedHeadings);
+  logger.debug('Headings: Structure hiérarchique analysée', enhancedHeadings);
   
   // Couleurs élégantes pour les indicateurs de niveau
   const headingColors = {
@@ -1176,13 +1176,13 @@ function displayHeadingStructure(headings) {
     6: '#6B7280'  // Gris élégant
   };
   
-  console.log('Headings: Ajout de', enhancedHeadings.length, 'titres avec le design élégant');
+  logger.debug('Headings: Ajout de', enhancedHeadings.length, 'titres avec le design élégant');
   
   // Ajouter chaque titre avec le design simple
   enhancedHeadings.forEach((heading, index) => {
     // Vérifier que le titre a les propriétés nécessaires
     if (!heading || typeof heading.level === 'undefined' || (!heading.text && !heading.missing)) {
-      console.error('Headings: Titre invalide:', heading);
+      logger.error('Headings: Titre invalide:', heading);
       return;
     }
     
@@ -1249,7 +1249,7 @@ function displayHeadingStructure(headings) {
       // Ajouter au conteneur principal
       structureContainer.appendChild(item);
     } catch (error) {
-      console.error('Headings: Erreur lors de l\'ajout du titre', index, error);
+      logger.error('Headings: Erreur lors de l\'ajout du titre', index, error);
     }
   });
   

@@ -35,7 +35,7 @@
  * // Traiter un lien et obtenir son statut
  * const linkElement = document.querySelector('a[href="https://example.com"]');
  * const result = await processLink(linkElement);
- * console.log(`Le lien a le statut: ${result.status}`);
+ * logger.debugEmoji("", "Le lien a le statut: ${result.status}");
  */
 async function processLink(linkElement, options = window.OptiRankUtils.defaultScanOptions) {
   try {
@@ -59,7 +59,7 @@ async function processLink(linkElement, options = window.OptiRankUtils.defaultSc
     if (relAttributes.hasNofollow) {
       linkElement.dataset.optirankStatus = 'nofollow';
       window.OptiRankUtils.scanResults.nofollow++;
-      console.log(`%cOptiRank: LIEN NOFOLLOW [N/A] ${url}`, 'color: purple;');
+      logger.debugEmoji("", "%cOptiRank: LIEN NOFOLLOW [N/A] ${url}", 'color: purple;');
       return { status: 'nofollow' };
     }
     
@@ -87,7 +87,7 @@ async function processLink(linkElement, options = window.OptiRankUtils.defaultSc
     if (window.OptiRankValidator.isArchiveLink(url)) {
       window.OptiRankUtils.scanResults.spamLinks++;
       linkElement.dataset.optirankStatus = 'spam';
-      console.log(`OptiRank: Spam link (Web Archive): ${url}`);
+      logger.debugEmoji("", "OptiRank: Spam link (Web Archive): ${url}");
       return { status: 'spam' };
     }
     
@@ -106,7 +106,7 @@ async function processLink(linkElement, options = window.OptiRankUtils.defaultSc
       linkElement.dataset.redirectUrl = httpToHttpsRedirect.redirectUrl;
       linkElement.dataset.redirectCode = httpToHttpsRedirect.statusCode;
       linkElement.dataset.mixedContent = 'true';
-      console.log(`%cOptiRank: MIXED CONTENT [${httpToHttpsRedirect.statusCode}] ${url} -> ${httpToHttpsRedirect.redirectUrl}`, 'color: #F39C12; font-weight: bold;');
+      logger.debugEmoji("", "%cOptiRank: MIXED CONTENT [${httpToHttpsRedirect.statusCode}] ${url} -> ${httpToHttpsRedirect.redirectUrl}", 'color: #F39C12; font-weight: bold;');
       return { 
         status: 'redirect', 
         statusCode: httpToHttpsRedirect.statusCode,
@@ -123,7 +123,7 @@ async function processLink(linkElement, options = window.OptiRankUtils.defaultSc
         linkElement.dataset.optirankStatus = 'redirect';
         linkElement.dataset.redirectUrl = linkInfo.redirectUrl || '';
         linkElement.dataset.redirectCode = linkInfo.statusCode || '';
-        console.log(`%cOptiRank: REDIRECTION [${linkInfo.statusCode}] ${url} -> ${linkInfo.redirectUrl || 'URL inconnue'}`, 'color: orange; font-weight: bold;');
+        logger.debugEmoji("", "%cOptiRank: REDIRECTION [${linkInfo.statusCode}] ${url} -> ${linkInfo.redirectUrl || 'URL inconnue'}", 'color: orange; font-weight: bold;');
         return { 
           status: 'redirect', 
           statusCode: linkInfo.statusCode,
@@ -135,7 +135,7 @@ async function processLink(linkElement, options = window.OptiRankUtils.defaultSc
         window.OptiRankUtils.scanResults.broken++;
         linkElement.dataset.optirankStatus = 'broken';
         linkElement.dataset.statusCode = linkInfo.statusCode || '';
-        console.log(`OptiRank: Broken link detected: ${url} (${linkInfo.statusCode})`);
+        logger.debugEmoji("", "OptiRank: Broken link detected: ${url} (${linkInfo.statusCode})");
         return { 
           status: 'broken', 
           statusCode: linkInfo.statusCode
@@ -147,7 +147,7 @@ async function processLink(linkElement, options = window.OptiRankUtils.defaultSc
       linkElement.dataset.optirankStatus = 'valid';
       return { status: 'valid', statusCode: linkInfo.statusCode || 200 };
     } catch (error) {
-      console.error(`OptiRank: Error processing link: ${url}`, error);
+      logger.error(`OptiRank: Error processing link: ${url}`, error);
       
       // En cas d'erreur, marquer comme valide par défaut
       window.OptiRankUtils.scanResults.valid++;
@@ -160,7 +160,7 @@ async function processLink(linkElement, options = window.OptiRankUtils.defaultSc
       };
     }
   } catch (error) {
-    console.error(`OptiRank: Unexpected error processing link: ${linkElement.href}`, error);
+    logger.error(`OptiRank: Unexpected error processing link: ${linkElement.href}`, error);
     return { 
       status: 'error', 
       error: error.message
@@ -190,7 +190,7 @@ async function processLink(linkElement, options = window.OptiRankUtils.defaultSc
  *   Array.from(links),
  *   { 
  *     checkExternal: true, 
- *     onProgress: (percent) => console.log(`Progression: ${percent}%`) 
+ *     onProgress: (percent) => logger.debugEmoji("", "Progression: ${percent}%") 
  *   },
  *   10 // Traiter 10 liens à la fois
  * );
@@ -228,4 +228,4 @@ window.OptiRankProcessor = {
   processLinkBatch
 };
 
-console.log('OptiRank: Link Processor module loaded');
+logger.debug('OptiRank: Link Processor module loaded');

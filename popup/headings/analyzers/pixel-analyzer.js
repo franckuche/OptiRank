@@ -17,7 +17,7 @@ function initPixelAnalyzerConfig() {
     originalThresholds = JSON.parse(JSON.stringify(headingSizeThresholds));
     pixelColors = window.headingsConfig.pixel.colors;
   } else {
-    console.warn('Headings: Configuration de l\'analyseur de pixels non disponible, utilisation des valeurs par défaut');
+    logger.warn('Headings: Configuration de l\'analyseur de pixels non disponible, utilisation des valeurs par défaut');
     
     // Valeurs par défaut
     headingSizeThresholds = {

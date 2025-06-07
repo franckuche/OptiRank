@@ -17,12 +17,12 @@ const MODULES = [
  * Initialise l'extension OptiRank
  */
 async function initOptiRank() {
-  console.log('OptiRank: Starting initialization');
+  logger.debug('OptiRank: Starting initialization');
   
   try {
     // Vérifier si les modules sont déjà chargés
     if (window.OptiRankInitialized) {
-      console.log('OptiRank: Already initialized, skipping');
+      logger.debug('OptiRank: Already initialized, skipping');
       return;
     }
     
@@ -31,7 +31,7 @@ async function initOptiRank() {
     
     // Attendre que les utilitaires soient chargés
     if (!window.OptiRankUtils) {
-      console.log('OptiRank: Waiting for utils to load...');
+      logger.debug('OptiRank: Waiting for utils to load...');
       await new Promise(resolve => {
         const checkUtils = () => {
           if (window.OptiRankUtils) {
@@ -46,7 +46,7 @@ async function initOptiRank() {
     
     // Attendre que le document soit prêt
     if (document.readyState !== 'complete') {
-      console.log('OptiRank: Waiting for document to be ready...');
+      logger.debug('OptiRank: Waiting for document to be ready...');
       await new Promise(resolve => {
         window.addEventListener('load', resolve);
       });
@@ -54,17 +54,17 @@ async function initOptiRank() {
     
     // Fonction pour analyser automatiquement les headings
     function analyzeHeadingsAutomatically() {
-      console.log('OptiRank: Analyzing headings automatically');
+      logger.debug('OptiRank: Analyzing headings automatically');
       
       // Vérifier si le module d'analyse des titres est chargé
       if (typeof window.OptiRankHeadings === 'undefined') {
-        console.log('OptiRank: Headings module not loaded, loading it now');
+        logger.debug('OptiRank: Headings module not loaded, loading it now');
         
         try {
           // Créer une fonction pour analyser les titres sans dépendre du module externe
           window.OptiRankHeadings = {
             detectHeadings: function() {
-              console.log('OptiRank: Détection des titres (headings)');
+              logger.debug('OptiRank: Détection des titres (headings)');
               
               // Structure de données pour les résultats
               const headingsData = {
@@ -107,7 +107,7 @@ async function initOptiRank() {
               // Analyser les problèmes de structure
               this.analyzeStructure(headingsData);
               
-              console.log(`OptiRank: ${headingsData.items.length} titres détectés`, headingsData);
+              logger.debugEmoji("", "OptiRank: ${headingsData.items.length} titres détectés", headingsData);
               return headingsData;
             },
             
@@ -196,21 +196,21 @@ async function initOptiRank() {
             }
           };
           
-          console.log('OptiRank: Headings module created internally');
+          logger.debug('OptiRank: Headings module created internally');
           const headingsData = window.OptiRankHeadings.detectHeadings();
           // Stocker les résultats pour le popup
           window.OptiRankUtils.headingsResults = headingsData;
-          console.log('OptiRank: Headings analysis complete', headingsData);
+          logger.debug('OptiRank: Headings analysis complete', headingsData);
         } catch (error) {
-          console.error('OptiRank: Error creating headings module:', error);
+          logger.error('OptiRank: Error creating headings module:', error);
         }
       } else {
-        console.log('OptiRank: Headings module already loaded, analyzing headings');
+        logger.debug('OptiRank: Headings module already loaded, analyzing headings');
         if (window.OptiRankHeadings && window.OptiRankHeadings.detectHeadings) {
           const headingsData = window.OptiRankHeadings.detectHeadings();
           // Stocker les résultats pour le popup
           window.OptiRankUtils.headingsResults = headingsData;
-          console.log('OptiRank: Headings analysis complete', headingsData);
+          logger.debug('OptiRank: Headings analysis complete', headingsData);
         }
       }
     }
@@ -221,14 +221,14 @@ async function initOptiRank() {
     }
     
     // Démarrer le scan automatique des liens (toujours, pas seulement si activé dans les paramètres)
-    console.log('OptiRank: Starting automatic scan of links');
+    logger.debug('OptiRank: Starting automatic scan of links');
     if (window.OptiRankScan && window.OptiRankScan.scanAllLinks) {
       window.OptiRankScan.scanAllLinks().then(results => {
         // Stocker les résultats pour le popup
         window.OptiRankUtils.analysisResults.links = results;
-        console.log('OptiRank: Link analysis complete and stored', results);
+        logger.debug('OptiRank: Link analysis complete and stored', results);
       }).catch(error => {
-        console.error('OptiRank: Error during link analysis:', error);
+        logger.error('OptiRank: Error during link analysis:', error);
       });
     }
     
@@ -241,9 +241,9 @@ async function initOptiRank() {
     // Initialiser les écouteurs de messages
     initMessageListeners();
     
-    console.log('OptiRank: Initialization complete');
+    logger.debug('OptiRank: Initialization complete');
   } catch (error) {
-    console.error('OptiRank: Error during initialization:', error);
+    logger.error('OptiRank: Error during initialization:', error);
   }
 }
 
@@ -256,7 +256,7 @@ function createChromeBridge() {
     return window.chromeBridge;
   }
   
-  console.log('OptiRank: Creating Chrome API bridge');
+  logger.debug('OptiRank: Creating Chrome API bridge');
   
   // Créer l'objet pont
   window.chromeBridge = {
@@ -284,7 +284,7 @@ function createChromeBridge() {
         // Ajouter une gestion d'erreur pour les cas où le destinataire n'existe pas
         return chrome.runtime.sendMessage(message, function(response) {
           if (chrome.runtime.lastError) {
-            console.warn('OptiRank: Runtime error in sendMessage:', chrome.runtime.lastError.message);
+            logger.warn('OptiRank: Runtime error in sendMessage:', chrome.runtime.lastError.message);
             // Appeler le callback avec un objet vide en cas d'erreur
             if (callback) callback({});
             return;
@@ -294,7 +294,7 @@ function createChromeBridge() {
           if (callback) callback(response || {});
         });
       } catch (error) {
-        console.error('OptiRank: Error in chrome.runtime.sendMessage bridge:', error);
+        logger.error('OptiRank: Error in chrome.runtime.sendMessage bridge:', error);
         if (callback) callback({});
         return null;
       }
@@ -304,7 +304,7 @@ function createChromeBridge() {
       try {
         return chrome.runtime.getURL(path);
       } catch (error) {
-        console.error('OptiRank: Error in chrome.runtime.getURL bridge:', error);
+        logger.error('OptiRank: Error in chrome.runtime.getURL bridge:', error);
         return path;
       }
     };
@@ -315,7 +315,7 @@ function createChromeBridge() {
         try {
           return chrome.storage.local.get(keys, callback);
         } catch (error) {
-          console.error('OptiRank: Error in chrome.storage.local.get bridge:', error);
+          logger.error('OptiRank: Error in chrome.storage.local.get bridge:', error);
           if (callback) callback({});
           return null;
         }
@@ -325,16 +325,16 @@ function createChromeBridge() {
         try {
           return chrome.storage.local.set(items, callback);
         } catch (error) {
-          console.error('OptiRank: Error in chrome.storage.local.set bridge:', error);
+          logger.error('OptiRank: Error in chrome.storage.local.set bridge:', error);
           if (callback) callback();
           return null;
         }
       };
     }
     
-    console.log('OptiRank: Chrome API bridge created successfully');
+    logger.debug('OptiRank: Chrome API bridge created successfully');
   } else {
-    console.warn('OptiRank: Chrome API not available, creating fallback bridge');
+    logger.warn('OptiRank: Chrome API not available, creating fallback bridge');
   }
   
   return window.chromeBridge;
@@ -356,7 +356,7 @@ function initMessageListeners() {
   
   // Vérifier que chrome.runtime est disponible
   if (typeof chrome === 'undefined' || !chrome.runtime) {
-    console.warn('OptiRank: chrome.runtime n\'est pas disponible, utilisation du mode de compatibilité');
+    logger.warn('OptiRank: chrome.runtime n\'est pas disponible, utilisation du mode de compatibilité');
     // Créer un substitut pour chrome.runtime.onMessage
     window.chromeRuntimeSubstitute = {
       listeners: [],
@@ -365,7 +365,7 @@ function initMessageListeners() {
         return callback;
       },
       sendMessage: function(message) {
-        console.log('OptiRank: Message envoyé via substitut:', message);
+        logger.debug('OptiRank: Message envoyé via substitut:', message);
         // Simuler une réponse après un court délai
         setTimeout(() => {
           if (message.action === 'scanLinks') {
@@ -382,31 +382,31 @@ function initMessageListeners() {
     
     // Démarrer un scan automatique après un court délai
     setTimeout(() => {
-      console.log('OptiRank: Démarrage automatique du scan en mode compatibilité');
+      logger.debug('OptiRank: Démarrage automatique du scan en mode compatibilité');
       // Vérifier si les modules nécessaires sont chargés
       if (!window.OptiRankScan) {
-        console.warn('OptiRank: Module Scanner non disponible, vérification des modules...');
+        logger.warn('OptiRank: Module Scanner non disponible, vérification des modules...');
         // Vérifier si le module est disponible sous un autre nom
         if (window.OptiRankUtils && window.OptiRankUtils.modules && window.OptiRankUtils.modules.scanner) {
           window.OptiRankScan = window.OptiRankUtils.modules.scanner;
-          console.log('OptiRank: Module Scanner trouvé dans window.OptiRankUtils.modules');
+          logger.debug('OptiRank: Module Scanner trouvé dans window.OptiRankUtils.modules');
         }
       }
       
       if (window.OptiRankScan && window.OptiRankScan.scanAllLinks) {
         try {
           window.OptiRankScan.scanAllLinks().then(results => {
-            console.log('OptiRank: Scan terminé avec succès en mode compatibilité', results);
+            logger.debug('OptiRank: Scan terminé avec succès en mode compatibilité', results);
           }).catch(error => {
-            console.error('OptiRank: Erreur lors du scan en mode compatibilité', error);
+            logger.error('OptiRank: Erreur lors du scan en mode compatibilité', error);
           });
         } catch (error) {
-          console.error('OptiRank: Erreur lors du démarrage du scan en mode compatibilité', error);
+          logger.error('OptiRank: Erreur lors du démarrage du scan en mode compatibilité', error);
         }
       } else {
-        console.error('OptiRank: Module Scanner non disponible, impossible de démarrer le scan');
+        logger.error('OptiRank: Module Scanner non disponible, impossible de démarrer le scan');
         // Afficher les modules disponibles pour le débogage
-        console.log('OptiRank: Modules disponibles:', window.OptiRankUtils ? Object.keys(window.OptiRankUtils) : 'Aucun');
+        logger.debug('OptiRank: Modules disponibles:', window.OptiRankUtils ? Object.keys(window.OptiRankUtils) : 'Aucun');
       }
     }, 1500);
     return;
@@ -415,13 +415,13 @@ function initMessageListeners() {
   try {
     // Écouter les messages du popup ou du background
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      console.log('OptiRank: Received message', message);
+      logger.debug('OptiRank: Received message', message);
       
       // Demande de scan
       if (message.action === 'scanLinks') {
         // Vérifier si les modules sont chargés
         if (!window.OptiRankScan) {
-          console.log('OptiRank: Scan module not loaded, requesting injection');
+          logger.debug('OptiRank: Scan module not loaded, requesting injection');
           chrome.runtime.sendMessage({ action: 'injectMainScripts' });
           sendResponse({ success: false, error: 'Modules not loaded' });
           return true;
@@ -441,11 +441,11 @@ function initMessageListeners() {
       
       // Demande des résultats du dernier scan
       if (message.action === 'getScanResults') {
-        console.log('OptiRank: Demande de récupération des résultats');
+        logger.debug('OptiRank: Demande de récupération des résultats');
         
         // Vérifier si les résultats d'analyse sont disponibles
         if (window.OptiRankUtils && window.OptiRankUtils.analysisResults) {
-          console.log('OptiRank: Résultats d\'analyse disponibles, envoi au popup');
+          logger.debug('OptiRank: Résultats d\'analyse disponibles, envoi au popup');
           
           // Préparer l'objet de résultats
           const results = {
@@ -475,7 +475,7 @@ function initMessageListeners() {
               }
             });
             results.links = linksArray;
-            console.log(`OptiRank: Collecté ${linksArray.length} liens depuis le DOM`);
+            logger.debugEmoji("", "OptiRank: Collecté ${linksArray.length} liens depuis le DOM");
           }
           
           // Envoyer les résultats au popup
@@ -484,7 +484,7 @@ function initMessageListeners() {
             results: results
           });
         } else {
-          console.warn('OptiRank: Impossible d\'envoyer les résultats au popup - résultats non disponibles');
+          logger.warn('OptiRank: Impossible d\'envoyer les résultats au popup - résultats non disponibles');
           sendResponse({
             success: false,
             error: 'Résultats non disponibles'
@@ -495,12 +495,12 @@ function initMessageListeners() {
       
       // Demande de récupération des liens de la page
       if (message.action === 'getPageLinks') {
-        console.log('OptiRank: Récupération des liens de la page pour le popup');
+        logger.debug('OptiRank: Récupération des liens de la page pour le popup');
         
         // Collecter les informations sur tous les liens de la page
         const linksArray = [];
         const allLinks = document.querySelectorAll('a');
-        console.log(`OptiRank: ${allLinks.length} liens trouvés dans le DOM`);
+        logger.debugEmoji("", "OptiRank: ${allLinks.length} liens trouvés dans le DOM");
         
         allLinks.forEach(link => {
           // Ajouter tous les liens, même ceux qui n'ont pas été scannés
@@ -516,9 +516,9 @@ function initMessageListeners() {
           linksArray.push(linkData);
         });
         
-        console.log(`OptiRank: Collected ${linksArray.length} links from the page`);
-        console.log('OptiRank: Premier lien d\'exemple:', linksArray[0]);
-        console.log('OptiRank: Dernier lien d\'exemple:', linksArray[linksArray.length - 1]);
+        logger.debugEmoji("", "OptiRank: Collected ${linksArray.length} links from the page");
+        logger.debug('OptiRank: Premier lien d\'exemple:', linksArray[0]);
+        logger.debug('OptiRank: Dernier lien d\'exemple:', linksArray[linksArray.length - 1]);
         
         sendResponse({ links: linksArray });
         return true;
@@ -526,18 +526,18 @@ function initMessageListeners() {
       
       // Vérifier si le module d'analyse des titres est chargé
       if (message.action === 'checkHeadingsModuleLoaded') {
-        console.log('OptiRank: Vérification du module d\'analyse des titres');
+        logger.debug('OptiRank: Vérification du module d\'analyse des titres');
         sendResponse({ loaded: typeof window.OptiRankHeadings !== 'undefined' });
         return true;
       }
       
       // Analyser les titres de la page
       if (message.action === 'analyzeHeadings') {
-        console.log('OptiRank: Analyse des titres de la page');
+        logger.debug('OptiRank: Analyse des titres de la page');
         
         // Vérifier si le module d'analyse des titres est chargé
         if (typeof window.OptiRankHeadings === 'undefined') {
-          console.error('OptiRank: Module d\'analyse des titres non disponible');
+          logger.error('OptiRank: Module d\'analyse des titres non disponible');
           sendResponse({ success: false, error: 'Module d\'analyse des titres non disponible' });
           return true;
         }
@@ -545,7 +545,7 @@ function initMessageListeners() {
         try {
           // Effectuer l'analyse des titres
           const headingsData = window.OptiRankHeadings.detectHeadings();
-          console.log('OptiRank: Analyse des titres terminée', headingsData);
+          logger.debug('OptiRank: Analyse des titres terminée', headingsData);
           
           // Stocker les résultats pour les récupérer plus tard
           window.OptiRankUtils.headingsResults = headingsData;
@@ -553,7 +553,7 @@ function initMessageListeners() {
           // Envoyer les résultats au popup
           sendResponse({ success: true, headingsData: headingsData });
         } catch (error) {
-          console.error('OptiRank: Erreur lors de l\'analyse des titres', error);
+          logger.error('OptiRank: Erreur lors de l\'analyse des titres', error);
           sendResponse({ success: false, error: error.message });
         }
         
@@ -562,15 +562,15 @@ function initMessageListeners() {
       
       // Récupérer les résultats de l'analyse des headings
       if (message.action === 'getHeadingsResults') {
-        console.log('OptiRank: Récupération des résultats de l\'analyse des titres');
+        logger.debug('OptiRank: Récupération des résultats de l\'analyse des titres');
         
         // Vérifier si les résultats sont disponibles
         if (window.OptiRankUtils && window.OptiRankUtils.headingsResults) {
-          console.log('OptiRank: Résultats de l\'analyse des titres disponibles');
+          logger.debug('OptiRank: Résultats de l\'analyse des titres disponibles');
           
           // Envoyer SEULEMENT les données brutes au popup - plus de pré-formatage
           const rawData = window.OptiRankUtils.headingsResults;
-          console.log('OptiRank: Données brutes envoyées au popup:', rawData);
+          logger.debug('OptiRank: Données brutes envoyées au popup:', rawData);
           sendResponse({ success: true, rawHeadingsData: rawData });
         } else {
           // Si les résultats ne sont pas disponibles, essayer d'analyser les titres maintenant
@@ -578,15 +578,15 @@ function initMessageListeners() {
             try {
               const rawData = window.OptiRankHeadings.detectHeadings();
               window.OptiRankUtils.headingsResults = rawData;
-              console.log('OptiRank: Analyse des titres effectuée à la demande');
-              console.log('OptiRank: Données brutes envoyées au popup:', rawData);
+              logger.debug('OptiRank: Analyse des titres effectuée à la demande');
+              logger.debug('OptiRank: Données brutes envoyées au popup:', rawData);
               sendResponse({ success: true, rawHeadingsData: rawData });
             } catch (error) {
-              console.error('OptiRank: Erreur lors de l\'analyse des titres', error);
+              logger.error('OptiRank: Erreur lors de l\'analyse des titres', error);
               sendResponse({ success: false, error: error.message });
             }
           } else {
-            console.error('OptiRank: Module d\'analyse des titres non disponible');
+            logger.error('OptiRank: Module d\'analyse des titres non disponible');
             sendResponse({ success: false, error: 'Module d\'analyse des titres non disponible' });
           }
         }
@@ -621,18 +621,18 @@ function initMessageListeners() {
       return false;
     });
     
-    console.log('OptiRank: Message listeners initialized');
+    logger.debug('OptiRank: Message listeners initialized');
   } catch (error) {
-    console.error('OptiRank: Error initializing message listeners:', error);
+    logger.error('OptiRank: Error initializing message listeners:', error);
   }
 }
 
 // Initialiser l'extension quand le document est prêt
 if (document.readyState === 'complete') {
-  console.log('OptiRank: Document already complete, initializing now');
+  logger.debug('OptiRank: Document already complete, initializing now');
   initOptiRank();
 } else {
-  console.log('OptiRank: Waiting for document to be ready');
+  logger.debug('OptiRank: Waiting for document to be ready');
   window.addEventListener('load', initOptiRank);
 }
 
@@ -646,7 +646,7 @@ window.OptiRankMain = {
     } else if (window.OptiRankUtils && window.OptiRankUtils.modules && window.OptiRankUtils.modules.scanner) {
       return window.OptiRankUtils.modules.scanner.scanAllLinks();
     } else {
-      console.error('OptiRank: Scanner module not found');
+      logger.error('OptiRank: Scanner module not found');
       return Promise.reject(new Error('Scanner module not found'));
     }
   }
@@ -658,4 +658,4 @@ if (window.OptiRankUtils) {
   window.OptiRankUtils.modules.main = window.OptiRankMain;
 }
 
-console.log('OptiRank: Main module loaded and exposed globally as window.OptiRankMain');
+logger.debug('OptiRank: Main module loaded and exposed globally as window.OptiRankMain');
