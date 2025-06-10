@@ -1,0 +1,348 @@
+/* ===================================================================
+   SYSTÈME DE CARTES UNIFIÉ - OPTIRANK
+   ===================================================================
+   
+   Ce fichier centralise TOUTES les règles CSS pour les cartes.
+   
+   RÈGLES IMPORTANTES :
+   1. Ne jamais redéfinir .heading-card-header-flex dans d'autres fichiers
+   2. Ne jamais redéfinir .title-section dans d'autres fichiers  
+   3. Utiliser .copy-dropdown-container ou .actions-container pour les actions
+   4. Les media queries sont gérées ici uniquement
+   
+   STRUCTURE STANDARD :
+   .heading-card
+     .heading-card-content
+       .heading-card-header
+         .heading-card-header-flex
+           .title-section
+           .copy-dropdown-container/.actions-container
+   
+   =================================================================== */
+
+/* =============================================
+   SYSTÈME DE CARTES UNIFIÉ - OPTIRANK
+   Toutes les variantes de cartes centralisées
+   ============================================= */
+
+/* === CARTE DE BASE === */
+.card,
+.heading-card,
+.modern-card {
+  background: var(--bg-accent);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--optirank-border);
+  border-radius: var(--radius-lg);
+  margin: 0 auto var(--space-4) auto;
+  box-shadow: var(--shadow-primary);
+  transition: var(--transition-normal);
+  width: calc(100% - 6%);
+  max-width: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* === LARGEUR PLEINE POUR TOUTES LES PAGES === */
+#links .heading-card,
+#headings .heading-card,
+#settings .heading-card {
+  width: calc(100% - 6%);
+  max-width: none;
+  margin: 0 auto var(--space-4) auto;
+}
+
+/* === ÉTATS HOVER === */
+.card:hover,
+.heading-card:hover,
+.modern-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-primary-hover);
+  border-color: rgba(59, 130, 246, 0.15);
+}
+
+/* === DERNIER ÉLÉMENT === */
+.card:last-child,
+.heading-card:last-child,
+.modern-card:last-child {
+  margin-bottom: 0;
+}
+
+/* === CONTENU DES CARTES === */
+.card-content,
+.heading-card-content,
+.modern-card-body {
+  padding: var(--space-5);
+}
+
+/* === HEADERS === */
+.card-header,
+.heading-card-header {
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--optirank-border);
+}
+
+/* ===================================================================
+   LAYOUT DES HEADERS DE CARTES - RÈGLES CENTRALISÉES
+   ===================================================================
+   
+   Structure HTML recommandée :
+   <div class="heading-card-header-flex">
+     <div class="title-section">
+       <h3 class="heading-card-title">Titre</h3>
+       <p class="heading-card-description">Description</p>
+     </div>
+     <div class="copy-dropdown-container">
+       <!-- Boutons/actions -->
+     </div>
+   </div>
+   
+   =================================================================== */
+
+/* Header principal : titre à gauche, actions à droite */
+.card-header-flex,
+.heading-card-header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: var(--space-4);
+}
+
+/* Section titre : prend seulement l'espace nécessaire, reste à gauche */
+.title-section {
+  flex: 0 0 auto;
+  text-align: left;
+}
+
+/* Container d'actions (boutons, dropdowns) : aligné à droite automatiquement */
+.copy-dropdown-container,
+.actions-container {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* === TITRES === */
+.card-title,
+.heading-card-title,
+h3.heading-card-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-dark);
+  margin: 0 0 var(--space-1) 0;
+  line-height: var(--line-height-tight);
+  text-align: left !important;
+}
+
+.card-description,
+.heading-card-description {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  margin: 0;
+  line-height: var(--line-height-normal);
+  text-align: left;
+}
+
+/* === SECTION TITRE === */
+/* Contenu de la section titre : titres et descriptions alignés à gauche */
+.title-section h3,
+.title-section .heading-card-title,
+.title-section p,
+.title-section .heading-card-description {
+  text-align: left;
+  margin-left: 0;
+}
+
+/* === VARIANTES SPÉCIALES === */
+
+/* Modern Card (style glassmorphisme) */
+.modern-card {
+  background: transparent;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.modern-card:hover {
+  transform: translateY(-4px);
+}
+
+.modern-card-body {
+  padding: var(--space-4);
+}
+
+/* === BADGES MODERNES === */
+.modern-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-inverse);
+}
+
+.modern-badge-h1 { background-color: #FF5A5F; }
+.modern-badge-h2 { background-color: #00A699; }
+.modern-badge-h3 { background-color: #FC642D; }
+.modern-badge-h4 { background-color: #007A87; }
+.modern-badge-h5 { background-color: #8CE071; }
+.modern-badge-h6 { background-color: #7B0051; }
+
+/* === ALERTES MODERNES === */
+.modern-alert {
+  display: flex;
+  align-items: center;
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  background-color: rgba(252, 100, 45, 0.1);
+  margin-bottom: var(--space-4);
+  gap: var(--space-3);
+}
+
+.modern-alert-icon {
+  color: #FC642D;
+  font-size: var(--font-size-lg);
+  flex-shrink: 0;
+}
+
+.modern-alert-content {
+  flex: 1;
+}
+
+.modern-alert-title {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-sm);
+}
+
+.modern-alert-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+/* === GRILLE MODERNE === */
+.modern-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-3);
+}
+
+/* === PROGRESS MODERNE === */
+.modern-progress {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: conic-gradient(var(--color-primary) var(--progress), #E0E0E0 0deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.modern-progress::after {
+  content: attr(data-value);
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xs);
+}
+
+/* === LISTES MODERNES === */
+.modern-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.modern-list-item {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  transition: var(--transition-fast);
+}
+
+.modern-list-item:last-child {
+  border-bottom: none;
+}
+
+.modern-list-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+/* === VARIANTES DE CARTES SPÉCIALISÉES === */
+
+/* Carte de statistiques */
+.card--stats {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03), rgba(147, 197, 253, 0.02));
+  border-color: rgba(59, 130, 246, 0.12);
+}
+
+.card--stats:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 197, 253, 0.03));
+}
+
+/* Carte d'alerte */
+.card--alert {
+  border-left: 4px solid var(--color-warning);
+  background: #fffbeb;
+}
+
+.card--alert-success {
+  border-left-color: var(--color-success);
+  background: #f0fdf4;
+}
+
+.card--alert-error {
+  border-left-color: var(--color-danger);
+  background: #fef2f2;
+}
+
+.card--alert-info {
+  border-left-color: var(--color-info);
+  background: #eff6ff;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .card,
+  .heading-card,
+  .modern-card {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  /* IMPORTANT: Les headers gardent leur layout horizontal 
+     même en responsive pour maintenir titre à gauche, actions à droite */
+  .card-header-flex,
+  .heading-card-header-flex {
+    flex-direction: row; /* Force horizontal */
+    gap: var(--space-2); /* Réduit l'espacement sur mobile */
+  }
+  
+  .modern-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .card-content,
+  .heading-card-content,
+  .modern-card-body {
+    padding: var(--space-4);
+  }
+  
+  .modern-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+} 

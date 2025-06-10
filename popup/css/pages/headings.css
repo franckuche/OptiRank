@@ -27,11 +27,31 @@ body:has(#headings.tab-content.active) .tab-navigation,
 }
 
 /* === CORRECTION LARGEUR POUR HEADINGS === */
+body:has(#headings.tab-content.active) .container,
 #headings.tab-content.active ~ * .content,
 #headings.tab-content .content,
 .content:has(#headings.tab-content.active) {
   --max-content-width: 100% !important;
   max-width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Force pleine largeur pour les cartes Headings */
+#headings .heading-card {
+  width: calc(100% - 6%) !important;
+  max-width: none !important;
+  margin: 0 auto 16px auto !important;
+}
+
+/* Forcer la même largeur que Settings */
+#headings .content-section {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 /* === BACKGROUND DÉGRADÉ POUR TOUTE LA PAGE === */
@@ -77,27 +97,21 @@ body:has(#headings.tab-content.active) .tab-navigation,
   border-bottom: 1px solid rgba(59, 130, 246, 0.08);
 }
 
-.heading-card-header-flex {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.title-section {
-  flex: 1;
-}
+/* Règles héritées de cards-unified.css */
 
 .heading-card-title {
   font-size: 16px;
   font-weight: 700;
   color: var(--headings-blue-dark);
   margin: 0;
+  text-align: left;
 }
 
 .heading-card-description {
   color: #6b7280;
   font-size: 14px;
   margin: 4px 0 0 0;
+  text-align: left;
 }
 
 /* === GRILLE DES COMPTEURS - STYLE SIMPLE === */
