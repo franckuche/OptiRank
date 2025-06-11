@@ -5,9 +5,9 @@
 
 // Fonction pour créer des données de test pour débogage
 function createTestHeadingsData() {
-  logger.debug('🧪 TEST DATA: Création des données de test (PAS de la page réelle)');
-  logger.debug('  - Source: popup/headings/utils/test-data.js');
-  logger.debug('  - Ces données sont CODÉES EN DUR pour le développement');
+  window.safeLogger.debug('🧪 TEST DATA: Création des données de test (PAS de la page réelle)');
+  window.safeLogger.debug('  - Source: popup/headings/utils/test-data.js');
+  window.safeLogger.debug('  - Ces données sont CODÉES EN DUR pour le développement');
   
   const testData = {
     counts: {
@@ -37,7 +37,7 @@ function createTestHeadingsData() {
     issues: []
   };
   
-  logger.debug('📊 TEST DATA: Données générées:', testData);
+  window.safeLogger.debug('📊 TEST DATA: Données générées:', testData);
   return testData;
 }
 

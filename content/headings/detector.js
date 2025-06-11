@@ -101,7 +101,7 @@ function detectHeadings() {
     
     // Vérification de cohérence
     logger.debug('%c[DETECTOR] Vérification de cohérence des données', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
-    logger.debugEmoji("", "[DETECTOR] Nombre total d'items: ${headingsData.items.length}");
+    logger.debugEmoji("", `[DETECTOR] Nombre total d'items: ${headingsData.items.length}`);
     logger.debugEmoji("", "[DETECTOR] Compteurs par niveau:", headingsData.counts);
     
     if (headingsData.items.length > 0) {
@@ -110,7 +110,7 @@ function detectHeadings() {
         totalCount += headingsData.counts[`h${i}`];
       }
       
-      logger.debugEmoji("", "[DETECTOR] Total des compteurs: ${totalCount}, Nombre d'items: ${headingsData.items.length}");
+      logger.debugEmoji("", `[DETECTOR] Total des compteurs: ${totalCount}, Nombre d'items: ${headingsData.items.length}`);
       
       if (totalCount !== headingsData.items.length) {
         logger.warn(`%c[DETECTOR] Incohérence détectée - Total des compteurs (${totalCount}) != nombre d'items (${headingsData.items.length})`, 'background: orange; color: black; padding: 2px 5px; border-radius: 3px;');

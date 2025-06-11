@@ -107,7 +107,7 @@ async function initOptiRank() {
               // Analyser les problèmes de structure
               this.analyzeStructure(headingsData);
               
-              logger.debugEmoji("", "OptiRank: ${headingsData.items.length} titres détectés", headingsData);
+              logger.debugEmoji("", `OptiRank: ${headingsData.items.length} titres détectés`, headingsData);
               return headingsData;
             },
             
@@ -201,6 +201,17 @@ async function initOptiRank() {
           // Stocker les résultats pour le popup
           window.OptiRankUtils.headingsResults = headingsData;
           logger.debug('OptiRank: Headings analysis complete', headingsData);
+          
+          // Envoyer automatiquement les résultats au popup s'il est ouvert
+          try {
+            chrome.runtime.sendMessage({
+              action: 'autoScanResults',
+              headingsData: headingsData,
+              results: window.OptiRankUtils.analysisResults ? window.OptiRankUtils.analysisResults.links : null
+            });
+          } catch (error) {
+            logger.debug('OptiRank: Popup probablement fermé, résultats headings stockés pour plus tard');
+          }
         } catch (error) {
           logger.error('OptiRank: Error creating headings module:', error);
         }
@@ -211,6 +222,17 @@ async function initOptiRank() {
           // Stocker les résultats pour le popup
           window.OptiRankUtils.headingsResults = headingsData;
           logger.debug('OptiRank: Headings analysis complete', headingsData);
+          
+          // Envoyer automatiquement les résultats au popup s'il est ouvert
+          try {
+            chrome.runtime.sendMessage({
+              action: 'autoScanResults',
+              headingsData: headingsData,
+              results: window.OptiRankUtils.analysisResults ? window.OptiRankUtils.analysisResults.links : null
+            });
+          } catch (error) {
+            logger.debug('OptiRank: Popup probablement fermé, résultats headings stockés pour plus tard');
+          }
         }
       }
     }
@@ -227,6 +249,28 @@ async function initOptiRank() {
         // Stocker les résultats pour le popup
         window.OptiRankUtils.analysisResults.links = results;
         logger.debug('OptiRank: Link analysis complete and stored', results);
+        
+        // Envoyer automatiquement les résultats au popup s'il est ouvert
+        try {
+          // Méthode 1: Message direct
+          chrome.runtime.sendMessage({
+            action: 'autoScanResults',
+            results: results,
+            headingsData: window.OptiRankUtils.headingsResults
+          });
+          
+          // Méthode 2: Via background script
+          chrome.runtime.sendMessage({
+            action: 'scanCompleted',
+            tabId: chrome.runtime.getURL ? null : window.location.href,
+            results: results,
+            success: true
+          });
+          
+          logger.debug('OptiRank: Données envoyées automatiquement au popup', results);
+        } catch (error) {
+          logger.debug('OptiRank: Popup probablement fermé, résultats stockés pour plus tard');
+        }
       }).catch(error => {
         logger.error('OptiRank: Error during link analysis:', error);
       });
@@ -417,6 +461,41 @@ function initMessageListeners() {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       logger.debug('OptiRank: Received message', message);
       
+      // Récupérer les résultats existants - FONCTION MANQUANTE !
+      if (message.action === 'getExistingResults') {
+        logger.debug('OptiRank: Demande de résultats existants reçue');
+        
+        const response = {
+          success: false,
+          results: null,
+          headingsData: null
+        };
+        
+        // Vérifier les résultats de scan
+        if (window.OptiRankUtils && window.OptiRankUtils.scanResults && window.OptiRankUtils.scanResults.total > 0) {
+          response.results = window.OptiRankUtils.scanResults;
+          response.success = true;
+          logger.debug('OptiRank: Envoi des résultats de scan:', response.results);
+        }
+        
+        // Vérifier les résultats headings
+        if (window.OptiRankUtils && window.OptiRankUtils.headingsResults) {
+          response.headingsData = window.OptiRankUtils.headingsResults;
+          response.success = true;
+          logger.debug('OptiRank: Envoi des résultats headings:', response.headingsData);
+        }
+        
+        sendResponse(response);
+        return true;
+      }
+      
+      // Ping pour tester la communication
+      if (message.action === 'ping') {
+        logger.debug('OptiRank: Ping reçu, réponse envoyée');
+        sendResponse({ success: true, message: 'OptiRank content script actif' });
+        return true;
+      }
+      
       // Demande de scan
       if (message.action === 'scanLinks') {
         // Vérifier si les modules sont chargés
@@ -475,7 +554,7 @@ function initMessageListeners() {
               }
             });
             results.links = linksArray;
-            logger.debugEmoji("", "OptiRank: Collecté ${linksArray.length} liens depuis le DOM");
+            logger.debugEmoji("", `OptiRank: Collecté ${linksArray.length} liens depuis le DOM`);
           }
           
           // Envoyer les résultats au popup
@@ -516,7 +595,7 @@ function initMessageListeners() {
           linksArray.push(linkData);
         });
         
-        logger.debugEmoji("", "OptiRank: Collected ${linksArray.length} links from the page");
+                      logger.debugEmoji("", `OptiRank: Collected ${linksArray.length} links from the page`);
         logger.debug('OptiRank: Premier lien d\'exemple:', linksArray[0]);
         logger.debug('OptiRank: Dernier lien d\'exemple:', linksArray[linksArray.length - 1]);
         
@@ -555,6 +634,44 @@ function initMessageListeners() {
         } catch (error) {
           logger.error('OptiRank: Erreur lors de l\'analyse des titres', error);
           sendResponse({ success: false, error: error.message });
+        }
+        
+        return true;
+      }
+      
+      // Récupérer les résultats existants (liens + headings)
+      if (message.action === 'getExistingResults') {
+        logger.debug('OptiRank: Récupération des résultats existants');
+        
+        const existingResults = {
+          links: null,
+          headings: null,
+          scanResults: null
+        };
+        
+        // Vérifier les résultats de scan de liens
+        if (window.OptiRankUtils && window.OptiRankUtils.scanResults && 
+            window.OptiRankUtils.scanResults.total > 0) {
+          existingResults.scanResults = window.OptiRankUtils.scanResults;
+          existingResults.links = window.OptiRankUtils.scanResults.links || [];
+          logger.debug('OptiRank: Résultats de scan disponibles:', existingResults.scanResults);
+        }
+        
+        // Vérifier les résultats d'analyse des headings
+        if (window.OptiRankUtils && window.OptiRankUtils.headingsResults) {
+          existingResults.headings = window.OptiRankUtils.headingsResults;
+          logger.debug('OptiRank: Résultats headings disponibles:', existingResults.headings);
+        }
+        
+        // Envoyer les résultats s'il y en a
+        if (existingResults.scanResults || existingResults.headings) {
+          sendResponse({ 
+            success: true, 
+            results: existingResults.scanResults || {},
+            headingsData: existingResults.headings
+          });
+        } else {
+          sendResponse({ success: false, message: 'Aucun résultat disponible' });
         }
         
         return true;

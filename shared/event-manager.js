@@ -174,7 +174,7 @@ class OptiRankEventManager {
         } catch (error) {
           this.logger.error(
             `Erreur dans interval : ${name}`,
-            { name, error: error.message, timerId }
+            error.message || error.toString()
           );
         }
       };
@@ -275,11 +275,19 @@ class OptiRankEventManager {
     const maxAge = 30 * 60 * 1000; // 30 minutes
 
     for (const [listenerId, info] of this.activeListeners.entries()) {
-      // Vérifier si l'élément existe encore dans le DOM
-      const isOrphaned = !document.contains(info.element) || 
-                        (now - info.addedAt > maxAge);
-      
-      if (isOrphaned) {
+      try {
+        // Vérifier si l'élément existe encore dans le DOM
+        const isOrphaned = !info.element || 
+                          !info.element.nodeType || 
+                          !document.contains(info.element) || 
+                          (now - info.addedAt > maxAge);
+        
+        if (isOrphaned) {
+          this.removeEventListener(listenerId);
+          cleanedCount++;
+        }
+      } catch (error) {
+        // Élément invalide, le supprimer
         this.removeEventListener(listenerId);
         cleanedCount++;
       }
@@ -302,8 +310,14 @@ class OptiRankEventManager {
     const maxAge = 60 * 60 * 1000; // 1 heure pour les intervals
 
     for (const [timerId, info] of this.timers.entries()) {
-      // Nettoyer les intervals très anciens (potentiellement oubliés)
-      if (info.type === 'interval' && now - info.createdAt > maxAge) {
+      try {
+        // Nettoyer les intervals très anciens (potentiellement oubliés)
+        if (info.type === 'interval' && now - info.createdAt > maxAge) {
+          this.clearTimer(timerId);
+          cleanedCount++;
+        }
+      } catch (error) {
+        // Timer invalide, le supprimer
         this.clearTimer(timerId);
         cleanedCount++;
       }

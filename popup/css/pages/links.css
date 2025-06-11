@@ -18,20 +18,20 @@
 }
 
 /* === CORRECTION BACKGROUND GLOBAL === */
-.content {
-  background: var(--links-bg) !important;
+#links.tab-content.active .content {
+  background: var(--links-bg);
   backdrop-filter: blur(8px);
 }
 
 /* === CORRECTION BACKGROUND CONTAINER ET NAVIGATION === */
 body:has(#links.tab-content.active) .container,
 .container:has(#links.tab-content.active) {
-  background-color: var(--links-bg) !important;
+  background-color: var(--links-bg);
 }
 
 body:has(#links.tab-content.active) .tab-navigation,
 .tab-navigation:has(+ * #links.tab-content.active) {
-  background: var(--links-bg) !important;
+  background: var(--links-bg);
 }
 
 /* === CORRECTION LARGEUR POUR LINKS === */
@@ -39,27 +39,27 @@ body:has(#links.tab-content.active) .container,
 #links.tab-content.active ~ * .content,
 #links.tab-content .content,
 .content:has(#links.tab-content.active) {
-  --max-content-width: 100% !important;
-  max-width: 100% !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
+  --max-content-width: 100%;
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 /* Force pleine largeur pour les cartes Links */
-#links .heading-card {
-  width: calc(100% - 6%) !important;
-  max-width: none !important;
-  margin: 0 auto 16px auto !important;
+#links.tab-content .heading-card {
+  width: calc(100% - 6%);
+  max-width: none;
+  margin: 0 auto 16px auto;
 }
 
 /* Forcer la même largeur que Settings */
-#links .content-section {
-  max-width: 100% !important;
-  width: 100% !important;
-  padding: 0 !important;
-  margin: 0 !important;
+#links.tab-content .content-section {
+  max-width: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
 }
 
 /* === BACKGROUND DÉGRADÉ POUR TOUTE LA PAGE === */
@@ -124,9 +124,9 @@ body:has(#links.tab-content.active) .container,
 }
 
 /* === STATISTIQUES DES LIENS === */
-#links .links-stats-grid {
-  display: grid !important;
-  grid-template-columns: 160px 160px 160px 160px !important;
+#links.tab-content .links-stats-grid {
+  display: grid;
+  grid-template-columns: 160px 160px 160px 160px;
   gap: 8px 6px;
   margin-bottom: 16px;
   width: 658px;
@@ -187,19 +187,19 @@ body:has(#links.tab-content.active) .container,
 
 /* Les titres dans les stat-box restent à gauche */
 .stat-box h3 {
-  text-align: left !important;
+  text-align: left;
 }
 
 /* Force spécifiquement les titres de la page links à gauche */
-#links .heading-card-title,
-#links .title-section h3,
-#links h3.heading-card-title {
-  text-align: left !important;
+#links.tab-content .heading-card-title,
+#links.tab-content .title-section h3,
+#links.tab-content h3.heading-card-title {
+  text-align: left;
 }
 
-#links .heading-card-description,
-#links .title-section p {
-  text-align: left !important;
+#links.tab-content .heading-card-description,
+#links.tab-content .title-section p {
+  text-align: left;
 }
 
 .stat-box:hover {

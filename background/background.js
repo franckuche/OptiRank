@@ -1,90 +1,98 @@
 // OptiRank - Background Script
 // This script runs in the background and handles communication between popup and content scripts
 
-// Import du logger
-importScripts('js/logger.js');
+// Import du logger universel
+importScripts('../shared/logger-universal.js');
 
 // Stockage des redirections et des liens brisés détectés
 let detectedRedirects = {};
 let detectedBrokenLinks = {};
 let redirectChainMap = {}; // Pour suivre les chaînes de redirection
 
-// Utiliser l'API chrome.webRequest pour détecter automatiquement toutes les redirections
-chrome.webRequest.onBeforeRedirect.addListener(
-  function(details) {
-    // Détecter toutes les redirections (codes 300-399)
-    if (details.statusCode >= 300 && details.statusCode < 400) {
-      // Analyser et enrichir les informations de redirection
-      const redirectInfo = {
-        redirectUrl: details.redirectUrl,
-        statusCode: details.statusCode,
-        timestamp: Date.now(),
-        type: getRedirectType(details.statusCode),
-        initiator: details.initiator || 'unknown',
-        fromCache: details.fromCache || false
-      };
-      
-      // Stocker l'information de redirection
-      detectedRedirects[details.url] = redirectInfo;
-      
-      // Conserver une référence inverse pour les URLs de redirection
-      if (details.redirectUrl) {
-        // Stocker également les informations pour l'URL de destination
-        // Cela aide à identifier les chaînes de redirection
-        const redirectChains = redirectChainMap[details.redirectUrl] || [];
-        redirectChains.push(details.url);
-        redirectChainMap[details.redirectUrl] = redirectChains;
+// Vérifier la disponibilité de chrome.webRequest et ajouter un wrapper de sécurité
+if (typeof chrome !== 'undefined' && chrome.webRequest && chrome.webRequest.onBeforeRedirect) {
+  // Utiliser l'API chrome.webRequest pour détecter automatiquement toutes les redirections
+  chrome.webRequest.onBeforeRedirect.addListener(
+    function(details) {
+      // Détecter toutes les redirections (codes 300-399)
+      if (details.statusCode >= 300 && details.statusCode < 400) {
+        // Analyser et enrichir les informations de redirection
+        const redirectInfo = {
+          redirectUrl: details.redirectUrl,
+          statusCode: details.statusCode,
+          timestamp: Date.now(),
+          type: getRedirectType(details.statusCode),
+          initiator: details.initiator || 'unknown',
+          fromCache: details.fromCache || false
+        };
+        
+        // Stocker l'information de redirection
+        detectedRedirects[details.url] = redirectInfo;
+        
+        // Conserver une référence inverse pour les URLs de redirection
+        if (details.redirectUrl) {
+          // Stocker également les informations pour l'URL de destination
+          // Cela aide à identifier les chaînes de redirection
+          const redirectChains = redirectChainMap[details.redirectUrl] || [];
+          redirectChains.push(details.url);
+          redirectChainMap[details.redirectUrl] = redirectChains;
+        }
       }
-    }
-  },
-  {urls: ["<all_urls>"]},
-  ["responseHeaders"]
-);
+    },
+    {urls: ["<all_urls>"]},
+    ["responseHeaders"]
+  );
 
-// Détecter les redirections HTTP vers HTTPS de manière proactive
-chrome.webRequest.onBeforeRequest.addListener(
-  function(details) {
-    // Vérifier si l'URL d'origine est en HTTP (non-localhost)
-    if (details.url.startsWith('http://') && !details.url.startsWith('http://localhost')) {
-      // Créer l'URL HTTPS équivalente
-      const httpsUrl = details.url.replace(/^http:/i, 'https:');
-      
-      // Vérifier si l'URL existe déjà dans notre base de redirections connues
-      if (!detectedRedirects[details.url]) {
-        // Utiliser chrome.tabs.executeScript pour vérifier si la version HTTPS est accessible
-        testHttpsUrl(details.url, httpsUrl);
+  // Détecter les redirections HTTP vers HTTPS de manière proactive
+  chrome.webRequest.onBeforeRequest.addListener(
+    function(details) {
+      // Vérifier si l'URL d'origine est en HTTP (non-localhost)
+      if (details.url.startsWith('http://') && !details.url.startsWith('http://localhost')) {
+        // Créer l'URL HTTPS équivalente
+        const httpsUrl = details.url.replace(/^http:/i, 'https:');
+        
+        // Vérifier si l'URL existe déjà dans notre base de redirections connues
+        if (!detectedRedirects[details.url]) {
+          // Utiliser chrome.tabs.executeScript pour vérifier si la version HTTPS est accessible
+          testHttpsUrl(details.url, httpsUrl);
+        }
       }
-    }
-  },
-  {urls: ["http://*/*"]}
-);
+    },
+    {urls: ["http://*/*"]}
+  );
 
-// Détecter les liens brisés avec informations enrichies
-chrome.webRequest.onCompleted.addListener(
-  function(details) {
-    // Détecter les liens brisés (codes 400+)
-    if (details.statusCode >= 400) {
-      // Enrichir les informations sur le lien brisé
-      detectedBrokenLinks[details.url] = {
-        statusCode: details.statusCode,
-        timestamp: Date.now(),
-        type: getErrorType(details.statusCode),
-        initiator: details.initiator || 'unknown',
-        fromCache: details.fromCache || false
-      };
-    }
-  },
-  {urls: ["<all_urls>"]},
-  ["responseHeaders"]
-);
+  // Détecter les liens brisés avec informations enrichies
+  chrome.webRequest.onCompleted.addListener(
+    function(details) {
+      // Détecter les liens brisés (codes 400+)
+      if (details.statusCode >= 400) {
+        // Enrichir les informations sur le lien brisé
+        detectedBrokenLinks[details.url] = {
+          statusCode: details.statusCode,
+          timestamp: Date.now(),
+          type: getErrorType(details.statusCode),
+          initiator: details.initiator || 'unknown',
+          fromCache: details.fromCache || false
+        };
+      }
+    },
+    {urls: ["<all_urls>"]},
+    ["responseHeaders"]
+  );
+} else {
+  // Log d'information si webRequest n'est pas disponible
+  if (typeof logger !== 'undefined') {
+    logger.warn('chrome.webRequest API not available - redirect and broken link detection disabled');
+  }
+}
 
 // L'API fetch ne peut pas toujours détecter les redirections à cause du CORS
 // Cette fonction vérifie activement si une URL HTTP peut être redirigée vers HTTPS
 async function testHttpsUrl(httpUrl, httpsUrl) {
   try {
-    // Utiliser XMLHttpRequest pour éviter les limitations CORS
-    const xhr = new XMLHttpRequest();
-    xhr.timeout = 5000; // 5 secondes de timeout
+    // Utiliser fetch avec un timeout pour service worker compatibility
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secondes de timeout
     
     // Stocker temporairement la redirection comme "en cours de vérification"
     detectedRedirects[httpUrl] = {
@@ -94,25 +102,37 @@ async function testHttpsUrl(httpUrl, httpsUrl) {
       isVerifying: true
     };
     
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4) {
-        // Si la version HTTPS est accessible, c'est une redirection valide
-        if (xhr.status >= 200 && xhr.status < 400) {
-          detectedRedirects[httpUrl] = {
-            redirectUrl: httpsUrl,
-            statusCode: 301, // Permanent Redirect (HTTP->HTTPS est généralement permanent)
-            timestamp: Date.now(),
-            verified: true,
-            type: 'http-to-https'
-          };
-        } else if (xhr.status >= 400) {
-          delete detectedRedirects[httpUrl]; // Supprimer la redirection temporaire
-        }
+    try {
+      const response = await fetch(httpsUrl, {
+        method: 'HEAD',
+        signal: controller.signal,
+        mode: 'no-cors' // Éviter les erreurs CORS
+      });
+      
+      clearTimeout(timeoutId);
+      
+      // Si la version HTTPS est accessible, c'est une redirection valide
+      if (response.ok || response.status < 400) {
+        detectedRedirects[httpUrl] = {
+          redirectUrl: httpsUrl,
+          statusCode: 301, // Permanent Redirect (HTTP->HTTPS est généralement permanent)
+          timestamp: Date.now(),
+          verified: true,
+          type: 'http-to-https'
+        };
+      } else if (response.status >= 400) {
+        delete detectedRedirects[httpUrl]; // Supprimer la redirection temporaire
       }
-    };
-    
-    xhr.open('HEAD', httpsUrl, true);
-    xhr.send();
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        // Timeout
+        delete detectedRedirects[httpUrl];
+      } else {
+        // Autre erreur
+        delete detectedRedirects[httpUrl];
+      }
+    }
   } catch (error) {
     logger.error(`OptiRank: Erreur lors de la vérification HTTPS: ${error.message}`);
     delete detectedRedirects[httpUrl]; // Supprimer la redirection temporaire en cas d'erreur
@@ -194,8 +214,8 @@ function sendResultsToPopup(tabId, results) {
       results: results
     }, (response) => {
       if (chrome.runtime.lastError) {
-        // Ce n'est pas une erreur critique, juste un log de débogage
-        // logger.error('OptiRank Background: Error sending scan results:', chrome.runtime.lastError);
+        // Ignorer silencieusement si la popup n'est pas ouverte
+        // C'est un comportement normal, pas une erreur
       } else {
         // Nettoyer le callback une fois utilisé
         if (pendingScanCallbacks[tabId]) {
@@ -204,7 +224,8 @@ function sendResultsToPopup(tabId, results) {
       }
     });
   } catch (error) {
-    logger.error('OptiRank Background: Error in sendResultsToPopup:', error);
+    // Ignorer silencieusement les erreurs de connexion
+    // logger.error('OptiRank Background: Error in sendResultsToPopup:', error);
   }
 }
 
@@ -271,7 +292,7 @@ function injectScriptsSequentially(tabId, scripts, index) {
 }
 
 // Listen for messages from popup or content script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   // Suppression du log : logger.debugEmoji("", "OptiRank Background: Message reçu", message);
   
   // Action: Vérifier un lot d'URLs en une seule requête
@@ -437,9 +458,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         action: 'scanProgress',
         tabId: tabId,
         progress: message.progress
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          // Ignorer silencieusement si la popup n'est pas ouverte
+        }
       });
     } catch (error) {
-      logger.error('OptiRank Background: Error sending progress update:', error);
+      // Ignorer silencieusement les erreurs de connexion
     }
     
     return false; // Ne pas attendre de réponse asynchrone
@@ -625,100 +650,104 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     
     // Effectuer une vérification active du lien externe
     try {
-      // Utiliser XMLHttpRequest pour éviter les limitations CORS
-      const xhr = new XMLHttpRequest();
-      xhr.timeout = 5000; // 5 secondes de timeout
+      // Utiliser fetch pour service worker compatibility
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secondes de timeout
       
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-          // Traiter la réponse en fonction du code de statut
-          if (xhr.status >= 300 && xhr.status < 400) {
-            // C'est une redirection
-            const redirectUrl = xhr.getResponseHeader('Location') || '';
-            // Suppression du log : logger.debugEmoji("", "OptiRank Background: Redirection détectée pour lien externe: ${url} -> ${redirectUrl} (${xhr.status})");
-            
-            // Enregistrer la redirection pour les futures vérifications
-            detectedRedirects[url] = {
-              redirectUrl: redirectUrl,
-              statusCode: xhr.status,
-              timestamp: Date.now(),
-              type: getRedirectType(xhr.status)
-            };
-            
-            sendResponse({
-              success: true,
-              isRedirect: true,
-              isBroken: false,
-              statusCode: xhr.status,
-              redirectUrl: redirectUrl
-            });
-          } else if (xhr.status >= 400) {
-            // C'est un lien cassé
-            // Suppression du log : logger.debugEmoji("", "OptiRank Background: Lien externe cassé détecté: ${url} (${xhr.status})");
-            
-            // Enregistrer le lien cassé pour les futures vérifications
-            detectedBrokenLinks[url] = {
-              statusCode: xhr.status,
-              timestamp: Date.now(),
-              type: getErrorType(xhr.status)
-            };
-            
-            sendResponse({
-              success: true,
-              isRedirect: false,
-              isBroken: true,
-              statusCode: xhr.status
-            });
-          } else if (xhr.status >= 200 && xhr.status < 300) {
-            // C'est un lien valide
-            // Suppression du log : logger.debugEmoji("", "OptiRank Background: Lien externe valide: ${url} (${xhr.status})");
-            
-            sendResponse({
-              success: true,
-              isRedirect: false,
-              isBroken: false,
-              statusCode: xhr.status
-            });
-          } else {
-            // Statut inconnu
-            // Suppression du log : logger.debugEmoji("", "OptiRank Background: Statut inconnu pour lien externe: ${url} (${xhr.status})");
-            
-            sendResponse({
-              success: true,
-              isRedirect: false,
-              isBroken: false,
-              statusCode: xhr.status,
-              isUnknownStatus: true
-            });
-          }
+      try {
+        const response = await fetch(url, {
+          method: 'HEAD',
+          signal: controller.signal,
+          mode: 'no-cors' // Éviter les erreurs CORS
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // Traiter la réponse en fonction du code de statut
+        if (response.status >= 300 && response.status < 400) {
+          // C'est une redirection
+          const redirectUrl = response.headers.get('Location') || response.url || '';
+          // Suppression du log : logger.debugEmoji("", "OptiRank Background: Redirection détectée pour lien externe: ${url} -> ${redirectUrl} (${response.status})");
+          
+          // Enregistrer la redirection pour les futures vérifications
+          detectedRedirects[url] = {
+            redirectUrl: redirectUrl,
+            statusCode: response.status,
+            timestamp: Date.now(),
+            type: getRedirectType(response.status)
+          };
+          
+          sendResponse({
+            success: true,
+            isRedirect: true,
+            isBroken: false,
+            statusCode: response.status,
+            redirectUrl: redirectUrl
+          });
+        } else if (response.status >= 400) {
+          // C'est un lien cassé
+          // Suppression du log : logger.debugEmoji("", "OptiRank Background: Lien externe cassé détecté: ${url} (${response.status})");
+          
+          // Enregistrer le lien cassé pour les futures vérifications
+          detectedBrokenLinks[url] = {
+            statusCode: response.status,
+            timestamp: Date.now(),
+            type: getErrorType(response.status)
+          };
+          
+          sendResponse({
+            success: true,
+            isRedirect: false,
+            isBroken: true,
+            statusCode: response.status
+          });
+        } else if (response.status >= 200 && response.status < 300) {
+          // C'est un lien valide
+          // Suppression du log : logger.debugEmoji("", "OptiRank Background: Lien externe valide: ${url} (${response.status})");
+          
+          sendResponse({
+            success: true,
+            isRedirect: false,
+            isBroken: false,
+            statusCode: response.status
+          });
+        } else {
+          // Statut inconnu
+          // Suppression du log : logger.debugEmoji("", "OptiRank Background: Statut inconnu pour lien externe: ${url} (${response.status})");
+          
+          sendResponse({
+            success: true,
+            isRedirect: false,
+            isBroken: false,
+            statusCode: response.status,
+            isUnknownStatus: true
+          });
         }
-      };
-      
-      xhr.ontimeout = function() {
-        // Suppression du log : logger.debugEmoji("", "OptiRank Background: Timeout pour lien externe: ${url}");
-        sendResponse({
-          success: true,
-          isRedirect: false,
-          isBroken: true,
-          statusCode: 0,
-          isTimeout: true
-        });
-      };
-      
-      xhr.onerror = function() {
-        // Suppression du log : logger.debugEmoji("", "OptiRank Background: Erreur pour lien externe: ${url}");
-        sendResponse({
-          success: true,
-          isRedirect: false,
-          isBroken: true, // Considérer comme cassé si on ne peut pas y accéder
-          statusCode: 0,
-          isError: true
-        });
-      };
-      
-      // Tenter d'abord avec HEAD pour minimiser le trafic
-      xhr.open('HEAD', url, true);
-      xhr.send();
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        
+        if (fetchError.name === 'AbortError') {
+          // Timeout
+          // Suppression du log : logger.debugEmoji("", "OptiRank Background: Timeout pour lien externe: ${url}");
+          sendResponse({
+            success: true,
+            isRedirect: false,
+            isBroken: true,
+            statusCode: 0,
+            isTimeout: true
+          });
+        } else {
+          // Autre erreur
+          // Suppression du log : logger.debugEmoji("", "OptiRank Background: Erreur pour lien externe: ${url}");
+          sendResponse({
+            success: true,
+            isRedirect: false,
+            isBroken: true, // Considérer comme cassé si on ne peut pas y accéder
+            statusCode: 0,
+            isError: true
+          });
+        }
+      }
     } catch (error) {
       logger.error(`OptiRank Background: Erreur lors de la vérification du lien externe: ${error.message}`);
       sendResponse({
@@ -745,8 +774,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // Charger les scripts avant de scanner
       chrome.tabs.sendMessage(sender.tab.id, { action: 'loadScripts' }, (response) => {
         if (chrome.runtime.lastError) {
-          logger.error('OptiRank: Error loading scripts:', chrome.runtime.lastError);
-          sendResponse({ success: false, error: 'Failed to load scripts' });
+          // L'onglet n'existe plus ou le content script n'est pas chargé
+          sendResponse({ success: false, error: 'Tab not available or content script not loaded' });
           return;
         }
         
@@ -758,6 +787,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           // Lancer le scan
           scanCurrentTab(message.options).then(results => {
             sendResponse(results);
+          }).catch(error => {
+            sendResponse({ success: false, error: error.message });
           });
         }, 500);
       });
@@ -815,7 +846,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     
     // Suppression du log : logger.debugEmoji("", "OptiRank DEBUG: Vérification de ${urls.length} liens depuis le background script");
     
-    urls.forEach(url => {
+    // Utiliser Promise.all pour gérer les vérifications async
+    const checkPromises = urls.map(async (url) => {
       results[url] = {
         isRedirect: false,
         isBroken: false,
@@ -829,6 +861,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         results[url].statusCode = detectedRedirects[url].statusCode;
         results[url].redirectUrl = detectedRedirects[url].redirectUrl;
         // Suppression du log : logger.debugEmoji("", "%cOptiRank BACKGROUND: REDIRECTION [${detectedRedirects[url].statusCode}] ${url} -> ${detectedRedirects[url].redirectUrl}", 'color: orange; font-weight: bold;');
+        return;
       }
       
       // Vérifier si c'est un lien brisé
@@ -836,49 +869,60 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         results[url].isBroken = true;
         results[url].statusCode = detectedBrokenLinks[url].statusCode;
         // Suppression du log : logger.debugEmoji("", "%cOptiRank BACKGROUND: LIEN BRISÉ [${detectedBrokenLinks[url].statusCode}] ${url}", 'color: red; font-weight: bold;');
+        return;
       }
       
       // Si ni redirection ni brisé, vérifier manuellement
       if (!results[url].isRedirect && !results[url].isBroken) {
-        // Faire une vérification manuelle avec XMLHttpRequest
-        const xhr = new XMLHttpRequest();
-        xhr.open('HEAD', url, false); // Synchrone pour simplifier
+        // Faire une vérification manuelle avec fetch (service worker compatible)
         try {
-          xhr.send();
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 secondes de timeout
+          
+          const response = await fetch(url, {
+            method: 'HEAD',
+            signal: controller.signal,
+            mode: 'no-cors' // Éviter les erreurs CORS
+          });
+          
+          clearTimeout(timeoutId);
           
           // Vérifier si c'est une redirection (3xx)
-          if (xhr.status >= 300 && xhr.status < 400) {
+          if (response.status >= 300 && response.status < 400) {
             results[url].isRedirect = true;
-            results[url].statusCode = xhr.status;
-            results[url].redirectUrl = xhr.responseURL !== url ? xhr.responseURL : null;
-            // Suppression du log : logger.debugEmoji("", "%cOptiRank BACKGROUND: REDIRECTION DÉTECTÉE [${xhr.status}] ${url} -> ${results[url].redirectUrl || 'URL inconnue'}", 'color: orange; font-weight: bold;');
+            results[url].statusCode = response.status;
+            results[url].redirectUrl = response.url !== url ? response.url : null;
+            // Suppression du log : logger.debugEmoji("", "%cOptiRank BACKGROUND: REDIRECTION DÉTECTÉE [${response.status}] ${url} -> ${results[url].redirectUrl || 'URL inconnue'}", 'color: orange; font-weight: bold;');
             
             // Stocker pour les futures vérifications
             detectedRedirects[url] = {
               redirectUrl: results[url].redirectUrl || url,
-              statusCode: xhr.status,
+              statusCode: response.status,
               timestamp: Date.now()
             };
           } 
           // Vérifier si c'est un lien brisé (4xx, 5xx)
-          else if (xhr.status >= 400) {
+          else if (response.status >= 400) {
             results[url].isBroken = true;
-            results[url].statusCode = xhr.status;
-            // Suppression du log : logger.debugEmoji("", "%cOptiRank BACKGROUND: LIEN BRISÉ DÉTECTÉ [${xhr.status}] ${url}", 'color: red; font-weight: bold;');
+            results[url].statusCode = response.status;
+            // Suppression du log : logger.debugEmoji("", "%cOptiRank BACKGROUND: LIEN BRISÉ DÉTECTÉ [${response.status}] ${url}", 'color: red; font-weight: bold;');
             
             // Stocker pour les futures vérifications
             detectedBrokenLinks[url] = {
-              statusCode: xhr.status,
+              statusCode: response.status,
               timestamp: Date.now()
             };
           } else {
-            // Suppression du log : logger.debugEmoji("", "%cOptiRank BACKGROUND: LIEN VALIDE [${xhr.status}] ${url}", 'color: green;');
+            // Suppression du log : logger.debugEmoji("", "%cOptiRank BACKGROUND: LIEN VALIDE [${response.status}] ${url}", 'color: green;');
           }
         } catch (error) {
           // Suppression du log : logger.debugEmoji("", "OptiRank BACKGROUND: Erreur lors de la vérification manuelle de ${url}", error);
         }
       }
     });
+    
+    // Attendre que toutes les vérifications soient terminées
+    await Promise.all(checkPromises);
     
     sendResponse({
       success: true,
@@ -922,8 +966,8 @@ async function scanCurrentTab(options = null) {
         await new Promise((resolve, reject) => {
           chrome.tabs.sendMessage(tab.id, { action: 'loadScripts' }, (response) => {
             if (chrome.runtime.lastError) {
-              logger.error('OptiRank: Error loading scripts:', chrome.runtime.lastError);
-              reject(chrome.runtime.lastError);
+              // L'onglet n'existe plus ou le content script n'est pas chargé
+              reject(new Error('Tab not available or content script not loaded'));
               return;
             }
             
@@ -936,28 +980,37 @@ async function scanCurrentTab(options = null) {
           });
         });
       } catch (error) {
-        logger.error('OptiRank: Failed to load scripts:', error);
+        // L'onglet n'existe plus ou le content script n'est pas chargé
         return { error: 'Failed to load scripts. Please refresh the page and try again.' };
       }
     }
     
     // Envoyer un message au content script pour scanner les liens avec les options
-    const results = await chrome.tabs.sendMessage(tab.id, { 
-      action: 'scanLinks',
-      options: options || {
-        scanInternal: true,
-        scanExternal: true,
-        checkAnchorText: true,
-        checkArchive: true
-      }
-    });
+    let results;
+    try {
+      results = await chrome.tabs.sendMessage(tab.id, { 
+        action: 'scanLinks',
+        options: options || {
+          scanInternal: true,
+          scanExternal: true,
+          checkAnchorText: true,
+          checkArchive: true
+        }
+      });
+    } catch (error) {
+      return { error: 'Unable to communicate with content script. Please refresh the page.' };
+    }
     
     // Envoyer un message au content script pour réinitialiser les surlignages
-    await chrome.tabs.sendMessage(tab.id, { action: 'resetHighlights' });
+    try {
+      await chrome.tabs.sendMessage(tab.id, { action: 'resetHighlights' });
+    } catch (error) {
+      // Ignorer silencieusement cette erreur, ce n'est pas critique
+    }
     
     return results;
   } catch (error) {
-    logger.error('Error scanning tab:', error);
+    // Gérer silencieusement les erreurs de communication
     return { error: error.message || 'Unknown error occurred' };
   }
 }

@@ -7,12 +7,13 @@
 3. [Utilisation](#utilisation)
 4. [Architecture du Projet](#architecture-du-projet)
 5. [Documentation Technique](#documentation-technique)
-6. [Fonctionnalités Principales](#fonctionnalités-principales)
-7. [Structure des Fichiers](#structure-des-fichiers)
-8. [Modules Détaillés](#modules-détaillés)
-9. [API et Fonctions](#api-et-fonctions)
-10. [Développement](#développement)
-11. [Troubleshooting](#troubleshooting)
+6. [Architecture de Logging](#architecture-de-logging)
+7. [Fonctionnalités Principales](#fonctionnalités-principales)
+8. [Structure des Fichiers](#structure-des-fichiers)
+9. [Modules Détaillés](#modules-détaillés)
+10. [API et Fonctions](#api-et-fonctions)
+11. [Développement](#développement)
+12. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -127,6 +128,189 @@ Page Web → Content Scripts → Background → Popup → Interface Utilisateur
   ],
   "host_permissions": ["<all_urls>"] // Accès à tous les sites
 }
+```
+
+---
+
+## 🔍 Architecture de Logging
+
+### 📋 Vue d'Ensemble
+
+Système de logging à 3 niveaux pour extension Chrome, optimisé pour audience Dev + SEO, conforme RGPD et performant.
+
+### 🎯 Architecture "Progressive Disclosure"
+
+#### **Niveau 1 : Production (Par Défaut)** 🟢
+```
+Mode : Silent
+Audience : Utilisateurs finaux SEO
+Logs : Erreurs critiques uniquement
+Performance : Impact minimal
+```
+
+#### **Niveau 2 : Mode Debug Utilisateur** 🔧
+```
+Mode : Diagnostic (Activé manuellement)
+Audience : SEO + Dev troubleshooting
+Logs : Informations de scan + erreurs détaillées
+Performance : Impact modéré avec warning
+```
+
+#### **Niveau 3 : Mode Développeur** 🛠️
+```
+Mode : Development (Auto-détecté)
+Audience : Développeurs
+Logs : Logs ultra-détaillés + performance
+Performance : Pas de limitation
+```
+
+### 🔧 Détection des Modes
+
+#### **Mode Production** (Défaut)
+```javascript
+// Détection : Extension du Chrome Web Store
+const isProduction = chrome.runtime.getManifest().update_url !== undefined;
+
+// Logs autorisés :
+- Erreurs critiques (anonymisées)
+- Messages de status pour l'utilisateur
+- Export automatique d'erreurs (pour support)
+```
+
+#### **Mode Debug Utilisateur** (Manuel)
+```javascript
+// Activation : Toggle dans Settings
+// Stockage : chrome.storage.sync.get('enableDiagnosticLogs')
+
+// Logs autorisés :
+- Messages informatifs pour SEO ("business-friendly")
+- Détails des scans et erreurs
+- Export des logs pour support
+- Warning performance visible
+```
+
+#### **Mode Développeur** (Auto)
+```javascript
+// Détection : Extension locale (non-packagée)
+const isDevelopment = chrome.runtime.getManifest().update_url === undefined;
+
+// Logs autorisés :
+- Tous les logs techniques
+- Performance timing
+- Debug avancé avec stack traces
+- Pas de limite de volume
+```
+
+### 📊 Types de Messages
+
+#### **Messages SEO (Business-Friendly)** 👥
+```javascript
+// ✅ Exemple SEO-friendly
+"Analyse terminée : 45 liens trouvés, 3 liens brisés détectés"
+"Attention : 12 liens redirigent vers HTTPS" 
+"Scan en cours... 67% terminé"
+
+// ❌ Éviter en mode SEO
+"XMLHttpRequest failed with status 404 in validator.js:142"
+"Promise rejection in async function scanLinks()"
+"Memory usage: 45.2MB, GC triggered"
+```
+
+#### **Messages Techniques (Dev-Friendly)** 🛠️
+```javascript
+// ✅ Messages techniques détaillés
+"[CONTENT] Link validation failed: HTTP 404 at https://example.com/page"
+"[SCANNER] Batch processing: 10/45 links completed (22ms average)"
+"[VALIDATOR] Timeout after 5000ms for URL: https://slow-site.com"
+```
+
+### 🎛️ Interface Utilisateur
+
+#### **Settings Simple (Recommandé)**
+```
+Extension Settings > Advanced
+
+□ Enable diagnostic logging
+  ℹ️ "Provides detailed information to help troubleshoot scan issues.
+      May impact performance on large websites."
+  
+□ Auto-export error reports
+  ℹ️ "Automatically save error logs for support purposes.
+      No personal data is collected."
+
+[Export Current Logs] [Clear All Logs]
+```
+
+### 🛡️ Conformité RGPD
+
+#### **Données Anonymisées** ✅
+```javascript
+// ✅ CONFORME
+logger.info('Scan completed', { 
+  linksCount: 42, 
+  brokenCount: 3,
+  domain: 'anonymized-domain.com',
+  duration: '1.2s' 
+});
+
+// ❌ NON CONFORME
+logger.info('Scanning', { 
+  url: 'https://private-user-site.com/personal-page',
+  userAgent: navigator.userAgent,
+  cookies: document.cookie 
+});
+```
+
+#### **Consentement Explicite** ✅
+```javascript
+// Premier lancement - demander permission
+if (!hasAskedLoggingPermission) {
+  showLoggingConsentDialog({
+    title: "Améliorer OptiRank",
+    message: "Acceptez-vous l'enregistrement de logs anonymes pour nous aider à améliorer l'extension ?",
+    details: "Aucune donnée personnelle n'est collectée. Vous pouvez désactiver à tout moment.",
+    options: ["Accepter", "Refuser", "Plus d'infos"]
+  });
+}
+```
+
+### ⚡ Optimisation Performance
+
+#### **Throttling Automatique** 🚀
+```javascript
+class PerformanceLogger {
+  constructor() {
+    this.logsPerSecond = 0;
+    this.maxLogsPerSecond = 50; // Limite pour sites lourds
+    this.throttleActive = false;
+  }
+  
+  log(level, message, data) {
+    if (this.shouldThrottle()) {
+      this.queueLog(level, message, data);
+      return;
+    }
+    
+    this.writeLog(level, message, data);
+    this.trackRate();
+  }
+  
+  shouldThrottle() {
+    // Throttle si trop de logs ou si page lourde
+    return this.logsPerSecond > this.maxLogsPerSecond || 
+           this.isHeavyPage();
+  }
+}
+```
+
+#### **Cleanup Automatique** 🧹
+```javascript
+// Rotation automatique des logs
+setInterval(() => {
+  if (logs.length > 1000) {
+    logs.splice(0, logs.length - 800); // Garder les 800 derniers
+  }
+}, 60000); // Toutes les minutes
 ```
 
 ---

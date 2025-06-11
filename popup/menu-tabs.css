@@ -32,10 +32,10 @@
 /* ========================================
    CONTAINER DES ONGLETS
    ======================================== */
-.tabs {
+.tab-navigation .tabs {
   display: flex;
   gap: var(--menu-gap);
-  background: var(--menu-bg-color) !important;
+  background: var(--menu-bg-color);
   padding: var(--menu-padding);
   border-radius: var(--menu-border-radius);
   width: 100%;
@@ -46,7 +46,7 @@
 /* ========================================
    ONGLETS INDIVIDUELS
    ======================================== */
-.tab-link {
+.tab-navigation .tabs .tab-link {
   /* Layout */
   display: flex;
   flex-direction: column;
@@ -60,10 +60,10 @@
   min-height: 32px;
   
   /* Apparence - AUCUN effet visuel sur l'onglet */
-  background: transparent !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
   
   /* Texte */
   color: var(--menu-text-normal);
@@ -75,13 +75,13 @@
 }
 
 /* Icônes */
-.tab-link i {
+.tab-navigation .tabs .tab-link i {
   font-size: 16px;
   color: inherit;
 }
 
 /* Texte */
-.tab-link span {
+.tab-navigation .tabs .tab-link span {
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.05px;
@@ -96,44 +96,44 @@
 /* ========================================
    ÉTATS DES ONGLETS - SEULEMENT LE TEXTE
    ======================================== */
-.tab-link:hover {
-  background: transparent !important; /* Force la transparence */
+.tab-navigation .tabs .tab-link:hover {
+  background: transparent;
   color: var(--menu-text-hover);
 }
 
-.tab-link.active {
-  background: transparent !important; /* Force la transparence */
+.tab-navigation .tabs .tab-link.active {
+  background: transparent;
   color: var(--menu-text-active);
   font-weight: bold;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.tab-link:focus-visible {
-  background: transparent !important; /* Force la transparence */
-  outline: none !important; /* Supprime complètement l'outline */
+.tab-navigation .tabs .tab-link:focus-visible {
+  background: transparent;
+  outline: none;
 }
 
 /* ========================================
    ONGLET PARAMÈTRES (SPÉCIAL)
    ======================================== */
-.tab-link.icon-only {
+.tab-navigation .tabs .tab-link.icon-only {
   flex: 0 0 24px;
   min-height: 28px;
-  border-radius: 50%; /* Garde le cercle pour les paramètres */
+  border-radius: 50%;
   padding: 4px;
-  margin: 0; /* Suppression des marges spécifiques */
-  background: transparent !important; /* Force la transparence même pour le cercle */
+  margin: 0;
+  background: transparent;
 }
 
-.tab-link.icon-only:hover {
-  background: transparent !important;
+.tab-navigation .tabs .tab-link.icon-only:hover {
+  background: transparent;
 }
 
-.tab-link.icon-only.active {
-  background: transparent !important;
+.tab-navigation .tabs .tab-link.icon-only.active {
+  background: transparent;
 }
 
-.tab-link.icon-only i {
+.tab-navigation .tabs .tab-link.icon-only i {
   font-size: 14px;
 }
 

@@ -131,7 +131,7 @@ h3.heading-card-title {
   color: var(--color-primary-dark);
   margin: 0 0 var(--space-1) 0;
   line-height: var(--line-height-tight);
-  text-align: left !important;
+  text-align: left;
 }
 
 .card-description,

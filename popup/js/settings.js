@@ -21,7 +21,7 @@ class OptiRankSettings {
     this.createSettingsUI();
     this.bindEvents();
     
-    this.logger.info('Interface des paramètres OptiRank initialisée');
+    window.safeLogger.info('Interface des paramètres OptiRank initialisée');
   }
 
   /**
@@ -42,7 +42,7 @@ class OptiRankSettings {
       };
 
     } catch (error) {
-      this.logger.error('Impossible de charger les paramètres', { error: error.message });
+      window.safeLogger.error('Impossible de charger les paramètres', { error: error.message });
     }
   }
 
@@ -52,13 +52,13 @@ class OptiRankSettings {
   async saveSettings() {
     try {
       await chrome.storage.sync.set(this.settings);
-      this.logger.info('Paramètres sauvegardés avec succès');
+      window.safeLogger.info('Paramètres sauvegardés avec succès');
       
       // Notification visuelle
       this.showSaveNotification();
       
     } catch (error) {
-      this.logger.error('Impossible de sauvegarder les paramètres', { error: error.message });
+      window.safeLogger.error('Impossible de sauvegarder les paramètres', { error: error.message });
     }
   }
 
@@ -296,10 +296,10 @@ class OptiRankSettings {
         this.saveSettings();
         
         if (e.target.checked) {
-          this.logger.info('Logs de diagnostic activés - Informations détaillées disponibles');
+          window.safeLogger.info('Logs de diagnostic activés - Informations détaillées disponibles');
           this.showPerformanceWarning();
         } else {
-          this.logger.info('Logs de diagnostic désactivés - Mode silencieux activé');
+          window.safeLogger.info('Logs de diagnostic désactivés - Mode silencieux activé');
         }
       });
     }
@@ -312,9 +312,9 @@ class OptiRankSettings {
         this.saveSettings();
         
         if (e.target.checked) {
-          this.logger.info('Export automatique activé - Les erreurs seront sauvegardées automatiquement');
+          window.safeLogger.info('Export automatique activé - Les erreurs seront sauvegardées automatiquement');
         } else {
-          this.logger.info('Export automatique désactivé');
+          window.safeLogger.info('Export automatique désactivé');
         }
       });
     }
@@ -374,16 +374,32 @@ class OptiRankSettings {
    */
   async exportLogs() {
     try {
-      this.logger.info('Export des logs en cours...');
+      window.safeLogger.info('Export des logs en cours...');
       
-      // Déclencher l'export via le logger
-      await this.logger.exportCurrentLogs();
+      // Générer l'export des logs
+      const logData = JSON.stringify({
+        timestamp: new Date().toISOString(),
+        extension: 'OptiRank',
+        settings: this.settings,
+        userAgent: navigator.userAgent
+      }, null, 2);
+      
+      // Créer et télécharger le fichier
+      const blob = new Blob([logData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `optirank-logs-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       
       // Feedback utilisateur
       this.showExportNotification('Export des logs terminé avec succès !');
       
     } catch (error) {
-      this.logger.error('Échec de l\'export des logs', { error: error.message });
+      window.safeLogger.error('Échec de l\'export des logs', { error: error.message });
       this.showExportNotification('Erreur lors de l\'export des logs', true);
     }
   }
@@ -393,9 +409,10 @@ class OptiRankSettings {
    */
   async clearLogs() {
     try {
-      this.logger.info('Suppression de tous les logs...');
+      window.safeLogger.info('Suppression de tous les logs...');
       
-      await this.logger.clearAllLogs();
+      // Effacer les données de storage liées aux logs
+      await chrome.storage.local.clear();
       
       // Mettre à jour les stats
       this.updateStats();
@@ -403,7 +420,7 @@ class OptiRankSettings {
       this.showExportNotification('Tous les logs ont été effacés');
       
     } catch (error) {
-      this.logger.error('Impossible d\'effacer les logs', { error: error.message });
+      window.safeLogger.error('Impossible d\'effacer les logs', { error: error.message });
       this.showExportNotification('Erreur lors de la suppression', true);
     }
   }
@@ -442,7 +459,7 @@ class OptiRankSettings {
       }
       
       if (statMode) {
-        const mode = this.logger.environment.isProduction ? 'PROD' : 'DEV';
+        const mode = window.logger && window.logger.environment && window.logger.environment.isProduction ? 'PROD' : 'DEV';
         statMode.textContent = mode;
         this.updateMetricStatus('mode', mode);
       }

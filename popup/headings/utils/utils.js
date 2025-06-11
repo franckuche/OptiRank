@@ -1,6 +1,6 @@
 
-// 🚀 OptiRank SEO-friendly Logging
-const logger = window.OptiRankLogger || {
+// 🚀 OptiRank SEO-friendly Logging - Utilise logger universel
+const logger = window.logger || {
   info: (msg, data) => console.log('[OptiRank] ' + msg, data || ''),
   error: (msg, data) => console.error('[OptiRank Error] ' + msg, data || ''),
   warn: (msg, data) => console.warn('[OptiRank Warning] ' + msg, data || ''),
@@ -10,11 +10,7 @@ const logger = window.OptiRankLogger || {
   linkValidationFailed: (url, status) => console.warn('[OptiRank] Lien inaccessible : ' + url + ' (' + status + ')')
 };
 
-const eventManager = window.OptiRankEventManager || {
-  onClick: (el, handler) => eventManager.onClick(el, handler),
-  setTimeout: (callback, delay, name) => setTimeout(callback, delay),
-  removeEventListener: (id) => console.log('Event cleanup simulated for:', id)
-};
+// EventManager est chargé globalement par event-manager.js
 
 // Helpers pour migration
 function anonymizeUrl(url) {
@@ -224,18 +220,18 @@ function setupCopyDropdown() {
   const copyDropdown = document.querySelector('.copy-dropdown');
   
   if (!dropdownTrigger || !dropdownMenu || !copyDropdown) {
-    console.error('Headings Utils: Éléments dropdown non trouvés');
+    // Les éléments peuvent ne pas être présents dans tous les contextes, ce n'est pas critique
     return;
   }
   
-  // Toggle du dropdown
-  eventManager.onClick(dropdownTrigger, function(e) {
+  // Toggle du dropdown - utiliser addEventListener standard
+  dropdownTrigger.addEventListener('click', function(e) {
     e.stopPropagation();
     copyDropdown.classList.toggle('active');
   });
   
   // Fermer le dropdown en cliquant ailleurs
-  eventManager.onClick(document, function(e) {
+  document.addEventListener('click', function(e) {
     if (!copyDropdown.contains(e.target)) {
       copyDropdown.classList.remove('active');
     }
@@ -246,7 +242,7 @@ function setupCopyDropdown() {
   const copyWithoutAnalysisBtn = document.getElementById('copy-without-analysis');
   
   if (copyWithAnalysisBtn) {
-    eventManager.onClick(copyWithAnalysisBtn, function(e) {
+    copyWithAnalysisBtn.addEventListener('click', function(e) {
       e.preventDefault();
       copyHeadingStructure(true);
       copyDropdown.classList.remove('active');
@@ -254,7 +250,7 @@ function setupCopyDropdown() {
   }
   
   if (copyWithoutAnalysisBtn) {
-    eventManager.onClick(copyWithoutAnalysisBtn, function(e) {
+    copyWithoutAnalysisBtn.addEventListener('click', function(e) {
       e.preventDefault();
       copyHeadingStructure(false);
       copyDropdown.classList.remove('active');
@@ -262,8 +258,8 @@ function setupCopyDropdown() {
   }
 }
 
-// Initialiser le système
-eventManager.addEventListener(document, 'DOMContentLoaded', function() {
+// Initialiser le système - utiliser addEventListener standard
+document.addEventListener('DOMContentLoaded', function() {
   console.log('Headings Utils: Initialisation du système de copie');
   setupCopyDropdown();
 });

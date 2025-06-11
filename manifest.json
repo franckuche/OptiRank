@@ -5,8 +5,9 @@
   "description": "Extension d'analyse de liens et de structure SEO pour Chrome",
   "permissions": [
     "activeTab",
-    "storage",
-    "scripting"
+    "storage", 
+    "scripting",
+    "webRequest"
   ],
   "host_permissions": ["<all_urls>"],
   "action": {
@@ -29,7 +30,7 @@
     {
       "matches": ["<all_urls>"],
       "js": [
-        "shared/logger.js",
+        "shared/logger-universal.js",
         "shared/event-manager.js",
         "content/common/utils.js",
         "content/common/data.js",

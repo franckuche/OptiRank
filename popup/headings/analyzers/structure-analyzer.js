@@ -15,7 +15,7 @@ function initStructureAnalyzerConfig() {
     headingColors = window.headingsConfig.structure.headingColors;
     missingHeadingColor = window.headingsConfig.structure.missingHeadingColor;
   } else {
-    logger.warn('Headings: Configuration de l\'analyseur de structure non disponible, utilisation des valeurs par défaut');
+    window.safeLogger.warn('Headings: Configuration de l\'analyseur de structure non disponible, utilisation des valeurs par défaut');
     
     // Valeurs par défaut
     headingColors = {

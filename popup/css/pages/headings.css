@@ -10,20 +10,20 @@
 }
 
 /* === CORRECTION BACKGROUND GLOBAL === */
-.content {
-  background: var(--headings-bg) !important;
+#headings.tab-content.active .content {
+  background: var(--headings-bg);
   backdrop-filter: blur(8px);
 }
 
 /* === CORRECTION BACKGROUND CONTAINER ET NAVIGATION === */
 body:has(#headings.tab-content.active) .container,
 .container:has(#headings.tab-content.active) {
-  background-color: var(--headings-bg) !important;
+  background-color: var(--headings-bg);
 }
 
 body:has(#headings.tab-content.active) .tab-navigation,
 .tab-navigation:has(+ * #headings.tab-content.active) {
-  background: var(--headings-bg) !important;
+  background: var(--headings-bg);
 }
 
 /* === CORRECTION LARGEUR POUR HEADINGS === */
@@ -31,27 +31,27 @@ body:has(#headings.tab-content.active) .container,
 #headings.tab-content.active ~ * .content,
 #headings.tab-content .content,
 .content:has(#headings.tab-content.active) {
-  --max-content-width: 100% !important;
-  max-width: 100% !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
+  --max-content-width: 100%;
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 /* Force pleine largeur pour les cartes Headings */
-#headings .heading-card {
-  width: calc(100% - 6%) !important;
-  max-width: none !important;
-  margin: 0 auto 16px auto !important;
+#headings.tab-content .heading-card {
+  width: calc(100% - 6%);
+  max-width: none;
+  margin: 0 auto 16px auto;
 }
 
 /* Forcer la même largeur que Settings */
-#headings .content-section {
-  max-width: 100% !important;
-  width: 100% !important;
-  padding: 0 !important;
-  margin: 0 !important;
+#headings.tab-content .content-section {
+  max-width: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
 }
 
 /* === BACKGROUND DÉGRADÉ POUR TOUTE LA PAGE === */
@@ -115,12 +115,12 @@ body:has(#headings.tab-content.active) .container,
 }
 
 /* === GRILLE DES COMPTEURS - STYLE SIMPLE === */
-.heading-counts-grid {
+#headings.tab-content .heading-counts-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
   margin-bottom: 16px;
-  background: transparent !important;
+  background: transparent;
 }
 
 .heading-count-box {
@@ -150,10 +150,25 @@ body:has(#headings.tab-content.active) .container,
 }
 
 /* Forcer TOUS les compteurs en bleu foncé */
-.h1-bg, .h2-bg, .h3-bg, .h4-bg, .h5-bg, .h6-bg,
-.h1-type, .h2-type, .h3-type, .h4-type, .h5-type, .h6-type,
-#h1-count, #h2-count, #h3-count, #h4-count, #h5-count, #h6-count {
-  background: var(--headings-blue-dark) !important;
+#headings.tab-content .h1-bg, 
+#headings.tab-content .h2-bg, 
+#headings.tab-content .h3-bg, 
+#headings.tab-content .h4-bg, 
+#headings.tab-content .h5-bg, 
+#headings.tab-content .h6-bg,
+#headings.tab-content .h1-type, 
+#headings.tab-content .h2-type, 
+#headings.tab-content .h3-type, 
+#headings.tab-content .h4-type, 
+#headings.tab-content .h5-type, 
+#headings.tab-content .h6-type,
+#headings.tab-content #h1-count, 
+#headings.tab-content #h2-count, 
+#headings.tab-content #h3-count, 
+#headings.tab-content #h4-count, 
+#headings.tab-content #h5-count, 
+#headings.tab-content #h6-count {
+  background: var(--headings-blue-dark);
 }
 
 /* === ÉLÉMENTS DE TITRE - AMÉLIORÉS === */
@@ -199,7 +214,7 @@ body:has(#headings.tab-content.active) .container,
   position: relative;
   overflow: hidden;
   /* TOUS LES LEVEL-INDICATORS EN BLEU comme demandé */
-  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
 
 .level-indicator::before {
@@ -221,7 +236,7 @@ body:has(#headings.tab-content.active) .container,
 /* Level-indicators pour titres manquants en jaune */
 .heading-item[data-missing="true"] .level-indicator,
 .heading-item.missing-heading .level-indicator {
-  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
 /* === CONTENU DES TITRES === */
@@ -274,8 +289,8 @@ body:has(#headings.tab-content.active) .container,
 }
 
 /* === INSIGHTS - DESIGN COLORÉ === */
-.insights-container {
-  background: transparent !important;
+#headings.tab-content .insights-container {
+  background: transparent;
   border-radius: 8px;
   padding: 16px;
   backdrop-filter: blur(8px);
@@ -573,8 +588,8 @@ body:has(#headings.tab-content.active) .container,
 }
 
 /* === STRUCTURE DES TITRES - SANS SCROLL, HAUTEUR ADAPTATIVE === */
-.headings-list-container {
-  background: transparent !important;
+#headings.tab-content .headings-list-container {
+  background: transparent;
   border-radius: 12px;
   padding: 20px;
   backdrop-filter: blur(8px);
@@ -627,8 +642,8 @@ body:has(#headings.tab-content.active) .container,
 }
 
 /* Level indicator pour sections manquantes */
-.heading-item.missing-section-item .level-indicator {
-  background: linear-gradient(135deg, #f97316, #ea580c) !important;
+#headings.tab-content .heading-item.missing-section-item .level-indicator {
+  background: linear-gradient(135deg, #f97316, #ea580c);
   border: 2px solid #fff;
   box-shadow: 0 0 0 2px #f97316;
 }

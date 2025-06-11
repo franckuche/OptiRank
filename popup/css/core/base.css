@@ -12,13 +12,13 @@
 
 /* === DIMENSIONS FIXES POUR EXTENSION === */
 html, body {
-  width: 750px !important;
-  height: 500px !important;
-  max-width: 750px !important;
-  max-height: 500px !important;
-  min-width: 750px !important;
-  min-height: 500px !important;
-  overflow: hidden !important;
+  width: 750px;
+  height: 500px;
+  max-width: 750px;
+  max-height: 500px;
+  min-width: 750px;
+  min-height: 500px;
+  overflow: hidden;
 }
 
 /* === STYLES GLOBAUX === */
@@ -142,7 +142,7 @@ body {
 
 /* === UTILITAIRES DE LAYOUT === */
 .hidden {
-  display: none !important;
+  display: none;
 }
 
 .sr-only {
@@ -285,5 +285,5 @@ h2.compact-heading {
 }
 
 h3 {
-  text-align: left !important;
+  text-align: left;
 } 

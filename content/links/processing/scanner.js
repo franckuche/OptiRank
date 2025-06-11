@@ -415,7 +415,7 @@ async function scanAllLinks(options = {}) {
     
     // Ajouter la propriété links aux résultats
     window.OptiRankUtils.scanResults.links = linksArray;
-    logger.debugEmoji("", "OptiRank: Added ${linksArray.length} links to scan results");
+                logger.debugEmoji("", `OptiRank: Added ${linksArray.length} links to scan results`);
     
     // Afficher les résultats du scan dans la console pour débogage
     logger.debug('OptiRank: Scan completed with results:', JSON.stringify(window.OptiRankUtils.scanResults, null, 2));

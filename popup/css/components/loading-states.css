@@ -62,8 +62,8 @@
 /* États de succès */
 .copy-success {
   animation: copy-success 0.6s ease;
-  background: var(--color-success) !important;
-  color: white !important;
+  background: var(--color-success);
+  color: white;
 }
 
 @keyframes copy-success {

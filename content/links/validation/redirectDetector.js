@@ -35,13 +35,23 @@
  */
 function checkRedirectWithBackgroundScript(url) {
   return new Promise((resolve, reject) => {
+    let resolved = false; // Empêcher les résolutions multiples
+    
+    const resolveOnce = (result) => {
+      if (!resolved) {
+        resolved = true;
+        resolve(result);
+      }
+    };
+    
     try {
       // Vérifier si l'API Chrome est disponible
       if (typeof chrome !== 'undefined' && chrome.runtime) {
         chrome.runtime.sendMessage({ action: 'checkRedirect', url: url }, (response) => {
           if (chrome.runtime.lastError) {
-            logger.error(`OptiRank: Error during redirect check: ${chrome.runtime.lastError.message}`);
-            resolve(null); // Résoudre avec null en cas d'erreur
+            // Ne pas logger cette erreur car elle est attendue quand la connexion se ferme
+            // logger.error(`OptiRank: Error during redirect check: ${chrome.runtime.lastError.message}`);
+            resolveOnce(null); // Résoudre avec null en cas d'erreur
             return;
           }
           
@@ -50,7 +60,7 @@ function checkRedirectWithBackgroundScript(url) {
             // URL cible de redirection (l'URL actuelle est une destination, pas une source)
             if (response.isRedirectTarget) {
               logger.debugEmoji("", "OptiRank: URL détectée comme destination de redirection depuis ${response.sourceUrl}");
-              resolve({
+              resolveOnce({
                 isRedirect: false, // Pas considéré comme une redirection dans notre contexte d'affichage
                 isRedirectTarget: true,
                 sourceUrl: response.sourceUrl
@@ -59,7 +69,7 @@ function checkRedirectWithBackgroundScript(url) {
             }
             
             logger.debugEmoji("", "OptiRank: Background a confirmé une redirection pour ${url}: ${response.statusCode}");
-            resolve({
+            resolveOnce({
               isRedirect: true,
               isBroken: false,
               statusCode: response.statusCode || 302,
@@ -68,15 +78,15 @@ function checkRedirectWithBackgroundScript(url) {
             });
           } else {
             // Pas de redirection connue par le background
-            resolve(null);
+            resolveOnce(null);
           }
         }
         );
         
         // En cas de timeout (si le background ne répond pas dans un délai raisonnable)
         setTimeout(() => {
-          resolve(null);
-        }, 1500); // 1.5 secondes pour donner plus de temps aux vérifications
+          resolveOnce(null);
+        }, 1000); // Réduit à 1 seconde pour éviter les blocages
       } else if (window.chromeRuntimeSubstitute) {
         // Utiliser le substitut pour chrome.runtime si disponible
         try {
@@ -84,7 +94,7 @@ function checkRedirectWithBackgroundScript(url) {
             { action: 'checkRedirect', url: url },
             (response) => {
               if (response && response.isRedirect) {
-                resolve({
+                resolveOnce({
                   isRedirect: true,
                   isBroken: false,
                   statusCode: response.statusCode || 302,
@@ -92,13 +102,13 @@ function checkRedirectWithBackgroundScript(url) {
                   type: response.type || ''
                 });
               } else {
-                resolve(null);
+                resolveOnce(null);
               }
             }
           );
         } catch (error) {
           logger.error(`OptiRank: Erreur lors de l'utilisation du substitut: ${error.message}`);
-          resolve(null);
+          resolveOnce(null);
         }
       } else {
         // Mode de compatibilité sans API Chrome ni substitut
@@ -108,7 +118,7 @@ function checkRedirectWithBackgroundScript(url) {
         // Vérifier si l'URL est une redirection HTTP vers HTTPS
         if (url.startsWith('http://')) {
           const httpsUrl = url.replace('http://', 'https://');
-          resolve({
+          resolveOnce({
             isRedirect: true,
             isBroken: false,
             statusCode: 301,
@@ -141,7 +151,7 @@ function checkRedirectWithBackgroundScript(url) {
         // Vérifier si l'URL correspond à un domaine connu pour les redirections
         for (const domain of redirectDomains) {
           if (url.includes(domain.pattern)) {
-            resolve({
+            resolveOnce({
               isRedirect: true,
               isBroken: false,
               statusCode: 302,
@@ -153,11 +163,11 @@ function checkRedirectWithBackgroundScript(url) {
         }
         
         // Si aucune redirection n'est détectée, retourner null
-        resolve(null);
+        resolveOnce(null);
       }
     } catch (error) {
       logger.error(`OptiRank: Erreur lors de la vérification avec le background: ${error.message}`);
-      resolve(null);
+      resolveOnce(null);
     }
   });
 }
@@ -190,6 +200,15 @@ function checkRedirectWithBackgroundScript(url) {
  */
 async function checkExternalLinkWithBackground(url) {
   return new Promise((resolve) => {
+    let resolved = false; // Empêcher les résolutions multiples
+    
+    const resolveOnce = (result) => {
+      if (!resolved) {
+        resolved = true;
+        resolve(result);
+      }
+    };
+    
     try {
       // Vérifier si l'API Chrome est disponible
       if (typeof chrome !== 'undefined' && chrome.runtime) {
@@ -197,41 +216,42 @@ async function checkExternalLinkWithBackground(url) {
           { action: 'checkExternalLink', url: url },
           (response) => {
             if (chrome.runtime.lastError) {
-              logger.error(`OptiRank: Erreur lors de la vérification externe: ${chrome.runtime.lastError.message}`);
-              resolve(null);
+              // Ne pas logger cette erreur car elle est attendue quand la connexion se ferme
+              // logger.error(`OptiRank: Erreur lors de la vérification externe: ${chrome.runtime.lastError.message}`);
+              resolveOnce(null);
               return;
             }
           
-          if (response && response.success) {
-            // Réponse du background script
-            resolve({
-              isRedirect: response.isRedirect || false,
-              isBroken: response.isBroken || false,
-              statusCode: response.statusCode || 200,
-              redirectUrl: response.redirectUrl || ''
-            });
-          } else {
-            // Considérer les liens externes comme valides en mode de compatibilité
-            resolve({
-              isRedirect: false,
-              isBroken: false,
-              statusCode: 200,
-              redirectUrl: ''
-            });
+            if (response && response.success) {
+              // Réponse du background script
+              resolveOnce({
+                isRedirect: response.isRedirect || false,
+                isBroken: response.isBroken || false,
+                statusCode: response.statusCode || 200,
+                redirectUrl: response.redirectUrl || ''
+              });
+            } else {
+              // Considérer les liens externes comme valides en mode de compatibilité
+              resolveOnce({
+                isRedirect: false,
+                isBroken: false,
+                statusCode: 200,
+                redirectUrl: ''
+              });
+            }
           }
-        }
         );
         
-        // En cas de timeout
+        // En cas de timeout (plus court pour éviter les blocages)
         setTimeout(() => {
           // Considérer les liens externes comme valides en mode de compatibilité
-          resolve({
+          resolveOnce({
             isRedirect: false,
             isBroken: false,
             statusCode: 200,
             redirectUrl: ''
           });
-        }, 2000);
+        }, 1000); // Réduit à 1 seconde
       } else if (window.chromeRuntimeSubstitute) {
         // Utiliser le substitut pour chrome.runtime si disponible
         try {
@@ -239,7 +259,7 @@ async function checkExternalLinkWithBackground(url) {
             { action: 'checkExternalLink', url: url },
             (response) => {
               if (response && response.success) {
-                resolve({
+                resolveOnce({
                   isRedirect: response.isRedirect || false,
                   isBroken: response.isBroken || false,
                   statusCode: response.statusCode || 200,
@@ -247,7 +267,7 @@ async function checkExternalLinkWithBackground(url) {
                 });
               } else {
                 // Considérer les liens externes comme valides en mode de compatibilité
-                resolve({
+                resolveOnce({
                   isRedirect: false,
                   isBroken: false,
                   statusCode: 200,
@@ -259,7 +279,7 @@ async function checkExternalLinkWithBackground(url) {
         } catch (error) {
           logger.error(`OptiRank: Erreur lors de l'utilisation du substitut: ${error.message}`);
           // Considérer les liens externes comme valides en mode de compatibilité
-          resolve({
+          resolveOnce({
             isRedirect: false,
             isBroken: false,
             statusCode: 200,
@@ -270,7 +290,7 @@ async function checkExternalLinkWithBackground(url) {
         // Mode de compatibilité sans API Chrome ni substitut
         logger.debugEmoji("", "OptiRank: API Chrome non disponible, impossible de vérifier les liens externes");
         // Considérer les liens externes comme valides en mode de compatibilité
-        resolve({
+        resolveOnce({
           isRedirect: false,
           isBroken: false,
           statusCode: 200,
@@ -280,7 +300,7 @@ async function checkExternalLinkWithBackground(url) {
     } catch (error) {
       logger.error(`OptiRank: Erreur lors de la vérification externe: ${error.message}`);
       // Considérer les liens externes comme valides en mode de compatibilité
-      resolve({
+      resolveOnce({
         isRedirect: false,
         isBroken: false,
         statusCode: 200,

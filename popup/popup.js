@@ -2,8 +2,17 @@
 // Variable globale pour suivre le filtre actif
 let currentActiveFilter = null;
 
-// 🚀 Système de Logging OptiRank - Initialisation
-let logger = null;
+// 🚀 Système de Logging OptiRank - Utilise logger-universal.js
+// Logger disponible globalement via window.logger
+
+// Wrapper sécurisé pour le logger
+const safeLogger = {
+  debug: (msg, ...args) => window.logger ? window.safeLogger.debug(msg, ...args) : console.log('[DEBUG]', msg, ...args),
+  info: (msg, ...args) => window.logger ? window.safeLogger.info(msg, ...args) : console.log('[INFO]', msg, ...args),
+  warn: (msg, ...args) => window.logger ? window.safeLogger.warn(msg, ...args) : console.warn('[WARN]', msg, ...args),
+  error: (msg, ...args) => window.logger ? window.safeLogger.error(msg, ...args) : console.error('[ERROR]', msg, ...args)
+};
+
 let eventManager = null;
 
 // Initialiser le système de logging
@@ -12,7 +21,9 @@ function initializeOptiRankLogging() {
   if (window.OptiRankLogger && window.OptiRankEventManager) {
     logger = window.OptiRankLogger;
     eventManager = window.OptiRankEventManager;
-    logger.info('Interface popup OptiRank initialisée avec logging SEO-friendly');
+    if (window.logger) {
+      window.safeLogger.info('Interface popup OptiRank initialisée avec logging SEO-friendly');
+    }
     return true;
   }
   return false;
@@ -22,12 +33,12 @@ function initializeOptiRankLogging() {
 if (!initializeOptiRankLogging()) {
   // Fallback si les modules ne sont pas encore chargés
   logger = {
-    info: (msg, data) => console.log(`[OptiRank] ${msg}`, data || ''),
-    error: (msg, data) => console.error(`[OptiRank Error] ${msg}`, data || ''),
-    warn: (msg, data) => console.warn(`[OptiRank Warning] ${msg}`, data || ''),
-    scanStarted: (count) => console.log(`[OptiRank] Analyse démarrée : ${count} liens à analyser`),
-    scanProgress: (current, total, percent) => console.log(`[OptiRank] Progression : ${percent}% (${current}/${total})`),
-    scanCompleted: (stats) => console.log(`[OptiRank] Analyse terminée`, stats)
+    info: (msg, data) => { /* Silencieux en production */ },
+    error: (msg, data) => window.safeLogger.error(`[OptiRank Error] ${msg}`, data || ''),
+    warn: (msg, data) => { /* Silencieux en production */ },
+    scanStarted: (count) => { /* Silencieux en production */ },
+    scanProgress: (current, total, percent) => { /* Silencieux en production */ },
+    scanCompleted: (stats) => { /* Silencieux en production */ }
   };
   eventManager = {
     onClick: (el, handler) => el.addEventListener('click', handler),
@@ -80,42 +91,41 @@ function applyLinksFiltersGlobal(linksArray) {
 
 // Fonction globale pour copier tous les liens (version simple - sans analyse)
 function copyAllLinksSimple() {
-  logger.info('Préparation de la copie des liens en cours...');
+  window.safeLogger.info('Préparation de la copie des liens en cours...');
   
   // Log technique uniquement en mode développement
-  if (logger.environment && logger.environment.isDevelopment) {
-    console.log('🔍 Vérification des données disponibles:');
-    console.log('- window.lastLinksResults:', window.lastLinksResults);
-    console.log('- window.lastResults:', window.lastResults);
-  }
+  window.safeLogger.debug('Vérification des données disponibles', {
+    lastLinksResults: !!window.lastLinksResults,
+    lastResults: !!window.lastResults
+  });
   
   // Essayer différentes sources de données
   let linksData = null;
   
   if (window.lastLinksResults && window.lastLinksResults.links) {
     linksData = window.lastLinksResults.links;
-    logger.info(`Source de données trouvée : ${linksData.length} liens disponibles`);
+    window.safeLogger.info(`Source de données trouvée : ${linksData.length} liens disponibles`);
   } else if (window.lastResults && window.lastResults.links) {
     linksData = window.lastResults.links;
-    logger.info(`Source de données alternative trouvée : ${linksData.length} liens disponibles`);
+    window.safeLogger.info(`Source de données alternative trouvée : ${linksData.length} liens disponibles`);
   } else {
-    logger.warn('Aucune donnée de liens disponible, récupération depuis la page en cours...');
+    window.safeLogger.warn('Aucune donnée de liens disponible, récupération depuis la page en cours...');
     
     // Essayer de récupérer les liens directement depuis la page
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
       if (tabs && tabs[0]) {
         chrome.tabs.sendMessage(tabs[0].id, { action: 'getPageLinks' }, function(response) {
           if (chrome.runtime.lastError) {
-            logger.error('Impossible de récupérer les liens depuis la page', { error: chrome.runtime.lastError.message });
+            window.safeLogger.error('Impossible de récupérer les liens depuis la page', { error: chrome.runtime.lastError.message });
             showTemporaryMessageGlobal('Erreur: Aucun lien disponible');
             return;
           }
           
           if (response && response.links && Array.isArray(response.links)) {
-            logger.info(`Liens récupérés avec succès : ${response.links.length} liens trouvés sur la page`);
+            window.safeLogger.info(`Liens récupérés avec succès : ${response.links.length} liens trouvés sur la page`);
             processSimpleCopy(response.links, tabs[0]);
           } else {
-            logger.error('Aucun lien trouvé sur cette page');
+            window.safeLogger.error('Aucun lien trouvé sur cette page');
             showTemporaryMessageGlobal('Aucun lien à copier');
           }
         });
@@ -125,12 +135,12 @@ function copyAllLinksSimple() {
   }
   
   if (!Array.isArray(linksData) || linksData.length === 0) {
-    logger.warn('Aucune donnée de liens valide disponible pour la copie');
+    window.safeLogger.warn('Aucune donnée de liens valide disponible pour la copie');
     showTemporaryMessageGlobal('Aucun lien à copier');
     return;
   }
   
-  logger.info(`Préparation de la copie : ${linksData.length} liens détectés`);
+  window.safeLogger.info(`Préparation de la copie : ${linksData.length} liens détectés`);
   
   // Récupérer l'URL de base pour construire les URLs complètes
   chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
@@ -150,12 +160,12 @@ function processSimpleCopy(linksData, tab) {
   const filteredLinks = applyLinksFiltersGlobal(linksData);
   
   if (filteredLinks.length === 0) {
-    logger.warn('Aucun lien ne correspond aux filtres actuels');
+    window.safeLogger.warn('Aucun lien ne correspond aux filtres actuels');
     showTemporaryMessageGlobal('Aucun lien à copier');
     return;
   }
   
-  logger.info(`Génération de la liste de liens : ${filteredLinks.length} liens sélectionnés`);
+  window.safeLogger.info(`Génération de la liste de liens : ${filteredLinks.length} liens sélectionnés`);
   
   // Construire la liste simple des URLs uniquement
   const linksList = filteredLinks.map(link => {
@@ -175,52 +185,53 @@ function processSimpleCopy(linksData, tab) {
   
   // Copier vers le presse-papiers
   navigator.clipboard.writeText(linksList).then(() => {
-    logger.info(`Copie réussie : ${filteredLinks.length} liens copiés dans le presse-papiers`);
+    window.safeLogger.info(`Copie réussie : ${filteredLinks.length} liens copiés dans le presse-papiers`);
     showTemporaryMessageGlobal(`${filteredLinks.length} liens copiés !`);
     
     // Fermer le dropdown
     const dropdown = document.querySelector('.copy-dropdown-menu');
     if (dropdown) dropdown.style.display = 'none';
   }).catch(err => {
-    logger.error('Échec de la copie dans le presse-papiers', { error: err.message });
+    window.safeLogger.error('Échec de la copie dans le presse-papiers', { error: err.message });
     showTemporaryMessageGlobal('Erreur lors de la copie');
   });
 }
 
 // Fonction globale pour copier tous les liens avec analyse complète
 function copyAllLinksWithAnalysis() {
-  console.log('🔗 copyAllLinksWithAnalysis appelée');
-  console.log('🔍 Vérification des données disponibles:');
-  console.log('- window.lastLinksResults:', window.lastLinksResults);
-  console.log('- window.lastResults:', window.lastResults);
+  window.safeLogger.userAction('copyAllLinksWithAnalysis appelée');
+  window.safeLogger.debug('Vérification des données disponibles', {
+    lastLinksResults: !!window.lastLinksResults,
+    lastResults: !!window.lastResults
+  });
   
   // Essayer différentes sources de données
   let linksData = null;
   
   if (window.lastLinksResults && window.lastLinksResults.links) {
     linksData = window.lastLinksResults.links;
-    console.log('✅ Utilisation de window.lastLinksResults.links');
+    window.safeLogger.debug('Utilisation de window.lastLinksResults.links');
   } else if (window.lastResults && window.lastResults.links) {
     linksData = window.lastResults.links;
-    console.log('✅ Utilisation de window.lastResults.links');
+    window.safeLogger.debug('Utilisation de window.lastResults.links');
   } else {
-    console.warn('❌ Aucune donnée de liens trouvée dans les variables globales');
+    window.safeLogger.warn('Aucune donnée de liens trouvée dans les variables globales');
     
     // Essayer de récupérer les liens directement depuis la page
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
       if (tabs && tabs[0]) {
         chrome.tabs.sendMessage(tabs[0].id, { action: 'getPageLinks' }, function(response) {
           if (chrome.runtime.lastError) {
-            console.error('❌ Erreur récupération liens:', chrome.runtime.lastError.message);
+            window.safeLogger.error('Erreur récupération liens:', chrome.runtime.lastError.message);
             showTemporaryMessageGlobal('Erreur: Aucun lien disponible');
             return;
           }
           
           if (response && response.links && Array.isArray(response.links)) {
-            console.log(`✅ ${response.links.length} liens récupérés depuis la page`);
+            window.safeLogger.info(`${response.links.length} liens récupérés depuis la page`);
             processAnalysisCopy(response.links, tabs[0]);
           } else {
-            console.error('❌ Pas de liens dans la réponse:', response);
+            window.safeLogger.error('Pas de liens dans la réponse:', response);
             showTemporaryMessageGlobal('Aucun lien à copier');
           }
         });
@@ -230,12 +241,12 @@ function copyAllLinksWithAnalysis() {
   }
   
   if (!Array.isArray(linksData) || linksData.length === 0) {
-    console.warn('❌ Données de liens invalides:', linksData);
+    window.safeLogger.warn('Données de liens invalides:', linksData);
     showTemporaryMessageGlobal('Aucun lien à copier');
     return;
   }
   
-  console.log(`🔗 ${linksData.length} liens trouvés, traitement...`);
+  window.safeLogger.info(`${linksData.length} liens trouvés, traitement...`);
   
   // Récupérer l'URL de base pour construire les URLs complètes
   chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
@@ -255,12 +266,12 @@ function processAnalysisCopy(linksData, tab) {
   const filteredLinks = applyLinksFiltersGlobal(linksData);
   
   if (filteredLinks.length === 0) {
-    console.warn('❌ Aucun lien après filtrage');
+    window.safeLogger.warn('Aucun lien après filtrage');
     showTemporaryMessageGlobal('Aucun lien à copier');
     return;
   }
   
-  console.log(`📊 Génération du rapport d'analyse pour ${filteredLinks.length} liens`);
+  window.safeLogger.info(`Génération du rapport d'analyse pour ${filteredLinks.length} liens`);
   
   // Construire la liste détaillée avec analyse
   let reportContent = `RAPPORT D'ANALYSE DES LIENS - ${tab.url}\n`;
@@ -323,14 +334,14 @@ function processAnalysisCopy(linksData, tab) {
   
   // Copier vers le presse-papiers
   navigator.clipboard.writeText(reportContent).then(() => {
-    console.log(`✅ Rapport complet de ${filteredLinks.length} liens copié`);
+    window.safeLogger.debug(`✅ Rapport complet de ${filteredLinks.length} liens copié`);
     showTemporaryMessageGlobal(`Rapport complet copié !`);
     
     // Fermer le dropdown
     const dropdown = document.querySelector('.copy-dropdown-menu');
     if (dropdown) dropdown.style.display = 'none';
   }).catch(err => {
-    console.error('❌ Erreur lors de la copie:', err);
+    window.safeLogger.error('❌ Erreur lors de la copie:', err);
     showTemporaryMessageGlobal('Erreur lors de la copie');
   });
 }
@@ -354,6 +365,11 @@ document.addEventListener('DOMContentLoaded', function() {
     autoAnalysisMessage.classList.add('visible');
   }
   
+  // FORCER la récupération des données au démarrage
+  if (window.logger) {
+    window.window.safeLogger.debug('Popup: Démarrage - Tentative de récupération forcée des données');
+  }
+  
   // Récupérer les résultats existants sans déclencher de nouvelle analyse
   chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
     if (!tabs || tabs.length === 0) return;
@@ -362,13 +378,19 @@ document.addEventListener('DOMContentLoaded', function() {
       // Demander les résultats existants au content script
       chrome.tabs.sendMessage(tabs[0].id, { action: 'getExistingResults' }, function(response) {
         if (chrome.runtime.lastError) {
-          console.error('Popup: Erreur lors de la récupération des résultats existants:', chrome.runtime.lastError);
+          window.safeLogger.error('Popup: Erreur lors de la récupération des résultats existants:', chrome.runtime.lastError);
           // Si on ne peut pas récupérer les résultats, masquer le message car il n'y a probablement pas d'analyse en cours
           toggleAutoAnalysisMessage(false);
         } else if (response && response.results) {
           // Si des résultats existent déjà, masquer immédiatement le message et traiter les résultats
           toggleAutoAnalysisMessage(false);
           processResults(response.results);
+          
+          // Traiter aussi les données headings si disponibles
+          if (response.headingsData) {
+            window.safeLogger.debug('Popup: Données headings reçues automatiquement:', response.headingsData);
+            displayHeadingsData(response.headingsData);
+          }
         } else {
           // Si pas de résultats et pas d'erreur, vérifier si une analyse est en cours
           chrome.tabs.sendMessage(tabs[0].id, { action: 'isAnalysisInProgress' }, function(progressResponse) {
@@ -380,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
     } catch (error) {
-      console.error('Popup: Erreur lors de la récupération des résultats:', error);
+      window.safeLogger.error('Popup: Erreur lors de la récupération des résultats:', error);
     }
   });
   
@@ -412,7 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Si c'est l'onglet links, déclencher l'analyse des liens
         if (targetId === 'links') {
-          console.log('🔗 Onglet Links activé, démarrage de l\'analyse');
+          window.safeLogger.info('Onglet Links activé, démarrage de l\'analyse');
           // Initialiser les gestionnaires d'événements d'abord
           setTimeout(() => {
             initializeLinksEventHandlers();
@@ -513,8 +535,14 @@ document.addEventListener('DOMContentLoaded', function() {
           // Traiter les résultats
           try {
             processResults(message.results);
+            
+            // Si on a aussi des données headings, les afficher
+            if (message.headingsData) {
+              window.safeLogger.debug('Popup: Données headings reçues avec scanResults:', message.headingsData);
+              displayHeadingsData(message.headingsData);
+            }
           } catch (error) {
-            console.error('Popup: Erreur lors du traitement des résultats', error);
+            window.safeLogger.error('Popup: Erreur lors du traitement des résultats', error);
             showError('Erreur lors du traitement des résultats: ' + error.message);
           }
           
@@ -567,37 +595,79 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialiser les filtres et la recherche
   initFiltersAndSearch();
   
+  // Ajouter un listener global pour les messages automatiques
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    // Écouter les résultats automatiques depuis le content script
+    if (message.action === 'autoScanResults') {
+      window.safeLogger.debug('Popup: Résultats automatiques reçus:', message);
+      
+      if (message.results) {
+        processResults(message.results);
+      }
+      
+      if (message.headingsData) {
+        displayHeadingsData(message.headingsData);
+      }
+      
+      return false;
+    }
+    
+    return false;
+  });
+  
+  // FORCER la récupération des données après 2 secondes
+  setTimeout(() => {
+    window.safeLogger.debug('Popup: Récupération forcée des données après 2s');
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      if (tabs && tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'getExistingResults' }, function(response) {
+          if (response && response.success) {
+            window.safeLogger.debug('Popup: Données récupérées en force:', response);
+            
+            if (response.results) {
+              processResults(response.results);
+            }
+            
+            if (response.headingsData) {
+              displayHeadingsData(response.headingsData);
+            }
+          }
+        });
+      }
+    });
+  }, 2000);
+  
   // Fonction pour traiter les résultats
   function processResults(results) {
     try {
       // Masquer le message d'analyse automatique
       toggleAutoAnalysisMessage(false);
       
-      // Vérifier que les résultats sont valides
-      if (!results) {
-        console.error('Popup: Résultats invalides', results);
-        showError('Résultats invalides reçus');
-        return;
-      }
+          // Vérifier que les résultats sont valides
+    if (!results) {
+      window.safeLogger.error('Popup: Résultats invalides', results);
+      showError('Résultats invalides reçus');
+      return;
+    }
       
       // Mettre à jour les statistiques
       updateStats(results);
       
       // Vérifier si nous avons des liens détaillés
       if (!results.links || !Array.isArray(results.links) || results.links.length === 0) {
-        console.warn('Popup: Aucun lien détaillé dans les résultats, tentative de récupération des liens depuis la page');
+        window.safeLogger.warn('Popup: Aucun lien détaillé dans les résultats, tentative de récupération des liens depuis la page');
         
         // Essayer de récupérer les liens directement depuis la page
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
           if (tabs && tabs[0]) {
             chrome.tabs.sendMessage(tabs[0].id, {action: 'getPageLinks'}, function(response) {
               if (chrome.runtime.lastError) {
-                console.error('Popup: Erreur lors de la récupération des liens:', chrome.runtime.lastError.message);
+                window.safeLogger.error('Popup: Erreur lors de la récupération des liens:', chrome.runtime.lastError.message);
               }
               
               // Si nous avons reçu des liens, les ajouter aux résultats
               if (response && response.links && Array.isArray(response.links) && response.links.length > 0) {
-                console.log(`Popup: ${response.links.length} liens récupérés depuis la page`);
+                window.safeLogger.debug(`Popup: ${response.links.length} liens récupérés depuis la page`);
                 results.links = response.links;
                 // Mettre à jour le tableau avec les nouveaux liens
                 generateResultsTable(results);
@@ -618,23 +688,16 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Toujours activer l'onglet des résultats à la fin de l'analyse
       setTimeout(() => {
-        const resultsTab = document.querySelector('[data-tab="results"]');
-        if (resultsTab) {
-          resultsTab.click();
+        // Basculer vers l'onglet links qui contient les résultats
+        const linksTab = document.querySelector('[data-tab="links"]');
+        if (linksTab) {
+          linksTab.click();
         } else {
-          console.error('Popup: Impossible de trouver l\'onglet des résultats');
-          // Essayer de trouver l'onglet par son contenu
-          const tabs = document.querySelectorAll('.tab-link');
-          for (const tab of tabs) {
-            if (tab.textContent.includes('Résultats')) {
-              tab.click();
-              break;
-            }
-          }
+          window.safeLogger.error('Popup: Impossible de trouver l\'onglet links');
         }
       }, 1000);
     } catch (error) {
-      console.error('Popup: Erreur lors du traitement des résultats:', error);
+      window.safeLogger.error('Popup: Erreur lors du traitement des résultats:', error);
       showError('Erreur lors du traitement des résultats: ' + error.message);
     }
   }
@@ -642,7 +705,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Fonction pour ajouter une ligne fictive aux résultats
   function addPlaceholderRow(results) {
     if (results.total > 0) {
-      console.log('Popup: Ajout d\'une ligne fictive au tableau');
+      window.safeLogger.debug('Popup: Ajout d\'une ligne fictive au tableau');
       
       // Créer un tableau vide si nécessaire
       if (!results.links) {
@@ -668,7 +731,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateStats(results) {
     // Vérifier la structure des résultats
     if (!results) {
-      console.error('Popup: Résultats invalides', results);
+      window.safeLogger.error('Popup: Résultats invalides', results);
       return;
     }
     
@@ -770,7 +833,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Si la valeur a été ajustée, afficher un log
     if (dofollow !== relAttributes.dofollow && relAttributes.dofollow !== undefined) {
-      console.warn(`Popup: Dofollow count adjusted from ${relAttributes.dofollow} to ${dofollow}`);
+      window.safeLogger.warn(`Popup: Dofollow count adjusted from ${relAttributes.dofollow} to ${dofollow}`);
     }
     
     if (dofollowLinksElement) {
@@ -1418,7 +1481,7 @@ document.addEventListener('DOMContentLoaded', function() {
         action: 'toggleHighlights'
       }, function(response) {
         if (chrome.runtime.lastError) {
-          console.error('Erreur lors du toggle des surlignages:', chrome.runtime.lastError);
+          window.safeLogger.error('Erreur lors du toggle des surlignages:', chrome.runtime.lastError);
         }
         
         // Mettre à jour le texte du bouton
@@ -1580,11 +1643,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (tabs[0]) {
         chrome.tabs.sendMessage(tabs[0].id, { action: 'getExistingResults' }, (response) => {
           if (chrome.runtime.lastError) {
-            console.error('Popup: Erreur lors de la vérification des résultats:', chrome.runtime.lastError);
+            window.safeLogger.error('Popup: Erreur lors de la vérification des résultats:', chrome.runtime.lastError);
           } else if (response && response.results) {
             processResults(response.results);
           } else {
-            console.error('Popup: Aucun résultat disponible lors de la vérification');
+            window.safeLogger.error('Popup: Aucun résultat disponible lors de la vérification');
           }
         });
       }
@@ -1593,7 +1656,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction pour analyser les titres de la page
   function analyzeHeadings() {
-    console.log('🔍 Démarrage de l\'analyse des titres');
+    window.safeLogger.debug('🔍 Démarrage de l\'analyse des titres');
     
     // Afficher le message de chargement
     const insightsList = document.getElementById('insights-list');
@@ -1614,7 +1677,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Communiquer avec le content script pour analyser les titres
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
       if (!tabs || tabs.length === 0) {
-        console.error('Aucun onglet actif trouvé');
+        window.safeLogger.error('Aucun onglet actif trouvé');
         showHeadingsError('Impossible d\'analyser la page active');
         return;
       }
@@ -1622,21 +1685,21 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         chrome.tabs.sendMessage(tabs[0].id, { action: 'analyzeHeadings' }, function(response) {
           if (chrome.runtime.lastError) {
-            console.error('Erreur de communication avec le content script:', chrome.runtime.lastError);
+            window.safeLogger.error('Erreur de communication avec le content script:', chrome.runtime.lastError);
             showHeadingsError('Impossible de communiquer avec la page. Rechargez la page et réessayez.');
             return;
           }
           
           if (response && response.headingsData) {
-            console.log('📊 Données des titres reçues:', response.headingsData);
+            window.safeLogger.debug('📊 Données des titres reçues:', response.headingsData);
             displayHeadingsData(response.headingsData);
           } else {
-            console.warn('Aucune donnée de titres reçue');
+            window.safeLogger.warn('Aucune donnée de titres reçue');
             showHeadingsError('Aucun titre trouvé sur cette page');
           }
         });
       } catch (error) {
-        console.error('Erreur lors de l\'analyse des titres:', error);
+        window.safeLogger.error('Erreur lors de l\'analyse des titres:', error);
         showHeadingsError('Erreur lors de l\'analyse des titres');
       }
     });
@@ -1644,7 +1707,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction pour afficher les données des titres
   function displayHeadingsData(headingsData) {
-    console.log('📋 Affichage des données des titres:', headingsData);
+    window.safeLogger.debug('📋 Affichage des données des titres:', headingsData);
     
     // Stocker les données pour le module de copie
     window.headingsResults = headingsData;
@@ -1664,25 +1727,25 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction pour mettre à jour les compteurs de titres
   function updateHeadingCounters(counts) {
-    console.log('🔢 Mise à jour des compteurs:', counts);
+    window.safeLogger.debug('🔢 Mise à jour des compteurs:', counts);
     
     for (let i = 1; i <= 6; i++) {
       const countElement = document.getElementById(`h${i}-count`);
       if (countElement) {
         const count = counts[`h${i}`] || 0;
         countElement.textContent = count;
-        console.log(`H${i}: ${count}`);
+        window.safeLogger.debug(`H${i}: ${count}`);
       }
     }
   }
   
   // Fonction pour afficher la structure des titres
   function displayHeadingStructure(headings) {
-    console.log('🏗️ Affichage de la structure:', headings);
+    window.safeLogger.debug('🏗️ Affichage de la structure:', headings);
     
     const container = document.querySelector('#headings-list .headings-list') || document.getElementById('headings-list');
     if (!container) {
-      console.error('Conteneur headings-list non trouvé');
+      window.safeLogger.error('Conteneur headings-list non trouvé');
       return;
     }
     
@@ -1732,11 +1795,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction pour afficher les insights et recommandations
   function displayHeadingInsights(headingsData) {
-    console.log('💡 Affichage des insights:', headingsData);
+    window.safeLogger.debug('💡 Affichage des insights:', headingsData);
     
     const insightsList = document.getElementById('insights-list');
     if (!insightsList) {
-      console.error('Élément insights-list non trouvé');
+      window.safeLogger.error('Élément insights-list non trouvé');
       return;
     }
     
@@ -1861,7 +1924,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction pour afficher une erreur dans l'onglet headings
   function showHeadingsError(message) {
-    console.error('❌ Erreur headings:', message);
+    window.safeLogger.error('❌ Erreur headings:', message);
     
     // Réinitialiser les compteurs à 0
     for (let i = 1; i <= 6; i++) {
@@ -1912,7 +1975,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const dropdownMenu = document.querySelector('.copy-dropdown-menu');
     
     if (!dropdownTrigger || !dropdownMenu) {
-      console.log('Éléments du dropdown de copie non trouvés');
+      window.safeLogger.debug('Éléments du dropdown de copie non trouvés');
       return;
     }
     
@@ -1932,7 +1995,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Fermer le dropdown quand on clique en dehors
     document.addEventListener('click', function(e) {
-      if (!dropdownTrigger.contains(e.target) && !dropdownMenu.contains(e.target)) {
+      if (dropdownTrigger && dropdownMenu && e.target && !dropdownTrigger.contains(e.target) && !dropdownMenu.contains(e.target)) {
         dropdownMenu.style.display = 'none';
       }
     });
@@ -1945,7 +2008,7 @@ document.addEventListener('DOMContentLoaded', function() {
       copySimpleOption.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔗 Clic sur copie simple détecté');
+        window.safeLogger.debug('🔗 Clic sur copie simple détecté');
         copyAllLinksSimple();
       });
       copySimpleOption.dataset.initialized = 'true';
@@ -1955,7 +2018,7 @@ document.addEventListener('DOMContentLoaded', function() {
       copyAnalysisOption.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔗 Clic sur copie avec analyse détecté');
+        window.safeLogger.debug('🔗 Clic sur copie avec analyse détecté');
         copyAllLinksWithAnalysis();
       });
       copyAnalysisOption.dataset.initialized = 'true';
@@ -1976,14 +2039,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Marquer comme initialisé
     dropdownTrigger.dataset.initialized = 'true';
     
-    console.log('Dropdown de copie initialisé avec event listeners');
+    window.safeLogger.debug('Dropdown de copie initialisé avec event listeners');
   }
 
   // === FONCTIONS POUR L'ONGLET LINKS ===
   
   // Fonction principale pour analyser les liens
   function analyzeLinks() {
-    console.log('🔗 Début de l\'analyse des liens');
+    window.safeLogger.debug('🔗 Début de l\'analyse des liens');
     
     // Afficher l'état de chargement
     const tableBody = document.getElementById('links-table-body');
@@ -2008,7 +2071,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       const tab = tabs[0];
-      console.log('📱 Tab actif:', tab.url);
+      window.safeLogger.debug('📱 Tab actif:', tab.url);
       
       // Vérifier si l'URL est valide pour l'injection de script
       if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:')) {
@@ -2017,13 +2080,13 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Essayer d'abord de récupérer les liens directement
-      console.log('🔍 Tentative de récupération directe des liens');
+      window.safeLogger.debug('🔍 Tentative de récupération directe des liens');
       chrome.tabs.sendMessage(tab.id, { action: 'getPageLinks' }, function(response) {
         if (chrome.runtime.lastError) {
-          console.warn('⚠️ Erreur lors de la récupération directe:', chrome.runtime.lastError.message);
+          window.safeLogger.warn('⚠️ Erreur lors de la récupération directe:', chrome.runtime.lastError.message);
           
           // Si l'injection du content script a échoué, essayer d'injecter manuellement
-          console.log('🔧 Tentative d\'injection manuelle du content script');
+          window.safeLogger.debug('🔧 Tentative d\'injection manuelle du content script');
           
           // Injecter tous les scripts dans l'ordre du manifest
           const scriptsToInject = [
@@ -2043,18 +2106,18 @@ document.addEventListener('DOMContentLoaded', function() {
             files: scriptsToInject
           }, function() {
             if (chrome.runtime.lastError) {
-              console.error('❌ Erreur d\'injection du script:', chrome.runtime.lastError.message);
+              window.safeLogger.error('❌ Erreur d\'injection du script:', chrome.runtime.lastError.message);
               showLinksError('Impossible d\'injecter le script d\'analyse. Rechargez la page et réessayez.');
               return;
             }
             
-            console.log('✅ Script injecté avec succès, nouvelle tentative de récupération');
+            window.safeLogger.debug('✅ Script injecté avec succès, nouvelle tentative de récupération');
             
             // Attendre un peu que le script s'initialise
             setTimeout(() => {
               chrome.tabs.sendMessage(tab.id, { action: 'getPageLinks' }, function(retryResponse) {
                 if (chrome.runtime.lastError) {
-                  console.error('❌ Échec même après injection:', chrome.runtime.lastError.message);
+                  window.safeLogger.error('❌ Échec même après injection:', chrome.runtime.lastError.message);
                   showLinksError('Script injecté mais communication impossible. Vérifiez que la page est bien chargée.');
                   return;
                 }
@@ -2074,34 +2137,34 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction helper pour traiter la réponse des liens
   function handleLinksResponse(response, tabUrl) {
-    console.log('📄 handleLinksResponse appelée avec:', response);
+    window.safeLogger.debug('📄 handleLinksResponse appelée avec:', response);
     
     if (!response) {
-      console.error('❌ Aucune réponse reçue du script d\'analyse');
+      window.safeLogger.error('❌ Aucune réponse reçue du script d\'analyse');
       showLinksError('Aucune réponse reçue du script d\'analyse');
       return;
     }
     
     if (response.error) {
-      console.error('❌ Erreur dans la réponse:', response.error);
+      window.safeLogger.error('❌ Erreur dans la réponse:', response.error);
       showLinksError('Erreur d\'analyse: ' + response.error);
       return;
     }
     
     if (!response.links) {
-      console.error('❌ Pas de propriété links dans la réponse');
+      window.safeLogger.error('❌ Pas de propriété links dans la réponse');
       showLinksError('Aucune donnée de liens dans la réponse');
       return;
     }
     
     if (!Array.isArray(response.links)) {
-      console.error('❌ response.links n\'est pas un tableau:', typeof response.links, response.links);
+      window.safeLogger.error('❌ response.links n\'est pas un tableau:', typeof response.links, response.links);
       showLinksError('Format de données incorrect reçu');
       return;
     }
     
     if (response.links.length === 0) {
-      console.warn('⚠️ Aucun lien trouvé sur la page');
+      window.safeLogger.warn('⚠️ Aucun lien trouvé sur la page');
       // Créer des résultats vides mais valides
       const emptyResults = {
         links: [],
@@ -2118,23 +2181,23 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    console.log(`🔗 ${response.links.length} liens trouvés, traitement en cours...`);
+    window.safeLogger.debug(`🔗 ${response.links.length} liens trouvés, traitement en cours...`);
     
     // Créer l'objet results à partir des liens
     const results = createResultsFromLinks(response.links);
-    console.log('📊 Results créés:', results);
+    window.safeLogger.debug('📊 Results créés:', results);
     
     // Appeler displayLinksData
-    console.log('🎯 Appel de displayLinksData...');
+    window.safeLogger.debug('🎯 Appel de displayLinksData...');
     displayLinksData(results);
   }
   
   // Fonction helper pour créer l'objet results à partir des liens
   function createResultsFromLinks(links) {
-    console.log('🔨 Création de l\'objet results à partir de', links.length, 'liens');
+    window.safeLogger.debug('🔨 Création de l\'objet results à partir de', links.length, 'liens');
     
     if (!Array.isArray(links)) {
-      console.error('❌ Links is not an array:', typeof links);
+      window.safeLogger.error('❌ Links is not an array:', typeof links);
       return { links: [], total: 0, valid: 0, broken: 0, redirects: 0, internal: 0, external: 0, nofollow: 0, dofollow: 0 };
     }
     
@@ -2191,60 +2254,60 @@ document.addEventListener('DOMContentLoaded', function() {
       dofollow: processedLinks.filter(l => !l.rel || !l.rel.includes('nofollow')).length
     };
     
-    console.log('📈 Objet results créé:', results);
+    window.safeLogger.debug('📈 Objet results créé:', results);
     return results;
   }
   
   // Fonction pour afficher les données des liens
   function displayLinksData(results) {
-    console.log('📊 displayLinksData appelée avec:', results);
+    window.safeLogger.debug('📊 displayLinksData appelée avec:', results);
     
     // Sauvegarder les résultats pour les filtres ET pour les fonctions de copie
     window.lastLinksResults = results;
     window.lastResults = results; // Backup pour compatibilité
     
     // Log pour vérifier que les données sont bien stockées
-    console.log('💾 Données stockées dans les variables globales:');
-    console.log('- window.lastLinksResults:', window.lastLinksResults);
-    console.log('- window.lastResults:', window.lastResults);
+    window.safeLogger.debug('💾 Données stockées dans les variables globales:');
+    window.safeLogger.debug('- window.lastLinksResults:', window.lastLinksResults);
+    window.safeLogger.debug('- window.lastResults:', window.lastResults);
     
     try {
-      console.log('🔢 Mise à jour des statistiques...');
+      window.safeLogger.debug('🔢 Mise à jour des statistiques...');
       // Mettre à jour les statistiques
       updateLinksStats(results);
       
-      console.log('📋 Génération du tableau...');
+      window.safeLogger.debug('📋 Génération du tableau...');
       // Générer le tableau des liens
       generateLinksTable(results);
       
-      console.log('🎛️ Initialisation des gestionnaires d\'événements...');
+      window.safeLogger.debug('🎛️ Initialisation des gestionnaires d\'événements...');
       // Initialiser les gestionnaires d'événements
       initializeLinksEventHandlers();
       
-      console.log('✅ Données de liens affichées avec succès');
-      console.log('📊 Résumé des données disponibles:');
-      console.log(`- Total liens: ${results.total || (results.links ? results.links.length : 0)}`);
-      console.log(`- Liens dans tableau: ${results.links ? results.links.length : 0}`);
+      window.safeLogger.debug('✅ Données de liens affichées avec succès');
+      window.safeLogger.debug('📊 Résumé des données disponibles:');
+      window.safeLogger.debug(`- Total liens: ${results.total || (results.links ? results.links.length : 0)}`);
+      window.safeLogger.debug(`- Liens dans tableau: ${results.links ? results.links.length : 0}`);
     } catch (error) {
-      console.error('❌ Erreur lors de l\'affichage des données de liens:', error);
-      console.error('❌ Stack trace:', error.stack);
+      window.safeLogger.error('❌ Erreur lors de l\'affichage des données de liens:', error);
+      window.safeLogger.error('❌ Stack trace:', error.stack);
       showLinksError('Erreur lors de l\'affichage des résultats: ' + error.message);
     }
   }
   
   // Fonction pour mettre à jour les statistiques des liens
   function updateLinksStats(results) {
-    console.log('📊 updateLinksStats called with:', results);
+    window.safeLogger.debug('📊 updateLinksStats called with:', results);
     
     // Vérifications de sécurité
     if (!results) {
-      console.error('❌ Results is null or undefined');
+      window.safeLogger.error('❌ Results is null or undefined');
       return;
     }
     
     // S'assurer que results.links est un tableau
     const linksArray = Array.isArray(results.links) ? results.links : [];
-    console.log('🔗 Links array:', linksArray);
+    window.safeLogger.debug('🔗 Links array:', linksArray);
     
     // Calculer les statistiques avec des vérifications
     const stats = {
@@ -2258,7 +2321,7 @@ document.addEventListener('DOMContentLoaded', function() {
       dofollow: results.dofollow || linksArray.filter(l => l && (!l.rel || !l.rel.includes('nofollow'))).length
     };
     
-    console.log('📈 Calculated stats:', stats);
+    window.safeLogger.debug('📈 Calculated stats:', stats);
     
     // Mettre à jour les éléments de l'interface avec les bons IDs
     const elements = {
@@ -2281,7 +2344,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const element = document.getElementById(id);
       if (element) {
         element.textContent = data.value;
-        console.log(`✅ Updated ${id}: ${data.value}`);
+        window.safeLogger.debug(`✅ Updated ${id}: ${data.value}`);
         
         // Ajouter gestionnaire de clic pour surlignage avec sélections multiples
         const statBox = element.closest('.stat-box');
@@ -2310,20 +2373,20 @@ document.addEventListener('DOMContentLoaded', function() {
                   types: highlightTypes
                 }, function(response) {
                   if (chrome.runtime.lastError) {
-                    console.log('Surlignage non disponible:', chrome.runtime.lastError.message);
+                    window.safeLogger.debug('Surlignage non disponible:', chrome.runtime.lastError.message);
                   } else {
-                    console.log(`🎯 Surlignage appliqué pour:`, highlightTypes);
+                    window.safeLogger.debug(`🎯 Surlignage appliqué pour:`, highlightTypes);
                   }
                 });
               }
             });
             
-            console.log(`🎯 Statistique cliquée: ${data.type}, sélections actives:`, Array.from(window.activeHighlights));
+            window.safeLogger.debug(`🎯 Statistique cliquée: ${data.type}, sélections actives:`, Array.from(window.activeHighlights));
           });
           statBox.dataset.clickListenerAdded = 'true';
         }
       } else {
-        console.warn(`⚠️ Element not found: ${id}`);
+        window.safeLogger.warn(`⚠️ Element not found: ${id}`);
       }
     });
     
@@ -2336,19 +2399,19 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction pour générer le tableau des liens
   function generateLinksTable(results) {
-    console.log('🎯 generateLinksTable appelée avec:', results);
+    window.safeLogger.debug('🎯 generateLinksTable appelée avec:', results);
     
     const tableBody = document.getElementById('links-table-body');
     if (!tableBody) {
-      console.error('❌ Element links-table-body not found !');
+      window.safeLogger.error('❌ Element links-table-body not found !');
       return;
     }
     
-    console.log('✅ Element tableBody trouvé:', tableBody);
+    window.safeLogger.debug('✅ Element tableBody trouvé:', tableBody);
     
     // Vérifications de sécurité
     if (!results) {
-      console.error('❌ No results provided');
+      window.safeLogger.error('❌ No results provided');
       tableBody.innerHTML = `
         <tr>
           <td colspan="4" class="empty-state">
@@ -2363,11 +2426,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // S'assurer que results.links est un tableau
     const linksArray = Array.isArray(results.links) ? results.links : [];
-    console.log(`🔗 Processing ${linksArray.length} links`);
+    window.safeLogger.debug(`🔗 Processing ${linksArray.length} links`);
     
     // Si aucun lien n'est trouvé, afficher un message approprié
     if (linksArray.length === 0) {
-      console.log('📝 Aucun lien trouvé, affichage du message');
+      window.safeLogger.debug('📝 Aucun lien trouvé, affichage du message');
       tableBody.innerHTML = `
         <tr>
           <td colspan="4" class="empty-state">
@@ -2380,20 +2443,20 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    console.log('⏳ Récupération de l\'onglet actif pour générer les liens...');
+    window.safeLogger.debug('⏳ Récupération de l\'onglet actif pour générer les liens...');
     
     // Récupérer l'URL de base pour construire les URLs complètes
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
       const baseUrl = tabs && tabs[0] ? new URL(tabs[0].url).origin : '';
-      console.log('🌐 Base URL:', baseUrl);
+      window.safeLogger.debug('🌐 Base URL:', baseUrl);
       
       // Appliquer les filtres avant de générer le tableau
       const filteredLinks = applyLinksFilters(linksArray);
-      console.log(`🔍 ${filteredLinks.length} liens après filtrage`);
+      window.safeLogger.debug(`🔍 ${filteredLinks.length} liens après filtrage`);
       
       // Vérifier s'il y a des liens après filtrage
       if (filteredLinks.length === 0) {
-        console.log('📝 Aucun lien après filtrage, affichage du message');
+        window.safeLogger.debug('📝 Aucun lien après filtrage, affichage du message');
         tableBody.innerHTML = `
           <tr>
             <td colspan="4" class="empty-state">
@@ -2406,13 +2469,13 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
-      console.log('🏗️ Génération des lignes du tableau...');
+      window.safeLogger.debug('🏗️ Génération des lignes du tableau...');
       
       // Générer les lignes du tableau avec vérifications
       const rows = filteredLinks.map((link, index) => {
         // Vérifications de sécurité pour chaque lien
         if (!link) {
-          console.warn(`⚠️ Link at index ${index} is null/undefined`);
+          window.safeLogger.warn(`⚠️ Link at index ${index} is null/undefined`);
           return '';
         }
         
@@ -2470,14 +2533,14 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
       }).filter(row => row !== '').join(''); // Filtrer les lignes vides
       
-      console.log('📝 Mise à jour du contenu du tableau...');
+      window.safeLogger.debug('📝 Mise à jour du contenu du tableau...');
       
       // Mettre à jour le tableau avec les liens générés
       if (rows) {
         tableBody.innerHTML = rows;
-        console.log('✅ Tableau généré avec succès avec', filteredLinks.length, 'liens');
+        window.safeLogger.debug('✅ Tableau généré avec succès avec', filteredLinks.length, 'liens');
       } else {
-        console.error('❌ Erreur de génération des lignes');
+        window.safeLogger.error('❌ Erreur de génération des lignes');
         tableBody.innerHTML = `
           <tr>
             <td colspan="4" class="empty-state">
@@ -2585,13 +2648,13 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction pour initialiser les gestionnaires d'événements de l'onglet links
   function initializeLinksEventHandlers() {
-    console.log('🔗 Initialisation des gestionnaires Links');
+    window.safeLogger.debug('🔗 Initialisation des gestionnaires Links');
     
     // Gestionnaire pour le bouton reset des filtres
     const resetFiltersButton = document.getElementById('reset-filters');
     if (resetFiltersButton && !resetFiltersButton.dataset.initialized) {
       resetFiltersButton.addEventListener('click', function() {
-        console.log('🔄 Réinitialisation des filtres');
+        window.safeLogger.debug('🔄 Réinitialisation des filtres');
         resetAllFilters();
       });
       resetFiltersButton.dataset.initialized = 'true';
@@ -2601,7 +2664,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportCSVBtn = document.getElementById('export-csv-btn');
     if (exportCSVBtn && !exportCSVBtn.dataset.initialized) {
       exportCSVBtn.addEventListener('click', function() {
-        console.log('📊 Clic sur export CSV du nouveau bouton détecté');
+        window.safeLogger.debug('📊 Clic sur export CSV du nouveau bouton détecté');
         exportLinksToCSV();
       });
       exportCSVBtn.dataset.initialized = 'true';
@@ -2640,12 +2703,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Réappliquer les filtres (qui vont tout afficher maintenant)
     applyLinksFiltersWithoutParam();
     
-    console.log('✅ Filtres réinitialisés');
+    window.safeLogger.debug('✅ Filtres réinitialisés');
   }
   
   // Fonction pour initialiser les filtres et la recherche avec les nouveaux filtres intégrés
   function initializeLinksFiltersAndSearch() {
-    console.log('🔍 Initialisation des filtres links intégrés');
+    window.safeLogger.debug('🔍 Initialisation des filtres links intégrés');
     
     // Initialiser les dropdowns de filtres
     initializeFilterDropdowns();
@@ -2680,7 +2743,7 @@ document.addEventListener('DOMContentLoaded', function() {
       clearSearch.dataset.initialized = 'true';
     }
     
-    console.log('✅ Filtres et recherche links initialisés');
+    window.safeLogger.debug('✅ Filtres et recherche links initialisés');
   }
   
   // Fonction pour initialiser les dropdowns de filtres
@@ -2740,7 +2803,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!input.dataset.initialized) {
         input.addEventListener('change', function(e) {
           e.stopPropagation(); // Empêcher la fermeture du menu
-          console.log('🔍 Filtre changé:', this.dataset.filter, this.dataset.value, this.checked);
+          window.safeLogger.debug('🔍 Filtre changé:', this.dataset.filter, this.dataset.value, this.checked);
           
           // Mettre à jour l'état visuel du bouton
           updateFilterButtonStates();
@@ -2759,7 +2822,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
     
-    console.log('✅ Dropdowns de filtres initialisés');
+    window.safeLogger.debug('✅ Dropdowns de filtres initialisés');
   }
   
   // Fonction pour mettre à jour l'état visuel des boutons de filtre
@@ -2788,11 +2851,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // Fonction pour appliquer les filtres sur les liens (adaptée pour les nouveaux filtres)
   function applyLinksFiltersWithoutParam() {
     if (!window.lastLinksResults || !window.lastLinksResults.links) {
-      console.log('Aucune donnée de liens à filtrer');
+      window.safeLogger.debug('Aucune donnée de liens à filtrer');
       return;
     }
     
-    console.log('🔍 Application des filtres links intégrés');
+    window.safeLogger.debug('🔍 Application des filtres links intégrés');
     
     // Récupérer les filtres actifs
     const activeFilters = {
@@ -2858,7 +2921,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    console.log(`✅ Filtres appliqués: ${filteredLinks.length}/${window.lastLinksResults.links.length} liens affichés`);
+    window.safeLogger.debug(`✅ Filtres appliqués: ${filteredLinks.length}/${window.lastLinksResults.links.length} liens affichés`);
   }
   
   // Fonction pour initialiser le dropdown de copie
@@ -2867,7 +2930,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const dropdownMenu = document.querySelector('.copy-dropdown-menu');
     
     if (!dropdownTrigger || !dropdownMenu) {
-      console.log('Éléments du dropdown de copie non trouvés');
+      window.safeLogger.debug('Éléments du dropdown de copie non trouvés');
       return;
     }
     
@@ -2887,7 +2950,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Fermer le dropdown quand on clique en dehors
     document.addEventListener('click', function(e) {
-      if (!dropdownTrigger.contains(e.target) && !dropdownMenu.contains(e.target)) {
+      if (dropdownTrigger && dropdownMenu && e.target && !dropdownTrigger.contains(e.target) && !dropdownMenu.contains(e.target)) {
         dropdownMenu.style.display = 'none';
       }
     });
@@ -2900,7 +2963,7 @@ document.addEventListener('DOMContentLoaded', function() {
       copySimpleOption.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔗 Clic sur copie simple détecté');
+        window.safeLogger.debug('🔗 Clic sur copie simple détecté');
         copyAllLinksSimple();
       });
       copySimpleOption.dataset.initialized = 'true';
@@ -2910,7 +2973,7 @@ document.addEventListener('DOMContentLoaded', function() {
       copyAnalysisOption.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔗 Clic sur copie avec analyse détecté');
+        window.safeLogger.debug('🔗 Clic sur copie avec analyse détecté');
         copyAllLinksWithAnalysis();
       });
       copyAnalysisOption.dataset.initialized = 'true';
@@ -2931,13 +2994,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Marquer comme initialisé
     dropdownTrigger.dataset.initialized = 'true';
     
-    console.log('Dropdown de copie initialisé avec event listeners');
+    window.safeLogger.debug('Dropdown de copie initialisé avec event listeners');
   }
   
   // Fonction pour copier tous les liens vers le presse-papiers
   function copyAllLinksToClipboard() {
     if (!window.lastLinksResults || !window.lastLinksResults.links) {
-      console.warn('Aucun lien à copier');
+      window.safeLogger.warn('Aucun lien à copier');
       showTemporaryMessage('Aucun lien à copier');
       return;
     }
@@ -2950,7 +3013,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const filteredLinks = applyLinksFilters(window.lastLinksResults.links);
       
       if (filteredLinks.length === 0) {
-        console.warn('Aucun lien visible à copier');
+        window.safeLogger.warn('Aucun lien visible à copier');
         showTemporaryMessage('Aucun lien à copier');
         return;
       }
@@ -2974,14 +3037,14 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Copier vers le presse-papiers
       navigator.clipboard.writeText(linksList).then(() => {
-        console.log(`✅ ${filteredLinks.length} liens copiés`);
+        window.safeLogger.debug(`✅ ${filteredLinks.length} liens copiés`);
         showTemporaryMessage(`${filteredLinks.length} liens copiés !`);
         
         // Fermer le dropdown
         const dropdown = document.querySelector('.copy-dropdown-menu');
         if (dropdown) dropdown.style.display = 'none';
       }).catch(err => {
-        console.error('❌ Erreur lors de la copie:', err);
+        window.safeLogger.error('❌ Erreur lors de la copie:', err);
         showTemporaryMessage('Erreur lors de la copie');
       });
     });
@@ -2990,7 +3053,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Fonction pour copier seulement les liens brisés
   function copyBrokenLinksOnly() {
     if (!window.lastLinksResults || !window.lastLinksResults.links) {
-      console.warn('Aucun lien à copier');
+      window.safeLogger.warn('Aucun lien à copier');
       showTemporaryMessage('Aucun lien à copier');
       return;
     }
@@ -3028,14 +3091,14 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Copier vers le presse-papiers
       navigator.clipboard.writeText(linksList).then(() => {
-        console.log(`✅ ${brokenLinks.length} liens brisés copiés`);
+        window.safeLogger.debug(`✅ ${brokenLinks.length} liens brisés copiés`);
         showTemporaryMessage(`${brokenLinks.length} liens brisés copiés !`);
         
         // Fermer le dropdown
         const dropdown = document.querySelector('.copy-dropdown-menu');
         if (dropdown) dropdown.style.display = 'none';
       }).catch(err => {
-        console.error('❌ Erreur lors de la copie:', err);
+        window.safeLogger.error('❌ Erreur lors de la copie:', err);
         showTemporaryMessage('Erreur lors de la copie');
       });
     });
@@ -3088,7 +3151,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.addEventListener('click', function(e) {
-      if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+      if (trigger && menu && e.target && !trigger.contains(e.target) && !menu.contains(e.target)) {
         menu.style.display = 'none';
       }
     });
@@ -3098,7 +3161,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction pour afficher une erreur dans l'onglet links
   function showLinksError(message) {
-    console.error('❌ Erreur links:', message);
+    window.safeLogger.error('❌ Erreur links:', message);
     
     // Réinitialiser les statistiques
     const statsElements = ['total-links', 'working-links', 'broken-links', 'redirect-links', 
@@ -3131,9 +3194,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Fonction pour copier l'URL d'un lien
   window.copyLinkUrl = function(url) {
     navigator.clipboard.writeText(url).then(() => {
-      console.log('URL copiée:', url);
+      window.safeLogger.debug('URL copiée:', url);
     }).catch(err => {
-      console.error('Erreur lors de la copie:', err);
+      window.safeLogger.error('Erreur lors de la copie:', err);
     });
   };
   
@@ -3144,7 +3207,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction pour exporter les liens
   window.exportLinks = function(type) {
-    console.log('Export des liens:', type);
+    window.safeLogger.debug('Export des liens:', type);
     // TODO: Implémenter l'export selon le type
   };
   
@@ -3163,19 +3226,19 @@ document.addEventListener('DOMContentLoaded', function() {
   // Fonction pour copier la liste des liens brisés
   function copyBrokenLinksList() {
     // TODO: Implémenter la copie de la liste des liens brisés
-    console.log('Copie de la liste des liens brisés');
+    window.safeLogger.debug('Copie de la liste des liens brisés');
   }
   
   // Fonction pour générer un rapport des liens
   function generateLinksReport() {
     // TODO: Implémenter la génération de rapport
-    console.log('Génération du rapport des liens');
+    window.safeLogger.debug('Génération du rapport des liens');
   }
   
   // Fonction pour copier tous les liens vers le presse-papiers (version simple - sans analyse)
   function copyAllLinksSimple() {
     if (!window.lastLinksResults || !window.lastLinksResults.links) {
-      console.warn('Aucun lien à copier');
+      window.safeLogger.warn('Aucun lien à copier');
       showTemporaryMessage('Aucun lien à copier');
       return;
     }
@@ -3188,7 +3251,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const filteredLinks = applyLinksFilters(window.lastLinksResults.links);
       
       if (filteredLinks.length === 0) {
-        console.warn('Aucun lien visible à copier');
+        window.safeLogger.warn('Aucun lien visible à copier');
         showTemporaryMessage('Aucun lien à copier');
         return;
       }
@@ -3211,14 +3274,14 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Copier vers le presse-papiers
       navigator.clipboard.writeText(linksList).then(() => {
-        console.log(`✅ ${filteredLinks.length} liens copiés (simple)`);
+        window.safeLogger.debug(`✅ ${filteredLinks.length} liens copiés (simple)`);
         showTemporaryMessage(`${filteredLinks.length} liens copiés !`);
         
         // Fermer le dropdown
         const dropdown = document.querySelector('.copy-dropdown-menu');
         if (dropdown) dropdown.style.display = 'none';
       }).catch(err => {
-        console.error('❌ Erreur lors de la copie:', err);
+        window.safeLogger.error('❌ Erreur lors de la copie:', err);
         showTemporaryMessage('Erreur lors de la copie');
       });
     });
@@ -3227,7 +3290,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Fonction pour copier tous les liens avec analyse complète
   function copyAllLinksWithAnalysis() {
     if (!window.lastLinksResults || !window.lastLinksResults.links) {
-      console.warn('Aucun lien à copier');
+      window.safeLogger.warn('Aucun lien à copier');
       showTemporaryMessage('Aucun lien à copier');
       return;
     }
@@ -3240,7 +3303,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const filteredLinks = applyLinksFilters(window.lastLinksResults.links);
       
       if (filteredLinks.length === 0) {
-        console.warn('Aucun lien visible à copier');
+        window.safeLogger.warn('Aucun lien visible à copier');
         showTemporaryMessage('Aucun lien à copier');
         return;
       }
@@ -3306,14 +3369,14 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Copier vers le presse-papiers
       navigator.clipboard.writeText(reportContent).then(() => {
-        console.log(`✅ Rapport complet de ${filteredLinks.length} liens copié`);
+        window.safeLogger.debug(`✅ Rapport complet de ${filteredLinks.length} liens copié`);
         showTemporaryMessage(`Rapport complet copié !`);
         
         // Fermer le dropdown
         const dropdown = document.querySelector('.copy-dropdown-menu');
         if (dropdown) dropdown.style.display = 'none';
       }).catch(err => {
-        console.error('❌ Erreur lors de la copie:', err);
+        window.safeLogger.error('❌ Erreur lors de la copie:', err);
         showTemporaryMessage('Erreur lors de la copie');
       });
     });
@@ -3329,7 +3392,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Fonction globale pour exporter en CSV
   function exportLinksToCSV() {
-    console.log('📊 exportLinksToCSV appelée');
+    window.safeLogger.debug('📊 exportLinksToCSV appelée');
     
     // Essayer différentes sources de données
     let linksData = null;
@@ -3339,13 +3402,13 @@ document.addEventListener('DOMContentLoaded', function() {
     } else if (window.lastResults && window.lastResults.links) {
       linksData = window.lastResults.links;
     } else {
-      console.warn('❌ Aucune donnée de liens trouvée');
+      window.safeLogger.warn('❌ Aucune donnée de liens trouvée');
       showTemporaryMessageGlobal('Aucun lien à exporter');
       return;
     }
     
     if (!Array.isArray(linksData) || linksData.length === 0) {
-      console.warn('❌ Données de liens invalides');
+      window.safeLogger.warn('❌ Données de liens invalides');
       showTemporaryMessageGlobal('Aucun lien à exporter');
       return;
     }
@@ -3359,12 +3422,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const filteredLinks = applyLinksFiltersGlobal(linksData);
         
         if (filteredLinks.length === 0) {
-          console.warn('❌ Aucun lien après filtrage');
+          window.safeLogger.warn('❌ Aucun lien après filtrage');
           showTemporaryMessageGlobal('Aucun lien à exporter');
           return;
         }
         
-        console.log(`📝 Génération du fichier CSV pour ${filteredLinks.length} liens`);
+        window.safeLogger.debug(`📝 Génération du fichier CSV pour ${filteredLinks.length} liens`);
         
         // Construire le contenu CSV
         let csvContent = 'Texte du lien,URL,Statut,Type,Rel\n';
@@ -3402,14 +3465,14 @@ document.addEventListener('DOMContentLoaded', function() {
           link.click();
           document.body.removeChild(link);
           
-          console.log(`✅ Fichier CSV généré avec ${filteredLinks.length} liens`);
+          window.safeLogger.debug(`✅ Fichier CSV généré avec ${filteredLinks.length} liens`);
           showTemporaryMessageGlobal(`CSV exporté (${filteredLinks.length} liens) !`);
           
           // Fermer le dropdown
           const dropdown = document.querySelector('.copy-dropdown-menu');
           if (dropdown) dropdown.style.display = 'none';
         } else {
-          console.error('❌ Le téléchargement de fichier n\'est pas supporté');
+          window.safeLogger.error('❌ Le téléchargement de fichier n\'est pas supporté');
           showTemporaryMessageGlobal('Export non supporté par ce navigateur');
         }
       } else {
